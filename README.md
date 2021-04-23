@@ -6,6 +6,12 @@ Part of the networking code was taken from [dicom-dimse](https://github.com/OHIF
 ### Note
 **This effort is a work-in-progress and should not be used for production or clinical purposes.**
 
+### Build
+![build master](https://github.com/PantelisGeorgiadis/dcmjs-dimse/actions/workflows/build.yml/badge.svg?branch=master)
+
+	npm install
+	npm run build
+
 ### Usage
 
 #### C-Echo SCU
