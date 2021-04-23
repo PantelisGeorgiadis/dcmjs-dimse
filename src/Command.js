@@ -1,4 +1,4 @@
-const { CommandFieldType, SopClass, Priority } = require('./Constants');
+const { CommandFieldType, SopClass, Priority, Status } = require('./Constants');
 const Dataset = require('./Dataset');
 
 const { EventEmitter } = require('events');
@@ -92,7 +92,9 @@ class Command {
     includeCommandDataset = includeCommandDataset || false;
     includeDataset = includeDataset || false;
     const str = [];
-    str.push(`${this._typeToString(this.getCommandFieldType())} [HasDataset: ${this.hasDataset()}]`);
+    str.push(
+      `${this._typeToString(this.getCommandFieldType())} [HasDataset: ${this.hasDataset()}]`
+    );
     if (includeCommandDataset) {
       str.push('DIMSE Command Dataset:');
       str.push('===============================================');
@@ -163,7 +165,7 @@ class Command {
       case CommandFieldType.NSetResponse:
         return 'N-SET RSP';
       default:
-        return 'DIMSE';
+        return `${type}`;
     }
   }
   //#endregion
@@ -269,12 +271,33 @@ class Request extends Mixin(Command, EventEmitter) {
   }
 
   /**
+   * Raise instance event.
+   * Special event for datasets coming from C-GET operations,
+   * as C-STORE requests.
+   *
+   * @param {Object} dataset - Dataset.
+   * @memberof Request
+   */
+  raiseInstanceEvent(dataset) {
+    this.emit('instance', dataset);
+  }
+
+  /**
    * Raise done event.
    *
    * @memberof Request
    */
   raiseDoneEvent() {
     this.emit('done');
+  }
+
+  /**
+   * Gets the request description.
+   *
+   * @memberof Request
+   */
+  toString() {
+    return `${super.toString()} [id: ${this.getMessageId()}]`;
   }
 }
 //#endregion
@@ -326,6 +349,39 @@ class Response extends Command {
   }
 
   /**
+   * Gets affected SOP instance UID.
+   *
+   * @returns {String} Affected SOP instance UID.
+   * @memberof Response
+   */
+  getAffectedSopInstanceUid() {
+    const command = this.getCommandDataset();
+    return command.getElement('AffectedSOPInstanceUID');
+  }
+
+  /**
+   * Sets affected SOP instance UID.
+   *
+   * @param {String} affectedSopInstanceUid - Affected SOP instance UID.
+   * @memberof Response
+   */
+  setAffectedSopInstanceUid(affectedSopInstanceUid) {
+    const command = this.getCommandDataset();
+    command.setElement('AffectedSOPInstanceUID', affectedSopInstanceUid);
+  }
+
+  /**
+   * Sets status.
+   *
+   * @param {Number} status - Status.
+   * @memberof Response
+   */
+  setStatus(status) {
+    const command = this.getCommandDataset();
+    command.setElement('Status', status);
+  }
+
+  /**
    * Gets status.
    *
    * @returns {Number} Status.
@@ -345,6 +401,17 @@ class Response extends Command {
   getErrorComment() {
     const command = this.getCommandDataset();
     return command.getElement('ErrorComment');
+  }
+
+  /**
+   * Sets error comment.
+   *
+   * @param {String} errorComment - Error comment.
+   * @memberof Response
+   */
+  setErrorComment(errorComment) {
+    const command = this.getCommandDataset();
+    command.setElement('ErrorComment', errorComment);
   }
 
   /**
@@ -368,6 +435,74 @@ class Response extends Command {
     const command = this.getCommandDataset();
     command.setElement('MessageIDBeingRespondedTo', messageId);
   }
+
+  /**
+   * Gets the response description.
+   *
+   * @memberof Response
+   */
+  toString() {
+    return `${super.toString()} [id: ${this.getMessageIdBeingRespondedTo()}; status: ${this._statusToString(
+      this.getStatus()
+    )}]`;
+  }
+
+  //#region Private Methods
+  /**
+   * Returns a readable string from status.
+   *
+   * @param {Number} status - Status code.
+   * @returns {String} Readable string.
+   */
+  _statusToString(status) {
+    switch (status) {
+      case Status.Success:
+        return 'Success';
+      case Status.Cancel:
+        return 'Cancel';
+      case Status.Pending:
+        return 'Pending';
+      case Status.SopClassNotSupported:
+        return 'SOP Class Not Supported';
+      case Status.ClassInstanceConflict:
+        return 'Class Instance Conflict';
+      case Status.DuplicateSOPInstance:
+        return 'Duplicate SOP Instance';
+      case Status.DuplicateInvocation:
+        return 'Duplicate Invocation';
+      case Status.InvalidArgumentValue:
+        return 'Invalid Argument Value';
+      case Status.InvalidAttributeValue:
+        return 'Invalid Attribute Value';
+      case Status.InvalidObjectInstance:
+        return 'Invalid Object Instance';
+      case Status.MissingAttribute:
+        return 'Missing Attribute';
+      case Status.MissingAttributeValue:
+        return 'Missing Attribute Value';
+      case Status.MistypedArgument:
+        return 'Mistyped Argument';
+      case Status.NoSuchArgument:
+        return 'No Such Argument';
+      case Status.NoSuchEventType:
+        return 'No Such Event Type';
+      case Status.NoSuchObjectInstance:
+        return 'No Such Object Instance';
+      case Status.NoSuchSopClass:
+        return 'No Such SOP Class';
+      case Status.ProcessingFailure:
+        return 'Processing Failure';
+      case Status.ResourceLimitation:
+        return 'Resource Limitation';
+      case Status.UnrecognizedOperation:
+        return 'Unrecognized Operation';
+      case Status.NoSuchActionType:
+        return 'No Such Action Type';
+      default:
+        return `${status}`;
+    }
+  }
+  //#endregion
 }
 //#endregion
 
@@ -409,7 +544,12 @@ class CFindRequest extends Request {
    * @memberof CFindRequest
    */
   constructor(priority) {
-    super(CommandFieldType.CFindRequest, SopClass.StudyRootQueryRetrieveInformationModelFind, priority || Priority.Medium, true);
+    super(
+      CommandFieldType.CFindRequest,
+      SopClass.StudyRootQueryRetrieveInformationModelFind,
+      priority || Priority.Medium,
+      true
+    );
   }
 
   /**
@@ -582,7 +722,13 @@ class CFindResponse extends Response {
    * @memberof CFindResponse
    */
   constructor(status, errorComment) {
-    super(CommandFieldType.CFindResponse, SopClass.StudyRootQueryRetrieveInformationModelFind, false, status, errorComment);
+    super(
+      CommandFieldType.CFindResponse,
+      SopClass.StudyRootQueryRetrieveInformationModelFind,
+      false,
+      status,
+      errorComment
+    );
   }
 }
 //#endregion
@@ -638,7 +784,12 @@ class CMoveRequest extends Request {
    * @memberof CMoveRequest
    */
   constructor(priority) {
-    super(CommandFieldType.CMoveRequest, SopClass.StudyRootQueryRetrieveInformationModelMove, priority || Priority.Medium, true);
+    super(
+      CommandFieldType.CMoveRequest,
+      SopClass.StudyRootQueryRetrieveInformationModelMove,
+      priority || Priority.Medium,
+      true
+    );
   }
 
   /**
@@ -702,7 +853,13 @@ class CMoveRequest extends Request {
    * @return {Object} Image move request.
    * @memberof CMoveRequest
    */
-  static createImageMoveRequest(destinationAet, studyInstanceUid, seriesInstanceUid, sopInstanceUid, priority) {
+  static createImageMoveRequest(
+    destinationAet,
+    studyInstanceUid,
+    seriesInstanceUid,
+    sopInstanceUid,
+    priority
+  ) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
@@ -731,7 +888,13 @@ class CMoveResponse extends Response {
    * @memberof CMoveResponse
    */
   constructor(status, errorComment) {
-    super(CommandFieldType.CMoveResponse, SopClass.StudyRootQueryRetrieveInformationModelMove, false, status, errorComment);
+    super(
+      CommandFieldType.CMoveResponse,
+      SopClass.StudyRootQueryRetrieveInformationModelMove,
+      false,
+      status,
+      errorComment
+    );
   }
 
   /**
@@ -780,6 +943,156 @@ class CMoveResponse extends Response {
 }
 //#endregion
 
+//#region CGetRequest
+class CGetRequest extends Request {
+  /**
+   * Creates an instance of CGetRequest.
+   * @param {Number} priority - Request priority.
+   *
+   * @memberof CGetRequest
+   */
+  constructor(priority) {
+    super(
+      CommandFieldType.CGetRequest,
+      SopClass.StudyRootQueryRetrieveInformationModelGet,
+      priority || Priority.Medium,
+      true
+    );
+  }
+
+  /**
+   * Creates study get request.
+   *
+   * @param {String} studyInstanceUid - Study instance UID of the study to get.
+   * @param {Number} priority - Request priority.
+   * @return {Object} Study get request.
+   * @memberof CGetRequest
+   */
+  static createStudyGetRequest(studyInstanceUid, priority) {
+    const elements = {
+      StudyInstanceUID: studyInstanceUid,
+      QueryRetrieveLevel: 'STUDY'
+    };
+
+    const getRequest = new CGetRequest(priority);
+    getRequest.setDataset(new Dataset(elements));
+
+    return getRequest;
+  }
+
+  /**
+   * Creates series get request.
+   *
+   * @param {String} studyInstanceUid - Study instance UID of the study to get.
+   * @param {String} seriesInstanceUid - Series instance UID of the series to get.
+   * @param {Number} priority - Request priority.
+   * @return {Object} Series get request.
+   * @memberof CGetRequest
+   */
+  static createSeriesGetRequest(studyInstanceUid, seriesInstanceUid, priority) {
+    const elements = {
+      StudyInstanceUID: studyInstanceUid,
+      SeriesInstanceUID: seriesInstanceUid,
+      QueryRetrieveLevel: 'SERIES'
+    };
+
+    const getRequest = new CGetRequest(priority);
+    getRequest.setDataset(new Dataset(elements));
+
+    return getRequest;
+  }
+
+  /**
+   * Creates image get request.
+   *
+   * @param {String} studyInstanceUid - Study instance UID of the study to get.
+   * @param {String} seriesInstanceUid - Series instance UID of the series to get.
+   * @param {String} sopInstanceUid - SOP instance UID of the series to get.
+   * @param {Number} priority - Request priority.
+   * @return {Object} Image get request.
+   * @memberof CGetRequest
+   */
+  static createImageGetRequest(studyInstanceUid, seriesInstanceUid, sopInstanceUid, priority) {
+    const elements = {
+      StudyInstanceUID: studyInstanceUid,
+      SeriesInstanceUID: seriesInstanceUid,
+      SOPInstanceUID: sopInstanceUid,
+      QueryRetrieveLevel: 'IMAGE'
+    };
+
+    const getRequest = new CGetRequest(priority);
+    getRequest.setDataset(new Dataset(elements));
+
+    return getRequest;
+  }
+}
+//#endregion
+
+//#region CGetResponse
+class CGetResponse extends Response {
+  /**
+   * Creates an instance of CGetResponse.
+   * @param {Number} status - Response status.
+   * @param {String} errorComment - Error comment.
+   *
+   * @memberof CGetResponse
+   */
+  constructor(status, errorComment) {
+    super(
+      CommandFieldType.CGetResponse,
+      SopClass.StudyRootQueryRetrieveInformationModelGet,
+      false,
+      status,
+      errorComment
+    );
+  }
+
+  /**
+   * Gets remaining sub operations.
+   *
+   * @returns {Number} Remaining sub operations.
+   * @memberof CGetResponse
+   */
+  getRemaining() {
+    const command = this.getCommandDataset();
+    return command.getElement('NumberOfRemainingSuboperations');
+  }
+
+  /**
+   * Gets completed sub operations.
+   *
+   * @returns {Number} Completed sub operations.
+   * @memberof CGetResponse
+   */
+  getCompleted() {
+    const command = this.getCommandDataset();
+    return command.getElement('NumberOfCompletedSuboperations');
+  }
+
+  /**
+   * Gets sub operations with warnings.
+   *
+   * @returns {Number} Sub operations with warnings.
+   * @memberof CGetResponse
+   */
+  getWarnings() {
+    const command = this.getCommandDataset();
+    return command.getElement('NumberOfWarningSuboperations');
+  }
+
+  /**
+   * Gets failed sub operations.
+   *
+   * @returns {Number} Failed sub operations.
+   * @memberof CGetResponse
+   */
+  getFailures() {
+    const command = this.getCommandDataset();
+    return command.getElement('NumberOfFailedSuboperations');
+  }
+}
+//#endregion
+
 //#region Exports
 module.exports = {
   Command,
@@ -792,6 +1105,8 @@ module.exports = {
   CStoreRequest,
   CStoreResponse,
   CMoveRequest,
-  CMoveResponse
+  CMoveResponse,
+  CGetRequest,
+  CGetResponse
 };
 //#endregion

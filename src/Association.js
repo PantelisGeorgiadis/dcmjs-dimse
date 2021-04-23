@@ -1,5 +1,12 @@
-const { CStoreRequest } = require('./Command');
-const { Implementation, PresentationContextResult, Uid, TransferSyntax } = require('./Constants');
+const { CStoreRequest, CGetRequest } = require('./Command');
+const {
+  Implementation,
+  PresentationContextResult,
+  Uid,
+  SopClass,
+  StorageClass,
+  TransferSyntax
+} = require('./Constants');
 
 //#region PresentationContext
 class PresentationContext {
@@ -357,10 +364,29 @@ class Association {
       // to allow bitstream.
       const dataset = request.getDataset();
       const transferSyntaxUid = dataset.getTransferSyntaxUid();
-      if (transferSyntaxUid !== TransferSyntax.ImplicitVRLittleEndian && transferSyntaxUid !== TransferSyntax.ExplicitVRLittleEndian) {
+      if (
+        transferSyntaxUid !== TransferSyntax.ImplicitVRLittleEndian &&
+        transferSyntaxUid !== TransferSyntax.ExplicitVRLittleEndian
+      ) {
         pcId = this.addPresentationContext(sopClassUid);
         this.addTransferSyntaxToPresentationContext(pcId, transferSyntaxUid);
       }
+    } else if (request instanceof CGetRequest) {
+      pcId = this.addPresentationContext(sopClassUid);
+      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
+      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
+      Object.keys(StorageClass).forEach(uid => {
+        const storageClassUid = StorageClass[uid];
+        const storagePcId = this.addPresentationContext(storageClassUid);
+        this.addTransferSyntaxToPresentationContext(
+          storagePcId,
+          TransferSyntax.ImplicitVRLittleEndian
+        );
+        this.addTransferSyntaxToPresentationContext(
+          storagePcId,
+          TransferSyntax.ExplicitVRLittleEndian
+        );
+      });
     } else {
       pcId = this.addPresentationContext(sopClassUid);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
@@ -381,7 +407,10 @@ class Association {
     const contexts = this.getPresentationContexts();
     contexts.forEach(pc => {
       const context = this.getPresentationContext(pc.id);
-      if (context.getAbstractSyntaxUid() === request.getAffectedSopClassUid() && context.getResult() === PresentationContextResult.Accept) {
+      if (
+        context.getAbstractSyntaxUid() === request.getAffectedSopClassUid() &&
+        context.getResult() === PresentationContextResult.Accept
+      ) {
         acceptedContext = context;
       }
     });
@@ -405,17 +434,36 @@ class Association {
     this.presentationContexts.forEach(pc => {
       const context = this.getPresentationContext(pc.id);
       str.push(`  Presentation Context:  ${pc.id} [${context.getResultDescription()}]`);
-      str.push(`      Abstract:  ${context.getAbstractSyntaxUid()}`);
+      str.push(
+        `      Abstract:  ${this._uidNameFromValue(
+          [SopClass, StorageClass],
+          context.getAbstractSyntaxUid()
+        ) || context.getAbstractSyntaxUid()}`
+      );
 
       const syntaxes = context.getTransferSyntaxUids();
       syntaxes.forEach(tx => {
-        str.push(`      Transfer:  ${tx}`);
+        str.push(`      Transfer:  ${this._uidNameFromValue(TransferSyntax, tx) || tx}`);
       });
     });
     str.push('');
 
     return str.join('\n');
   }
+
+  //#region Private Methods
+  /**
+   * Gets UID name from UID value.
+   *
+   * @param {Object|Array} uids - UID object(s).
+   * @param {String} uid - UID value.
+   * @returns {String} UID name.
+   */
+  _uidNameFromValue(uids, uid) {
+    const mergedUids = Array.isArray(uids) ? Object.assign({}, ...uids) : uids;
+    return Object.keys(mergedUids).find(key => mergedUids[key] === uid);
+  }
+  //#endregion
 }
 
 //#region Exports

@@ -77,12 +77,79 @@ const Uid = {
 };
 //#endregion
 
+//#region StorageClass
+const StorageClass = {
+  BasicTextSrStorage: '1.2.840.10008.5.1.4.1.1.88.11',
+  BreastProjectionXRayImageStorageForPresentation: '1.2.840.10008.5.1.4.1.1.13.1.4',
+  BreastProjectionXRayImageStorageForProcessing: '1.2.840.10008.5.1.4.1.1.13.1.5',
+  BreastTomosynthesisImageStorage: '1.2.840.10008.5.1.4.1.1.13.1.3',
+  ChestCadSrStorage: '1.2.840.10008.5.1.4.1.1.88.65',
+  ComprehensiveSrStorage: '1.2.840.10008.5.1.4.1.1.88.33',
+  ComputedRadiographyImageStorage: '1.2.840.10008.5.1.4.1.1.1',
+  CtImageStorage: '1.2.840.10008.5.1.4.1.1.2',
+  DigitalIntraOralXRayImageStorageForPresentation: '1.2.840.10008.5.1.4.1.1.1.3',
+  DigitalIntraOralXRayImageStorageForProcessing: '1.2.840.10008.5.1.4.1.1.1.3.1',
+  DigitalMammographyXRayImageStorageForPresentation: '1.2.840.10008.5.1.4.1.1.1.2',
+  DigitalMammographyXRayImageStorageForProcessing: '1.2.840.10008.5.1.4.1.1.1.2.1',
+  DigitalXRayImageStorageForPresentation: '1.2.840.10008.5.1.4.1.1.1.1',
+  DigitalXRayImageStorageForProcessing: '1.2.840.10008.5.1.4.1.1.1.1.1',
+  EncapsulatedCdaStorage: '1.2.840.10008.5.1.4.1.1.104.2',
+  EncapsulatedPdfStorage: '1.2.840.10008.5.1.4.1.1.104.1',
+  EnhancedCtImageStorage: '1.2.840.10008.5.1.4.1.1.2.1',
+  EnhancedMrColorImageStorage: '1.2.840.10008.5.1.4.1.1.4.3',
+  EnhancedMrImageStorage: '1.2.840.10008.5.1.4.1.1.4.1',
+  EnhancedPetImageStorage: '1.2.840.10008.5.1.4.1.1.130',
+  EnhancedSrStorage: '1.2.840.10008.5.1.4.1.1.88.22',
+  EnhancedXaImageStorage: '1.2.840.10008.5.1.4.1.1.12.1.1',
+  EnhancedXrfImageStorage: '1.2.840.10008.5.1.4.1.1.12.2.1',
+  IntravascularOpticalCoherenceTomographyImageStorageForPresentation:
+    '1.2.840.10008.5.1.4.1.1.14.1',
+  IntravascularOpticalCoherenceTomographyImageStorageForProcessing: '1.2.840.10008.5.1.4.1.1.14.2',
+  LegacyConvertedEnhancedCTImageStorage: '1.2.840.10008.5.1.4.1.1.2.2',
+  LegacyConvertedEnhancedMRImageStorage: '1.2.840.10008.5.1.4.1.1.4.4',
+  LegacyConvertedEnhancedPETImageStorage: '1.2.840.10008.5.1.4.1.1.128.1',
+  MammographyCadSrStorage: '1.2.840.10008.5.1.4.1.1.88.50',
+  MrImageStorage: '1.2.840.10008.5.1.4.1.1.4',
+  MultiframeGrayscaleByteSecondaryCaptureImageStorage: '1.2.840.10008.5.1.4.1.1.7.2',
+  MultiframeGrayscaleWordSecondaryCaptureImageStorage: '1.2.840.10008.5.1.4.1.1.7.3',
+  MultiframeSingleBitSecondaryCaptureImageStorage: '1.2.840.10008.5.1.4.1.1.7.1',
+  MultiframeTrueColorSecondaryCaptureImageStorage: '1.2.840.10008.5.1.4.1.1.7.4',
+  NuclearMedicineImageStorage: '1.2.840.10008.5.1.4.1.1.20',
+  OphthalmicOpticalCoherenceTomographyEnFaceImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.5.7',
+  OphthalmicPhotography16BitImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.5.2',
+  OphthalmicPhotography8BitImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.5.1',
+  OphthalmicTomographyImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.5.4',
+  PositronEmissionTomographyImageStorage: '1.2.840.10008.5.1.4.1.1.128',
+  RtImageStorage: '1.2.840.10008.5.1.4.1.1.481.1',
+  SecondaryCaptureImageStorage: '1.2.840.10008.5.1.4.1.1.7',
+  UltrasoundImageStorage: '1.2.840.10008.5.1.4.1.1.6.1',
+  UltrasoundMultiframeImageStorage: '1.2.840.10008.5.1.4.1.1.3.1',
+  VideoEndoscopicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.1.1',
+  VideoMicroscopicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.2.1',
+  VideoPhotographicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.4.1',
+  VlEndoscopicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.1',
+  VlMicroscopicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.2',
+  VlPhotographicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.4',
+  VlSlideCoordinatesMicroscopicImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.3',
+  VlWholeSlideMicroscopyImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.6',
+  WideFieldOphthalmicPhotography3dCoordinatesImageStorage: '1.2.840.10008.5.1.4.1.1.77.1.5.6',
+  WideFieldOphthalmicPhotographyStereographicProjectionImageStorage:
+    '1.2.840.10008.5.1.4.1.1.77.1.5.5',
+  XRay3dAngiographicImageStorage: '1.2.840.10008.5.1.4.1.1.13.1.1',
+  XRay3dCraniofacialImageStorage: '1.2.840.10008.5.1.4.1.1.13.1.2',
+  XRayAngiographicImageStorage: '1.2.840.10008.5.1.4.1.1.12.1',
+  XRayRadiationDoseSRStorage: '1.2.840.10008.5.1.4.1.1.88.67',
+  XRayRadiofluoroscopicImageStorage: '1.2.840.10008.5.1.4.1.1.12.2'
+};
+//#endregion
+
 //#region SopClass
 const SopClass = {
   Verification: '1.2.840.10008.1.1',
   StudyRootQueryRetrieveInformationModelFind: '1.2.840.10008.5.1.4.1.2.2.1',
   ModalityWorklistInformationModelFind: '1.2.840.10008.5.1.4.31',
-  StudyRootQueryRetrieveInformationModelMove: '1.2.840.10008.5.1.4.1.2.2.2'
+  StudyRootQueryRetrieveInformationModelMove: '1.2.840.10008.5.1.4.1.2.2.2',
+  StudyRootQueryRetrieveInformationModelGet: '1.2.840.10008.5.1.4.1.2.2.3'
 };
 //#endregion
 
@@ -108,6 +175,7 @@ module.exports = {
   Priority,
   Status,
   Uid,
+  StorageClass,
   SopClass,
   TransferSyntax,
   Implementation

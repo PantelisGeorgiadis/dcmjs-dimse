@@ -1,7 +1,26 @@
 const { Association } = require('./Association');
-const { RawPdu, AAssociateRQ, AAssociateAC, AAssociateRJ, AReleaseRQ, AReleaseRP, AAbort, Pdv, PDataTF } = require('./Pdu');
+const {
+  RawPdu,
+  AAssociateRQ,
+  AAssociateAC,
+  AAssociateRJ,
+  AReleaseRQ,
+  AReleaseRP,
+  AAbort,
+  Pdv,
+  PDataTF
+} = require('./Pdu');
 const { CommandFieldType, Status, TransferSyntax } = require('./Constants');
-const { Command, CEchoResponse, CFindResponse, CStoreResponse, CMoveResponse } = require('./Command');
+const {
+  Command,
+  Response,
+  CEchoResponse,
+  CFindResponse,
+  CStoreRequest,
+  CStoreResponse,
+  CMoveResponse,
+  CGetResponse
+} = require('./Command');
 const Dataset = require('./Dataset');
 const log = require('./log');
 
@@ -43,7 +62,10 @@ class PduAccumulator extends EventEmitter {
   _process(data) {
     if (this.receiving === undefined) {
       if (this.minimumReceived) {
-        data = Buffer.concat([this.minimumReceived, data], this.minimumReceived.length + data.length);
+        data = Buffer.concat(
+          [this.minimumReceived, data],
+          this.minimumReceived.length + data.length
+        );
         this.minimumReceived = undefined;
       }
       if (data.length < 6) {
@@ -109,17 +131,29 @@ class Network extends EventEmitter {
   /**
    * Creates an instance of Network.
    *
+   * @param {Object} opts - Network options.
+   * @param {Number} opts.connectTimeout - Connection timeout in milliseconds.
+   * @param {Number} opts.associationTimeout - Association timeout in milliseconds.
+   * @param {Number} opts.pduTimeout - PDU timeout in milliseconds.
    * @memberof Network
    */
-  constructor() {
+  constructor(opts) {
     super();
     this.messageId = 0;
     this.socket = {};
     this.requests = [];
-    this.connected = false;
 
     this.dimseBuffer = undefined;
     this.dimse = undefined;
+
+    opts = opts || {};
+    this.connectTimeout = opts.connectTimeout || 10000;
+    this.associationTimeout = opts.associationTimeout || 10000;
+    this.pduTimeout = opts.pduTimeout || 5000;
+    this.connected = false;
+    this.connectedTime = undefined;
+    this.lastPduTime = undefined;
+    this.timeoutIntervalId = undefined;
   }
 
   /**
@@ -131,15 +165,37 @@ class Network extends EventEmitter {
    */
   connect(host, port) {
     const network = new net.Socket();
+    network.setTimeout(this.connectTimeout);
     log.info(`Connecting to ${host}:${port}`);
 
     this.socket = network.connect({ host, port });
     this.socket.on('connect', () => {
       this.connected = true;
+      this.connectedTime = Date.now();
       this.emit('connect');
+
+      this.timeoutIntervalId = setInterval(() => {
+        const current = Date.now();
+        let timedOut = false;
+        let error = undefined;
+        if (!this.lastPduTime && current - this.connectedTime >= this.associationTimeout) {
+          error = `Exceeded association timeout (${this.associationTimeout}), closing connection...`;
+          timedOut = true;
+        } else if (this.lastPduTime && current - this.lastPduTime >= this.pduTimeout) {
+          error = `Exceeded PDU timeout (${this.pduTimeout}), closing connection...`;
+          timedOut = true;
+        }
+        if (timedOut) {
+          log.error(error);
+          this.release();
+          this.close();
+          this.emit('error', new Error(`Connection error: ${error}`));
+        }
+      }, 1000);
     });
     const pduAccumulator = new PduAccumulator();
     pduAccumulator.on('pdu', data => {
+      this.lastPduTime = Date.now();
       this._processPdu(data);
     });
     this.socket.on('data', data => {
@@ -150,13 +206,19 @@ class Network extends EventEmitter {
       log.error('Connection error');
       this.emit('error', new Error(`Connection error: ${err.message}`));
     });
-    this.socket.on('timeout', err => {
+    this.socket.on('timeout', () => {
       this.connected = false;
       log.error('Connection timeout');
-      this.emit('error', new Error(`Connection error: ${err.message}`));
+      this.emit('error', new Error(`Connection timeout`));
     });
     this.socket.on('close', () => {
       this.connected = false;
+      this.lastPduTime = undefined;
+      this.connectedTime = undefined;
+      if (this.timeoutIntervalId) {
+        clearInterval(this.timeoutIntervalId);
+        this.timeoutIntervalId = undefined;
+      }
       log.info('Connection closed');
       this.emit('close');
     });
@@ -197,7 +259,7 @@ class Network extends EventEmitter {
       const context = this.association.getAcceptedPresentationContextFromRequest(request);
       if (context) {
         request.setMessageId(this._getNextMessageId());
-        requestsWithAcceptedContext.push({ context, request });
+        requestsWithAcceptedContext.push({ context, command: request });
       }
     });
 
@@ -208,7 +270,8 @@ class Network extends EventEmitter {
         this.emit('done');
         return;
       }
-      dimse.request.on('done', () => {
+      dimse.command.on('done', () => {
+        // Request is done (there are no more pending responses)
         processNextDimse();
       });
       this._sendDimse(dimse);
@@ -245,6 +308,10 @@ class Network extends EventEmitter {
     this.socket.end();
   }
 
+  //#region Requests/Responses Methods
+
+  //#endregion
+
   //#region Private Methods
   /**
    * Advances the message ID.
@@ -270,24 +337,74 @@ class Network extends EventEmitter {
    * @param {Object} dimse - DIMSE information.
    */
   _sendDimse(dimse) {
-    const dataset = dimse.request.getDataset();
-    const presentationContext = this.association.getPresentationContext(dimse.context.getPresentationContextId());
+    const dataset = dimse.command.getDataset();
+    const presentationContext = this.association.getPresentationContext(
+      dimse.context.getPresentationContextId()
+    );
     const supportedTransferSyntaxes = Object.values(TransferSyntax);
     const acceptedTransferSyntaxUid = presentationContext.getAcceptedTransferSyntaxUid();
     if (dataset && acceptedTransferSyntaxUid !== dataset.getTransferSyntaxUid()) {
-      if (supportedTransferSyntaxes.includes(acceptedTransferSyntaxUid) && supportedTransferSyntaxes.includes(dataset.getTransferSyntaxUid())) {
+      if (
+        supportedTransferSyntaxes.includes(acceptedTransferSyntaxUid) &&
+        supportedTransferSyntaxes.includes(dataset.getTransferSyntaxUid())
+      ) {
         dataset.setTransferSyntaxUid(acceptedTransferSyntaxUid);
       } else {
-        log.error(`A transfer syntax transcoding from ${dataset.getTransferSyntaxUid()} to ${acceptedTransferSyntaxUid} which is currently not supported. Skipping...`);
-        dimse.request.raiseDoneEvent();
+        log.error(
+          `A transfer syntax transcoding from ${dataset.getTransferSyntaxUid()} to ${acceptedTransferSyntaxUid} which is currently not supported. Skipping...`
+        );
+        dimse.command.raiseDoneEvent();
         return;
       }
     }
+    this._sendPDataTF(
+      dimse.command,
+      dimse.context.getPresentationContextId(),
+      this.association.getMaxPduLength()
+    );
+  }
 
-    const pDataTFBuffer = new PDataTFBuffer(this.socket, dimse.context.getPresentationContextId(), this.association.getMaxPduLength());
-    pDataTFBuffer.sendCommand(dimse.request);
+  /**
+   * Sends PDataTF over the network.
+   *
+   * @param {Object} command - The requesting command.
+   * @param {Number} pcId - Presentation context ID.
+   * @param {Number} maxPduLength - Maximum PDU length.
+   */
+  _sendPDataTF(command, pcId, maxPduLength) {
+    const max = 4 * 1024 * 1024;
+    maxPduLength = maxPduLength === 0 ? max : Math.min(maxPduLength, max);
+
+    const commandDataset = command.getCommandDataset();
+    const commandBuffer = commandDataset.getDenaturalizedDataset();
+    const pdv = new Pdv(pcId, commandBuffer, true, true);
+    const pDataTf = new PDataTF();
+    pDataTf.addPdv(pdv);
+
+    log.info(`${command.toString()} [pc: ${pdv.getPresentationContextId()}]`);
+
+    const pdu = pDataTf.write();
+    const pduBuffer = pdu.writePdu();
+    this.socket.write(pduBuffer);
+
+    const dataset = command.getDataset();
     if (dataset) {
-      pDataTFBuffer.sendDataset(dataset);
+      const datasetBuffer = dataset.getDenaturalizedDataset();
+      const datasetBufferChunks = chunks(datasetBuffer, maxPduLength - 6);
+      for (let i = 0; i < datasetBufferChunks.length; i++) {
+        const pdv = new Pdv(
+          pcId,
+          datasetBufferChunks[i],
+          false,
+          datasetBufferChunks.length === i + 1
+        );
+
+        const pDataTf = new PDataTF();
+        pDataTf.addPdv(pdv);
+        const pdu = pDataTf.write();
+        const pduBuffer = pdu.writePdu();
+        this.socket.write(pduBuffer);
+      }
     }
   }
 
@@ -319,7 +436,9 @@ class Network extends EventEmitter {
       case 0x03: {
         const pdu = new AAssociateRJ();
         pdu.read(raw);
-        log.info(`Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`);
+        log.info(
+          `Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
+        );
         this.emit('associationRejected', pdu.getResult(), pdu.getSource(), pdu.getReason());
         break;
       }
@@ -373,7 +492,9 @@ class Network extends EventEmitter {
         });
       }
       this.dimseBuffer.writeBuffer(pdv.getValue());
-      const presentationContext = this.association.getPresentationContext(pdv.getPresentationContextId());
+      const presentationContext = this.association.getPresentationContext(
+        pdv.getPresentationContextId()
+      );
       if (pdv.isLastFragment()) {
         if (pdv.isCommand()) {
           const command = new Command(new Dataset(this.dimseBuffer.toBuffer()));
@@ -385,114 +506,76 @@ class Network extends EventEmitter {
             case CommandFieldType.CFindResponse:
               this.dimse = Object.assign(new CFindResponse(), command);
               break;
+            case CommandFieldType.CStoreRequest:
+              this.dimse = Object.assign(new CStoreRequest(), command);
+              break;
             case CommandFieldType.CStoreResponse:
               this.dimse = Object.assign(new CStoreResponse(), command);
               break;
             case CommandFieldType.CMoveResponse:
               this.dimse = Object.assign(new CMoveResponse(), command);
               break;
+            case CommandFieldType.CGetResponse:
+              this.dimse = Object.assign(new CGetResponse(), command);
+              break;
             default:
               this.dimse = command;
               break;
           }
 
-          log.info(`${this.dimse.toString()} [pc: ${pdv.getPresentationContextId()}; id: ${this.dimse.getMessageIdBeingRespondedTo()}; status: ${this.dimse.getStatus()}]`);
+          log.info(`${this.dimse.toString()} [pc: ${pdv.getPresentationContextId()}]`);
 
           if (!this.dimse.hasDataset()) {
-            const response = Object.assign(Object.create(Object.getPrototypeOf(this.dimse)), this.dimse);
-            const request = this.requests.find(r => r.getMessageId() === this.dimse.getMessageIdBeingRespondedTo());
-            if (request) {
-              request.raiseResponseEvent(response);
-              if (response.getStatus() !== Status.Pending) {
-                request.raiseDoneEvent();
-              }
-            }
+            this._performDimse(this.dimse, presentationContext);
             this.dimse = undefined;
             return;
           }
           this.dimseBuffer = undefined;
         } else {
-          const dataset = new Dataset(this.dimseBuffer.toBuffer(), presentationContext.getAcceptedTransferSyntaxUid());
-          const response = Object.assign(Object.create(Object.getPrototypeOf(this.dimse)), this.dimse);
-          response.setDataset(dataset);
-
-          const request = this.requests.find(r => r.getMessageId() === this.dimse.getMessageIdBeingRespondedTo());
-          if (request) {
-            request.raiseResponseEvent(response);
-            if (response.getStatus() !== Status.Pending) {
-              request.raiseDoneEvent();
-            }
-          }
+          const dataset = new Dataset(
+            this.dimseBuffer.toBuffer(),
+            presentationContext.getAcceptedTransferSyntaxUid()
+          );
+          this.dimse.setDataset(dataset);
+          this._performDimse(this.dimse, presentationContext);
           this.dimseBuffer = undefined;
           this.dimse = undefined;
         }
       }
     });
   }
+
+  /**
+   * Perform DIMSE operation.
+   *
+   * @param {Object} dimse - DIMSE.
+   * @param {Object} presentationContext - Accepted presentation context.
+   */
+  _performDimse(dimse, presentationContext) {
+    if (dimse instanceof Response) {
+      const response = Object.assign(Object.create(Object.getPrototypeOf(dimse)), dimse);
+      const request = this.requests.find(
+        r => r.getMessageId() === dimse.getMessageIdBeingRespondedTo()
+      );
+      if (request) {
+        request.raiseResponseEvent(response);
+        if (response.getStatus() !== Status.Pending) {
+          request.raiseDoneEvent();
+        }
+      }
+      return;
+    }
+
+    if (dimse.getCommandFieldType() == CommandFieldType.CStoreRequest) {
+      const response = new CStoreResponse(Status.ProcessingFailure);
+      response.setMessageIdBeingRespondedTo(dimse.getMessageId());
+      response.setAffectedSopClassUid(dimse.getAffectedSopClassUid());
+      response.setAffectedSopInstanceUid(dimse.getAffectedSopInstanceUid());
+      this.emit('onCStoreRequest', dimse, response);
+      this._sendDimse({ context: presentationContext, command: response });
+    }
+  }
   //#endregion
-}
-//#endregion
-
-//#region PDataTFBuffer
-class PDataTFBuffer {
-  /**
-   * Creates an instance of PDataTFBuffer.
-   *
-   * @param {Object} socket - Network socket.
-   * @param {Number} pcId - Presentation context ID.
-   * @param {Number} maxPduLength - Maximum PDU length.
-   * @memberof Network
-   */
-  constructor(socket, pcId, maxPduLength) {
-    this.socket = socket;
-    this.pcId = pcId;
-    const max = 4 * 1024 * 1024;
-    this.maxPduLength = maxPduLength === 0 ? max : Math.min(maxPduLength, max);
-  }
-
-  /**
-   * Sends command.
-   *
-   * @param {Object} request - The requesting command.
-   * @memberof Network
-   */
-  sendCommand(request) {
-    const commandDataset = request.getCommandDataset();
-    const commandBuffer = commandDataset.getDenaturalizedDataset();
-    const pdv = new Pdv(this.pcId, commandBuffer, true, true);
-    const pDataTf = new PDataTF();
-    pDataTf.addPdv(pdv);
-
-    log.info(`${request.toString()} [pc: ${pdv.getPresentationContextId()}; id: ${request.getMessageId()}]`);
-
-    const pdu = pDataTf.write();
-    const buffer = pdu.writePdu();
-    this.socket.write(buffer);
-  }
-
-  /**
-   * Sends dataset.
-   *
-   * @param {Object} dataset - The requesting dataset.
-   * @memberof Network
-   */
-  sendDataset(dataset) {
-    const datasetBuffer = dataset.getDenaturalizedDataset();
-    const datasetBufferChunks = chunks(datasetBuffer, this.maxPduLength - 6);
-
-    const pdvs = [];
-    datasetBufferChunks.forEach(chunk => {
-      pdvs.push(new Pdv(this.pcId, chunk, false, datasetBufferChunks.length === pdvs.length + 1));
-    });
-
-    pdvs.forEach(pdv => {
-      const pDataTf = new PDataTF();
-      pDataTf.addPdv(pdv);
-      const pdu = pDataTf.write();
-      const buffer = pdu.writePdu();
-      this.socket.write(buffer);
-    });
-  }
 }
 //#endregion
 

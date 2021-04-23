@@ -18,7 +18,12 @@ class Dataset {
     dcmjsLog.level = 'error';
     this.transferSyntaxUid = transferSyntaxUid || TransferSyntax.ImplicitVRLittleEndian;
     if (Buffer.isBuffer(elementsOrBuffer)) {
-      var stream = new ReadBufferStream(elementsOrBuffer.buffer.slice(elementsOrBuffer.byteOffset, elementsOrBuffer.byteOffset + elementsOrBuffer.byteLength));
+      var stream = new ReadBufferStream(
+        elementsOrBuffer.buffer.slice(
+          elementsOrBuffer.byteOffset,
+          elementsOrBuffer.byteOffset + elementsOrBuffer.byteLength
+        )
+      );
       const denaturalizedDataset = DicomMessage.read(stream, this.transferSyntaxUid, true);
       const naturalizedDataset = DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
 

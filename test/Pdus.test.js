@@ -1,6 +1,19 @@
 const { Association } = require('./../src/Association');
-const { RawPdu, AAssociateRQ, AAssociateAC, AAssociateRJ, Pdv, PDataTF, AAbort } = require('../src/Pdu');
-const { Implementation, PresentationContextResult, SopClass, TransferSyntax } = require('./../src/Constants');
+const {
+  RawPdu,
+  AAssociateRQ,
+  AAssociateAC,
+  AAssociateRJ,
+  Pdv,
+  PDataTF,
+  AAbort
+} = require('../src/Pdu');
+const {
+  Implementation,
+  PresentationContextResult,
+  SopClass,
+  TransferSyntax
+} = require('./../src/Constants');
 
 const chai = require('chai');
 const expect = chai.expect;

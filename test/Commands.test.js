@@ -1,4 +1,18 @@
-const { Command, Request, Response, CEchoRequest, CEchoResponse, CFindRequest, CFindResponse, CMoveRequest, CMoveResponse, CStoreRequest, CStoreResponse } = require('./../src/Command');
+const {
+  Command,
+  Request,
+  Response,
+  CEchoRequest,
+  CEchoResponse,
+  CFindRequest,
+  CFindResponse,
+  CMoveRequest,
+  CMoveResponse,
+  CStoreRequest,
+  CStoreResponse,
+  CGetRequest,
+  CGetResponse
+} = require('./../src/Command');
 const Dataset = require('../src/Dataset');
 const { CommandFieldType, SopClass, TransferSyntax } = require('./../src/Constants');
 
@@ -66,7 +80,9 @@ describe('Command', () => {
     });
     const dataset = request.getDataset();
 
-    expect(request.getAffectedSopClassUid()).to.be.eq(SopClass.StudyRootQueryRetrieveInformationModelFind);
+    expect(request.getAffectedSopClassUid()).to.be.eq(
+      SopClass.StudyRootQueryRetrieveInformationModelFind
+    );
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CFindRequest);
     expect(request.hasDataset()).to.be.true;
     expect(dataset.getElement('PatientName')).to.be.eq('JOHN^DOE');
@@ -78,7 +94,9 @@ describe('Command', () => {
   it('should correctly create find response', () => {
     const response = new CFindResponse();
 
-    expect(response.getAffectedSopClassUid()).to.be.eq(SopClass.StudyRootQueryRetrieveInformationModelFind);
+    expect(response.getAffectedSopClassUid()).to.be.eq(
+      SopClass.StudyRootQueryRetrieveInformationModelFind
+    );
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CFindResponse);
     expect(response.hasDataset()).to.be.false;
   });
@@ -111,7 +129,7 @@ describe('Command', () => {
     expect(request.hasDataset()).to.be.true;
   });
 
-  it('should correctly create move response', () => {
+  it('should correctly create store response', () => {
     const response = new CStoreResponse();
 
     expect(response.getAffectedSopClassUid()).to.be.eq('');
@@ -124,7 +142,9 @@ describe('Command', () => {
     const dataset = request.getDataset();
     const commandDataset = request.getCommandDataset();
 
-    expect(request.getAffectedSopClassUid()).to.be.eq(SopClass.StudyRootQueryRetrieveInformationModelMove);
+    expect(request.getAffectedSopClassUid()).to.be.eq(
+      SopClass.StudyRootQueryRetrieveInformationModelMove
+    );
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CMoveRequest);
     expect(request.hasDataset()).to.be.true;
     expect(dataset.getElement('StudyInstanceUID')).to.be.eq('1.2.3.4.5.6.7.8.9');
@@ -135,8 +155,34 @@ describe('Command', () => {
   it('should correctly create move response', () => {
     const response = new CMoveResponse();
 
-    expect(response.getAffectedSopClassUid()).to.be.eq(SopClass.StudyRootQueryRetrieveInformationModelMove);
+    expect(response.getAffectedSopClassUid()).to.be.eq(
+      SopClass.StudyRootQueryRetrieveInformationModelMove
+    );
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CMoveResponse);
+    expect(response.hasDataset()).to.be.false;
+  });
+
+  it('should correctly create get request', () => {
+    const request = CGetRequest.createStudyGetRequest('1.2.3.4.5.6.7.8.9');
+    const dataset = request.getDataset();
+    const commandDataset = request.getCommandDataset();
+
+    expect(request.getAffectedSopClassUid()).to.be.eq(
+      SopClass.StudyRootQueryRetrieveInformationModelGet
+    );
+    expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CGetRequest);
+    expect(request.hasDataset()).to.be.true;
+    expect(dataset.getElement('StudyInstanceUID')).to.be.eq('1.2.3.4.5.6.7.8.9');
+    expect(dataset.getElement('QueryRetrieveLevel')).to.be.eq('STUDY');
+  });
+
+  it('should correctly create get response', () => {
+    const response = new CGetResponse();
+
+    expect(response.getAffectedSopClassUid()).to.be.eq(
+      SopClass.StudyRootQueryRetrieveInformationModelGet
+    );
+    expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CGetResponse);
     expect(response.hasDataset()).to.be.false;
   });
 });

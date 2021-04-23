@@ -1,6 +1,12 @@
 const { Association } = require('./../src/Association');
 const { Request } = require('../src/Command');
-const { CommandFieldType, SopClass, TransferSyntax, PresentationContextResult, Priority } = require('./../src/Constants');
+const {
+  CommandFieldType,
+  SopClass,
+  TransferSyntax,
+  PresentationContextResult,
+  Priority
+} = require('./../src/Constants');
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -57,7 +63,7 @@ describe('Association', () => {
     }).to.throw();
   });
 
-  it('should correctly add a presentation context from a request', () => {
+  it('should correctly add presentation context from request', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
 
@@ -75,7 +81,12 @@ describe('Association', () => {
     const calledAet = 'CALLEDAET';
 
     const association = new Association(callingAet, calledAet);
-    const request = new Request(CommandFieldType.CEchoRequest, SopClass.Verification, Priority.High, false);
+    const request = new Request(
+      CommandFieldType.CEchoRequest,
+      SopClass.Verification,
+      Priority.High,
+      false
+    );
     let pcId = association.addPresentationContextFromRequest(request);
     const context = association.getPresentationContext(pcId);
     context.setResult(PresentationContextResult.Accept, TransferSyntax.ExplicitVRLittleEndian);

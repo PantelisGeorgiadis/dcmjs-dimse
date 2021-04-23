@@ -31,9 +31,9 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```js
 const client = new Client();
 const request = CFindRequest.createStudyFindRequest({ PatientID: '12345', PatientName: '*' });
-request.on('response', request => {
-  if (request.getStatus() === Status.Pending && request.hasDataset()) {
-    console.log(request.getDataset());
+request.on('response', response => {
+  if (response.getStatus() === Status.Pending && response.hasDataset()) {
+    console.log(response.getDataset());
   }
 });
 client.addRequest(request);
@@ -44,9 +44,9 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```js
 const client = new Client();
 const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
-request.on('response', request => {
-  if (request.getStatus() === Status.Pending && request.hasDataset()) {
-    console.log(request.getDataset());
+request.on('response', response => {
+  if (response.getStatus() === Status.Pending && response.hasDataset()) {
+    console.log(response.getDataset());
   }
 });
 client.addRequest(request);
@@ -72,6 +72,26 @@ request.on('response', response => {
     console.log('Warning: ' + response.getWarnings());
     console.log('Failed: ' + response.getFailures());
   }
+});
+client.addRequest(request);
+client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
+```
+
+#### C-Get SCU
+```js
+const client = new Client();
+const request = CGetRequest.createStudyGetRequest(studyInstanceUid);
+request.on('response', response => {
+  if (response.getStatus() === Status.Pending) {
+    console.log('Remaining: ' + response.getRemaining());
+    console.log('Completed: ' + response.getCompleted());
+    console.log('Warning: ' + response.getWarnings());
+    console.log('Failed: ' + response.getFailures());
+  }
+});
+client.on('onCStoreRequest', (request, response) => {
+  console.log(request.getDataset());
+  response.setStatus(Status.Success);
 });
 client.addRequest(request);
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');

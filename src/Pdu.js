@@ -110,7 +110,9 @@ class RawPdu {
     const offset = this.buffer.readOffset;
     const length = this.buffer.length;
     if (offset + bytes > length) {
-      throw new Error(`${toString()} (length=${length}, offset=${offset}, bytes=${bytes}, field=${name}) Requested offset out of range!`);
+      throw new Error(
+        `${toString()} (length=${length}, offset=${offset}, bytes=${bytes}, field=${name}) Requested offset out of range!`
+      );
     }
   }
 
@@ -506,7 +508,9 @@ class AAssociateRQ {
           if (ut == 0x51) {
             this.association.setMaxPduLength(pdu.readUInt32('Max PDU Length'));
           } else if (ut === 0x52) {
-            this.association.setImplementationClassUid(pdu.readString('Implementation Class UID', ul));
+            this.association.setImplementationClassUid(
+              pdu.readString('Implementation Class UID', ul)
+            );
           } else if (ut === 0x55) {
             this.association.setImplementationVersion(pdu.readString('Implementation Version', ul));
           } else {
@@ -580,7 +584,10 @@ class AAssociateAC {
       pdu.writeByte('Item-Type', 0x40);
       pdu.writeByte('Reserved', 0x00);
       pdu.markLength16('Item-Length');
-      pdu.writeString('Transfer Syntax UID', context.getAcceptedTransferSyntaxUid() || '1.2.840.10008.1.2');
+      pdu.writeString(
+        'Transfer Syntax UID',
+        context.getAcceptedTransferSyntaxUid() || '1.2.840.10008.1.2'
+      );
       pdu.writeLength16();
 
       pdu.writeLength16();
@@ -683,7 +690,9 @@ class AAssociateAC {
           if (ut === 0x51) {
             this.association.setMaxPduLength(pdu.readUInt32('Max PDU Length'));
           } else if (ut === 0x52) {
-            this.association.setImplementationClassUid(pdu.readString('Implementation Class UID', ul));
+            this.association.setImplementationClassUid(
+              pdu.readString('Implementation Class UID', ul)
+            );
           } else if (ut === 0x55) {
             this.association.setImplementationVersion(pdu.readString('Implementation Version', ul));
           } else {

@@ -2,14 +2,17 @@ const { Association } = require('./Association');
 const Network = require('./Network');
 const { Request } = require('./Command');
 
+const { EventEmitter } = require('events');
+
 //#region Client
-class Client {
+class Client extends EventEmitter {
   /**
    * Creates an instance of Client.
    *
    * @memberof Client
    */
   constructor() {
+    super();
     this.requests = [];
   }
 
@@ -73,11 +76,16 @@ class Client {
     network.on('done', () => {
       network.release();
     });
+    network.on('onCStoreRequest', (request, response) => {
+      this.emit('onCStoreRequest', request, response);
+    });
     network.on('associationReleaseResponse', () => {
       network.close();
     });
     network.on('associationRejected', (result, source, reason) => {
-      throw new Error(`Association rejected. Result: ${result}, source: ${source}, reason: ${reason}`);
+      throw new Error(
+        `Association rejected. Result: ${result}, source: ${source}, reason: ${reason}`
+      );
     });
     network.on('error', err => {
       throw err;

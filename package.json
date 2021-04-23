@@ -15,7 +15,7 @@
     "dev:examples": "nodemon examples/index.js",
     "start:examples": "node examples/index.js",
     "test": "mocha 'test/**/*.test.js'",
-    "lint": "eslint -c .eslintrc.json --fix src && prettier --tab-width 2 --single-quote true --print-width 200 --use-tabs false --write src/**/*.js test/**/*.js examples/**/*.js"
+    "lint": "eslint -c .eslintrc.json --fix src && prettier --tab-width 2 --single-quote true --print-width 100 --use-tabs false --write src/**/*.js test/**/*.js examples/**/*.js"
   },
   "repository": {
     "type": "git",

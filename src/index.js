@@ -1,6 +1,27 @@
 const Client = require('./Client');
-const { CEchoRequest, CEchoResponse, CFindRequest, CFindResponse, CStoreRequest, CStoreResponse, CMoveRequest, CMoveResponse } = require('./Command');
-const { CommandFieldType, PresentationContextResult, Priority, Status, Uid, SopClass, TransferSyntax, Implementation } = require('./Constants');
+const {
+  CEchoRequest,
+  CEchoResponse,
+  CFindRequest,
+  CFindResponse,
+  CStoreRequest,
+  CStoreResponse,
+  CMoveRequest,
+  CMoveResponse,
+  CGetRequest,
+  CGetResponse
+} = require('./Command');
+const {
+  CommandFieldType,
+  PresentationContextResult,
+  Priority,
+  Status,
+  Uid,
+  StorageClass,
+  SopClass,
+  TransferSyntax,
+  Implementation
+} = require('./Constants');
 const log = require('./log');
 
 //#region requests
@@ -8,7 +29,8 @@ const requests = {
   CEchoRequest,
   CFindRequest,
   CStoreRequest,
-  CMoveRequest
+  CMoveRequest,
+  CGetRequest
 };
 //#endregion
 
@@ -17,7 +39,8 @@ const responses = {
   CEchoResponse,
   CFindResponse,
   CStoreResponse,
-  CMoveResponse
+  CMoveResponse,
+  CGetResponse
 };
 //#endregion
 
@@ -28,13 +51,14 @@ const constants = {
   Priority,
   Status,
   Uid,
+  StorageClass,
   SopClass,
   TransferSyntax,
   Implementation
 };
 //#endregion
 
-const dcmjsDimse = {
+const DcmjsDimse = {
   Client,
   requests,
   responses,
@@ -43,5 +67,5 @@ const dcmjsDimse = {
 };
 
 //#region Exports
-module.exports = dcmjsDimse;
+module.exports = DcmjsDimse;
 //#endregion
