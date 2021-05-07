@@ -12,12 +12,11 @@ const {
 class PresentationContext {
   /**
    * Creates an instance of PresentationContext.
-   *
-   * @param {Number} pcId - Presentation context ID.
-   * @param {String} abstractSyntaxUid - Abstract syntax UID.
-   * @param {String} transferSyntaxUid - Transfer syntax UID.
-   * @param {Number} result - Presentation context result.
-   * @memberof PresentationContext
+   * @constructor
+   * @param {number} pcId - Presentation context ID.
+   * @param {string} abstractSyntaxUid - Abstract syntax UID.
+   * @param {string} [transferSyntaxUid] - Transfer syntax UID.
+   * @param {number} [result] - Presentation context result.
    */
   constructor(pcId, abstractSyntaxUid, transferSyntaxUid, result) {
     this.pcId = pcId;
@@ -26,17 +25,13 @@ class PresentationContext {
     if (transferSyntaxUid) {
       this.transferSyntaxes.push(transferSyntaxUid);
     }
-    this.result = result;
-    if (!this.result) {
-      this.result = PresentationContextResult.Proposed;
-    }
+    this.result = result || PresentationContextResult.Proposed;
   }
 
   /**
    * Gets presentation context ID.
-   *
-   * @returns {Number} Presentation context ID.
-   * @memberof PresentationContext
+   * @method
+   * @returns {number} Presentation context ID.
    */
   getPresentationContextId() {
     return this.pcId;
@@ -44,9 +39,8 @@ class PresentationContext {
 
   /**
    * Gets abstract syntax UID.
-   *
-   * @returns {String} Abstract syntax UID.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Abstract syntax UID.
    */
   getAbstractSyntaxUid() {
     return this.abstractSyntaxUid;
@@ -54,19 +48,17 @@ class PresentationContext {
 
   /**
    * Gets transfer syntax UIDs.
-   *
-   * @returns {Array} Transfer syntax UIDs.
-   * @memberof PresentationContext
+   * @method
+   * @returns {Array<string>} Transfer syntax UIDs.
    */
   getTransferSyntaxUids() {
     return this.transferSyntaxes;
   }
 
   /**
-   * Add transfer syntax UIDs.
-   *
-   * @param {String} transferSyntaxUid - Transfer syntax UIDs.
-   * @memberof PresentationContext
+   * Add transfer syntax UID.
+   * @method
+   * @param {string} transferSyntaxUid - Transfer syntax UID.
    */
   addTransferSyntaxUid(transferSyntaxUid) {
     if (this.transferSyntaxes.includes(transferSyntaxUid)) {
@@ -77,9 +69,8 @@ class PresentationContext {
 
   /**
    * Gets the accepted transfer syntax UID.
-   *
-   * @returns {String} Transfer syntax UID.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Transfer syntax UID.
    */
   getAcceptedTransferSyntaxUid() {
     return this.transferSyntaxes.length > 0 ? this.transferSyntaxes[0] : undefined;
@@ -87,9 +78,8 @@ class PresentationContext {
 
   /**
    * Gets the presentation context result.
-   *
-   * @returns {Number} Result.
-   * @memberof PresentationContext
+   * @method
+   * @returns {number} Result.
    */
   getResult() {
     return this.result;
@@ -97,28 +87,28 @@ class PresentationContext {
 
   /**
    * Sets the presentation context result.
-   *
-   * @param {Number} result - Result.
-   * @param {String} acceptedTransferSyntax - Accepted transfer syntax UID.
-   * @memberof PresentationContext
+   * @method
+   * @param {number} result - Result.
+   * @param {string} acceptedTransferSyntax - Accepted transfer syntax UID.
    */
   setResult(result, acceptedTransferSyntaxUid) {
     this.result = result;
+    const transferSyntaxes = [...this.transferSyntaxes];
     this.transferSyntaxes.length = 0;
 
     if (acceptedTransferSyntaxUid) {
       this.transferSyntaxes.push(acceptedTransferSyntaxUid);
     } else {
-      if (this.transferSyntaxes.length > 0) {
-        this.transferSyntaxes.push(this.transferSyntaxes[0]);
+      if (transferSyntaxes.length > 0) {
+        this.transferSyntaxes.push(transferSyntaxes[0]);
       }
     }
   }
 
   /**
    * Gets the presentation context result description.
-   *
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Presentation context result description.
    */
   getResultDescription() {
     switch (this.result) {
@@ -145,10 +135,9 @@ class PresentationContext {
 class Association {
   /**
    * Creates an instance of Association.
-   *
-   * @param {String} callingAeTitle - Local AE title.
-   * @param {String} calledAeTitle - Remote AE title.
-   * @memberof Association
+   * @constructor
+   * @param {string} callingAeTitle - Local AE title.
+   * @param {string} calledAeTitle - Remote AE title.
    */
   constructor(callingAeTitle, calledAeTitle) {
     this.callingAeTitle = callingAeTitle;
@@ -162,9 +151,8 @@ class Association {
 
   /**
    * Gets the calling AE title.
-   *
-   * @returns {String} Calling AE title.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Calling AE title.
    */
   getCallingAeTitle() {
     return this.callingAeTitle;
@@ -172,9 +160,8 @@ class Association {
 
   /**
    * Sets the calling AE title.
-   *
-   * @param {String} aet - Calling AE title.
-   * @memberof PresentationContext
+   * @method
+   * @param {string} aet - Calling AE title.
    */
   setCallingAeTitle(aet) {
     this.callingAeTitle = aet;
@@ -182,9 +169,8 @@ class Association {
 
   /**
    * Gets the called AE title.
-   *
-   * @returns {String} Called AE title.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Called AE title.
    */
   getCalledAeTitle() {
     return this.calledAeTitle;
@@ -192,9 +178,8 @@ class Association {
 
   /**
    * Sets the called AE title.
-   *
-   * @param {String} aet - Called AE title.
-   * @memberof PresentationContext
+   * @method
+   * @param {string} aet - Called AE title.
    */
   setCalledAeTitle(aet) {
     this.calledAeTitle = aet;
@@ -202,9 +187,8 @@ class Association {
 
   /**
    * Gets maximum PDU length.
-   *
-   * @returns {Number} Maximum PDU length.
-   * @memberof PresentationContext
+   * @method
+   * @returns {number} Maximum PDU length.
    */
   getMaxPduLength() {
     return this.maxPduLength;
@@ -212,9 +196,8 @@ class Association {
 
   /**
    * Sets maximum PDU length.
-   *
-   * @param {Number} maxPduLength - Maximum PDU length.
-   * @memberof PresentationContext
+   * @method
+   * @param {number} maxPduLength - Maximum PDU length.
    */
   setMaxPduLength(maxPduLength) {
     this.maxPduLength = maxPduLength;
@@ -222,9 +205,8 @@ class Association {
 
   /**
    * Gets the application context name.
-   *
-   * @returns {String} Application context name.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Application context name.
    */
   getApplicationContextName() {
     return this.applicationContextName;
@@ -232,9 +214,8 @@ class Association {
 
   /**
    * Gets the implementation class UID.
-   *
-   * @returns {String} Implementation class UID.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Implementation class UID.
    */
   getImplementationClassUid() {
     return this.implementationClassUid;
@@ -242,9 +223,8 @@ class Association {
 
   /**
    * Sets the implementation class UID.
-   *
-   * @param {String} uid - Implementation class UID.
-   * @memberof PresentationContext
+   * @method
+   * @param {string} uid - Implementation class UID.
    */
   setImplementationClassUid(uid) {
     this.implementationClassUid = uid;
@@ -252,9 +232,8 @@ class Association {
 
   /**
    * Gets the implementation version.
-   *
-   * @returns {String} Implementation version.
-   * @memberof PresentationContext
+   * @method
+   * @returns {string} Implementation version.
    */
   getImplementationVersion() {
     return this.implementationVersion;
@@ -262,9 +241,8 @@ class Association {
 
   /**
    * Sets the implementation version.
-   *
-   * @param {String} version - Implementation version.
-   * @memberof PresentationContext
+   * @method
+   * @param {string} version - Implementation version.
    */
   setImplementationVersion(version) {
     this.implementationVersion = version;
@@ -272,11 +250,10 @@ class Association {
 
   /**
    * Adds presentation context to association.
-   *
-   * @param {String} abstractSyntaxUid - Abstract Syntax UID.
-   * @param {Number} presentationContextId - Presentation context ID.
-   * @returns {Number} Presentation context ID.
-   * @memberof Association
+   * @method
+   * @param {string} abstractSyntaxUid - Abstract Syntax UID.
+   * @param {number} [presentationContextId] - Presentation context ID.
+   * @returns {number} Presentation context ID.
    */
   addPresentationContext(abstractSyntaxUid, presentationContextId) {
     let pcId = presentationContextId || 1;
@@ -296,10 +273,9 @@ class Association {
 
   /**
    * Adds transfer syntax to presentation context.
-   *
-   * @param {Number} pcId - Presentation context ID.
-   * @param {String} transferSyntaxUid - Transfer Syntax UID.
-   * @memberof Association
+   * @method
+   * @param {number} pcId - Presentation context ID.
+   * @param {string} transferSyntaxUid - Transfer Syntax UID.
    */
   addTransferSyntaxToPresentationContext(pcId, transferSyntaxUid) {
     const context = this.getPresentationContext(pcId);
@@ -308,10 +284,10 @@ class Association {
 
   /**
    * Gets presentation context.
-   *
-   * @param {Number} pcId - Presentation context ID.
-   * @returns {Object} Presentation context.
-   * @memberof Association
+   * @method
+   * @param {number} pcId - Presentation context ID.
+   * @returns {PresentationContext} Presentation context.
+   * @throws Error if presentation context ID is not found within the presentation contexts collection.
    */
   getPresentationContext(pcId) {
     const presentationContext = this.presentationContexts.find(p => p.id === pcId);
@@ -324,9 +300,8 @@ class Association {
 
   /**
    * Gets presentation contexts.
-   *
-   * @returns {Array} Presentation contexts.
-   * @memberof Association
+   * @method
+   * @returns {Array<{id: number, context: PresentationContext}>} Presentation contexts.
    */
   getPresentationContexts() {
     return this.presentationContexts;
@@ -334,10 +309,9 @@ class Association {
 
   /**
    * Adds presentation context from request.
-   *
-   * @param {Object} request - Request.
-   * @returns {Number} Presentation context ID.
-   * @memberof Association
+   * @method
+   * @param {Request} request - Request.
+   * @returns {number} Presentation context ID.
    */
   addPresentationContextFromRequest(request) {
     const sopClassUid = request.getAffectedSopClassUid();
@@ -361,7 +335,7 @@ class Association {
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
 
       // Add an extra presentation context with any encapsulated transfer syntax
-      // to allow bitstream.
+      // to allow bit-stream.
       const dataset = request.getDataset();
       const transferSyntaxUid = dataset.getTransferSyntaxUid();
       if (
@@ -398,9 +372,8 @@ class Association {
 
   /**
    * Gets accepted presentation context from request.
-   *
-   * @return {Object} request - Presentation context.
-   * @memberof Association
+   * @method
+   * @return {PresentationContext} Presentation context.
    */
   getAcceptedPresentationContextFromRequest(request) {
     let acceptedContext = undefined;
@@ -414,13 +387,14 @@ class Association {
         acceptedContext = context;
       }
     });
+
     return acceptedContext;
   }
 
   /**
    * Gets the association description.
-   *
-   * @memberof Association
+   * @method
+   * @return {string} Association description.
    */
   toString() {
     const str = [];
@@ -454,10 +428,11 @@ class Association {
   //#region Private Methods
   /**
    * Gets UID name from UID value.
-   *
+   * @method
+   * @private
    * @param {Object|Array} uids - UID object(s).
-   * @param {String} uid - UID value.
-   * @returns {String} UID name.
+   * @param {string} uid - UID value.
+   * @returns {string} UID name.
    */
   _uidNameFromValue(uids, uid) {
     const mergedUids = Array.isArray(uids) ? Object.assign({}, ...uids) : uids;

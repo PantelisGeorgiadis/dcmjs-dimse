@@ -5,20 +5,20 @@ const dcmjs = require('dcmjs');
 const { DicomMetaDictionary, DicomMessage, ReadBufferStream, WriteBufferStream } = dcmjs.data;
 const dcmjsLog = dcmjs.log;
 
-//#region Command
+//#region Dataset
 class Dataset {
   /**
    * Creates an instance of Dataset.
-   * @param {Object|Buffer} elementsOrBuffer - Dataset elements as object or encoded as a DICOM dataset buffer.
-   * @param {String} transferSyntaxUid - Dataset transfer syntax
-   *
-   * @memberof Dataset
+   * @constructor
+   * @param {Object|Buffer} [elementsOrBuffer] - Dataset elements as object or encoded as a DICOM dataset buffer.
+   * @param {string} [transferSyntaxUid] - Dataset transfer syntax
    */
   constructor(elementsOrBuffer, transferSyntaxUid) {
     dcmjsLog.level = 'error';
+
     this.transferSyntaxUid = transferSyntaxUid || TransferSyntax.ImplicitVRLittleEndian;
     if (Buffer.isBuffer(elementsOrBuffer)) {
-      var stream = new ReadBufferStream(
+      const stream = new ReadBufferStream(
         elementsOrBuffer.buffer.slice(
           elementsOrBuffer.byteOffset,
           elementsOrBuffer.byteOffset + elementsOrBuffer.byteLength
@@ -34,18 +34,14 @@ class Dataset {
       return;
     }
 
-    this.elements = elementsOrBuffer;
-    if (!this.elements) {
-      this.elements = {};
-    }
+    this.elements = elementsOrBuffer || {};
   }
 
   /**
    * Gets element value.
-   *
-   * @param {String} tag - Element tag.
-   * @returns {String} Element value.
-   * @memberof Dataset
+   * @method
+   * @param {string} tag - Element tag.
+   * @returns {string} Element value.
    */
   getElement(tag) {
     return this.elements[tag];
@@ -53,10 +49,9 @@ class Dataset {
 
   /**
    * Sets element value.
-   *
-   * @param {String} tag - Element tag.
-   * @param {String} value - Element value.
-   * @memberof Dataset
+   * @method
+   * @param {string} tag - Element tag.
+   * @param {string} value - Element value.
    */
   setElement(tag, value) {
     this.elements[tag] = value;
@@ -64,9 +59,8 @@ class Dataset {
 
   /**
    * Gets all elements.
-   *
+   * @method
    * @returns {Object} Elements.
-   * @memberof Dataset
    */
   getElements() {
     return this.elements;
@@ -74,9 +68,8 @@ class Dataset {
 
   /**
    * Gets DICOM transfer syntax UID.
-   *
-   * @returns {String} Transfer syntax UID.
-   * @memberof Dataset
+   * @method
+   * @returns {string} Transfer syntax UID.
    */
   getTransferSyntaxUid() {
     return this.transferSyntaxUid;
@@ -84,9 +77,8 @@ class Dataset {
 
   /**
    * Sets DICOM transfer syntax UID.
-   *
-   * @param {String} transferSyntaxUid - Transfer Syntax UID.
-   * @memberof Dataset
+   * @method
+   * @param {string} transferSyntaxUid - Transfer Syntax UID.
    */
   setTransferSyntaxUid(transferSyntaxUid) {
     this.transferSyntaxUid = transferSyntaxUid;
@@ -94,14 +86,13 @@ class Dataset {
 
   /**
    * Gets elements encoded in a DICOM dataset buffer.
-   *
-   * @param {String} transferSyntaxUid - Transfer Syntax UID.
+   * @method
+   * @param {string} transferSyntaxUid - Transfer Syntax UID.
    * @returns {Buffer} DICOM dataset.
-   * @memberof Dataset
    */
   getDenaturalizedDataset() {
     const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
-    var stream = new WriteBufferStream();
+    const stream = new WriteBufferStream();
     DicomMessage.write(denaturalizedDataset, stream, this.transferSyntaxUid, {});
 
     return Buffer.from(stream.getBuffer());
@@ -109,10 +100,10 @@ class Dataset {
 
   /**
    * Loads a dataset from p10 file.
-   *
-   * @param {String} path - P10 file path.
-   * @returns {Object} Dataset.
-   * @memberof Dataset
+   * @method
+   * @static
+   * @param {string} path - P10 file path.
+   * @returns {Dataset} Dataset.
    */
   static fromFile(path) {
     const fileBuffer = fs.readFileSync(path);
@@ -126,8 +117,8 @@ class Dataset {
 
   /**
    * Gets the dataset description.
-   *
-   * @memberof Dataset
+   * @method
+   * @returns {string} Dataset description.
    */
   toString() {
     const str = [];

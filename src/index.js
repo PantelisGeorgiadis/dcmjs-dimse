@@ -1,4 +1,6 @@
+const Dataset = require('./Dataset');
 const Client = require('./Client');
+const { Server, Scp } = require('./Server');
 const {
   CEchoRequest,
   CEchoResponse,
@@ -14,6 +16,11 @@ const {
 const {
   CommandFieldType,
   PresentationContextResult,
+  AbortSource,
+  AbortReason,
+  RejectResult,
+  RejectSource,
+  RejectReason,
   Priority,
   Status,
   Uid,
@@ -48,6 +55,11 @@ const responses = {
 const constants = {
   CommandFieldType,
   PresentationContextResult,
+  AbortSource,
+  AbortReason,
+  RejectResult,
+  RejectSource,
+  RejectReason,
   Priority,
   Status,
   Uid,
@@ -59,7 +71,10 @@ const constants = {
 //#endregion
 
 const DcmjsDimse = {
+  Dataset,
   Client,
+  Server,
+  Scp,
   requests,
   responses,
   constants,

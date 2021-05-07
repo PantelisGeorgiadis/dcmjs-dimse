@@ -12,6 +12,12 @@ Part of the networking code was taken from [dicom-dimse](https://github.com/OHIF
 	npm install
 	npm run build
 
+### Run examples
+
+	npm install
+	npm run build
+	npm run start:examples
+
 ### Usage
 
 #### C-Echo SCU
@@ -89,12 +95,97 @@ request.on('response', response => {
     console.log('Failed: ' + response.getFailures());
   }
 });
-client.on('onCStoreRequest', (request, response) => {
-  console.log(request.getDataset());
-  response.setStatus(Status.Success);
+client.on('cStoreRequest', e => {
+  console.log(e.request.getDataset());
+
+  e.response = CStoreResponse.fromRequest(e.request);
+  e.response.setStatus(Status.Success);
 });
 client.addRequest(request);
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
+```
+
+#### SCP
+```js
+class DcmjsDimseScp extends Scp {
+  constructor(socket, opts) {
+    super(socket, opts);
+    this.association = undefined;
+  }
+
+  // Handle incoming association requests
+  associationRequested(association) {
+    this.association = association;
+
+    // Evaluate calling/called AET and reject association, if needed
+    if (this.association.getCallingAeTitle() !== 'SCU') {
+      this.sendAssociationReject(
+        RejectResult.Permanent,
+        RejectSource.ServiceUser,
+        RejectReason.CallingAeNotRecognized
+      );
+      return;
+    }
+
+    const contexts = association.getPresentationContexts();
+    contexts.forEach(c => {
+      const context = association.getPresentationContext(c.id);
+      if (
+        context.getAbstractSyntaxUid() === SopClass.Verification ||
+        context.getAbstractSyntaxUid() === SopClass.StudyRootQueryRetrieveInformationModelFind ||
+        context.getAbstractSyntaxUid() === StorageClass.MrImageStorage
+        // Accept other presentation contexts, as needed
+      ) {
+        context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
+      } else {
+        context.setResult(PresentationContextResult.RejectAbstractSyntaxNotSupported);
+      }
+    });
+    this.sendAssociationAccept();
+  }
+
+  // Handle incoming C-ECHO requests
+  cEchoRequest(request) {
+    const response = CEchoResponse.fromRequest(request);
+    response.setStatus(Status.Success);
+    
+    return response;
+  }
+
+  // Handle incoming C-FIND requests
+  cFindRequest(request) {
+    console.log(request.getDataset());
+
+    const pendingResponse = CFindResponse.fromRequest(request);
+    pendingResponse.setDataset(new Dataset({ PatientID: '12345', PatientName: 'JOHN^DOE' }));
+    pendingResponse.setStatus(Status.Pending);
+
+    const finalResponse = CFindResponse.fromRequest(request);
+    finalResponse.setStatus(Status.Success);
+
+    return [pendingResponse, finalResponse];
+  }
+
+  // Handle incoming C-STORE requests
+  cStoreRequest(request) {
+    console.log(request.getDataset());
+
+    const response = CStoreResponse.fromRequest(request);
+    response.setStatus(Status.Success);
+    return response;
+  }
+
+  // Handle incoming association release requests
+  associationReleaseRequested() {
+    this.sendAssociationReleaseResponse();
+  }
+}
+
+const server = new Server(DcmjsDimseScp);
+server.listen(port);
+
+// When done
+server.close();
 ```
 
 ### License

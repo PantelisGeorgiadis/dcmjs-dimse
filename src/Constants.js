@@ -1,4 +1,8 @@
 //#region CommandFieldType
+/**
+ * Command field types.
+ * @constant {Object}
+ */
 const CommandFieldType = {
   CStoreRequest: 0x0001,
   CStoreResponse: 0x8001,
@@ -27,6 +31,10 @@ const CommandFieldType = {
 //#endregion
 
 //#region PresentationContextResult
+/**
+ * Presentation context results.
+ * @constant {Object}
+ */
 const PresentationContextResult = {
   Proposed: 255,
   Accept: 0,
@@ -37,7 +45,80 @@ const PresentationContextResult = {
 };
 //#endregion
 
+//#region AbortSource
+/**
+ * Abort sources.
+ * @constant {Object}
+ */
+const AbortSource = {
+  Unknown: 0,
+  ServiceUser: 1,
+  ServiceProvider: 2
+};
+//#endregion
+
+//#region AbortReason
+/**
+ * Abort reasons.
+ * @constant {Object}
+ */
+const AbortReason = {
+  Unknown: 0,
+  ServiceUser: 1,
+  ServiceProvider: 2
+};
+//#endregion
+
+//#region RejectResult
+/**
+ * Reject results.
+ * @constant {Object}
+ */
+const RejectResult = {
+  NotSpecified: 0,
+  UnrecognizedPdu: 1,
+  UnexpectedPdu: 2,
+  UnrecognizedPduParameter: 4,
+  UnexpectedPduParameter: 5,
+  InvalidPduParameter: 6
+};
+//#endregion
+
+//#region RejectSource
+/**
+ * Reject sources.
+ * @constant {Object}
+ */
+const RejectSource = {
+  ServiceUser: 1,
+  ServiceProviderAcse: 2,
+  ServiceProviderPresentation: 3
+};
+//#endregion
+
+//#region RejectReason
+/**
+ * Reject reasons.
+ * @constant {Object}
+ */
+const RejectReason = {
+  // Service user
+  NoReasonGiven: 1,
+  ApplicationContextNotSupported: 2,
+  CallingAeNotRecognized: 3,
+  CalledAeNotRecognized: 7,
+  // Service provider
+  ProtocolVersionNotSupported: 1,
+  TemporaryCongestion: 1,
+  LocalLimitExceeded: 2
+};
+//#endregion
+
 //#region Priority
+/**
+ * Priority.
+ * @constant {Object}
+ */
 const Priority = {
   Low: 0x0002,
   Medium: 0x0000,
@@ -46,6 +127,10 @@ const Priority = {
 //#endregion
 
 //#region Status
+/**
+ * Statuses.
+ * @constant {Object}
+ */
 const Status = {
   Success: 0x0000,
   Cancel: 0xfe00,
@@ -72,12 +157,20 @@ const Status = {
 //#endregion
 
 //#region Uid
+/**
+ * UIDs.
+ * @constant {Object}
+ */
 const Uid = {
   ApplicationContextName: '1.2.840.10008.3.1.1.1'
 };
 //#endregion
 
 //#region StorageClass
+/**
+ * Storage classes.
+ * @constant {Object}
+ */
 const StorageClass = {
   BasicTextSrStorage: '1.2.840.10008.5.1.4.1.1.88.11',
   BreastProjectionXRayImageStorageForPresentation: '1.2.840.10008.5.1.4.1.1.13.1.4',
@@ -144,6 +237,10 @@ const StorageClass = {
 //#endregion
 
 //#region SopClass
+/**
+ * SOP classes.
+ * @constant {Object}
+ */
 const SopClass = {
   Verification: '1.2.840.10008.1.1',
   StudyRootQueryRetrieveInformationModelFind: '1.2.840.10008.5.1.4.1.2.2.1',
@@ -154,6 +251,10 @@ const SopClass = {
 //#endregion
 
 //#region TransferSyntax
+/**
+ * Transfer syntaxes.
+ * @constant {Object}
+ */
 const TransferSyntax = {
   ImplicitVRLittleEndian: '1.2.840.10008.1.2',
   ExplicitVRLittleEndian: '1.2.840.10008.1.2.1'
@@ -161,6 +262,10 @@ const TransferSyntax = {
 //#endregion
 
 //#region Implementation
+/**
+ * Implementation information.
+ * @constant {Object}
+ */
 const Implementation = {
   ImplementationClassUid: '1.3.6.1.4.1.41293.8',
   ImplementationVersion: 'DCMJS-DIMSE-V0.1',
@@ -172,6 +277,11 @@ const Implementation = {
 module.exports = {
   CommandFieldType,
   PresentationContextResult,
+  AbortSource,
+  AbortReason,
+  RejectResult,
+  RejectSource,
+  RejectReason,
   Priority,
   Status,
   Uid,

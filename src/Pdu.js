@@ -1,19 +1,27 @@
+const {
+  RejectResult,
+  RejectSource,
+  RejectReason,
+  AbortSource,
+  AbortReason,
+  TransferSyntax
+} = require('./Constants');
+
 const { SmartBuffer } = require('smart-buffer');
 
 //#region RawPdu
 class RawPdu {
   /**
    * Creates an instance of Pdu for reading or writing PDUs.
-   *
+   * @constructor
    * @param {Number|Buffer} typeOrBuffer - Type of PDU or PDU Buffer.
-   * @memberof RawPdu
    */
   constructor(typeOrBuffer) {
     this.m16 = [];
     this.m32 = [];
 
     if (Buffer.isBuffer(typeOrBuffer)) {
-      this.buffer = SmartBuffer.fromBuffer(typeOrBuffer);
+      this.buffer = SmartBuffer.fromBuffer(typeOrBuffer, 'ascii');
       this.type = this.buffer.readUInt8();
       return;
     }
@@ -26,9 +34,8 @@ class RawPdu {
 
   /**
    * Gets the PDU type.
-   *
-   * @returns {Number} PDU type.
-   * @memberof RawPdu
+   * @method
+   * @returns {number} PDU type.
    */
   getType() {
     return this.type;
@@ -36,9 +43,8 @@ class RawPdu {
 
   /**
    * Gets the PDU length.
-   *
-   * @returns {Number} PDU length.
-   * @memberof RawPdu
+   * @method
+   * @returns {number} PDU length.
    */
   getLength() {
     return this.buffer.length;
@@ -46,9 +52,8 @@ class RawPdu {
 
   /**
    * Gets the PDU description.
-   *
-   * @returns {String} PDU description.
-   * @memberof RawPdu
+   * @method
+   * @returns {string} PDU description.
    */
   toString() {
     return `PDU [type=${this.getType()}, length=${this.getLength()}]`;
@@ -56,8 +61,7 @@ class RawPdu {
 
   /**
    * Resets PDU read buffer.
-   *
-   * @memberof RawPdu
+   * @method
    */
   reset() {
     this.buffer.readOffset = 0;
@@ -66,21 +70,19 @@ class RawPdu {
 
   /**
    * Reads PDU.
-   *
-   * @memberof RawPdu
+   * @method
    */
   readPdu() {
     this.buffer.readUInt8();
     const len = this.buffer.readUInt32BE();
     const data = this.buffer.readBuffer(len);
-    this.buffer = SmartBuffer.fromBuffer(data);
+    this.buffer = SmartBuffer.fromBuffer(data, 'ascii');
   }
 
   /**
    * Writes PDU type and length.
-   *
+   * @method
    * @returns {Buffer} PDU buffer with type and length.
-   * @memberof RawPdu
    */
   writePdu() {
     const outBuffer = SmartBuffer.fromOptions({
@@ -101,10 +103,10 @@ class RawPdu {
 
   /**
    * Checks if the reading bytes exceed the PDU length.
-   *
-   * @param {Number} bytes - Number of bytes to read.
-   * @param {String} name - Field name to read.
-   * @memberof RawPdu
+   * @method
+   * @param {number} bytes - Number of bytes to read.
+   * @param {string} name - Field name to read.
+   * @throws Error if bytes to read are exceeding buffer length.
    */
   checkOffset(bytes, name) {
     const offset = this.buffer.readOffset;
@@ -119,10 +121,9 @@ class RawPdu {
   //#region Read Methods
   /**
    * Reads byte from PDU.
-   *
-   * @param {String} name - Field name to read.
-   * @returns {Number} Read byte.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to read.
+   * @returns {number} Read byte.
    */
   readByte(name) {
     this.checkOffset(1, name);
@@ -131,11 +132,10 @@ class RawPdu {
 
   /**
    * Reads bytes from PDU.
-   *
-   * @param {String} name - Field name to read.
-   * @param {Number} count - Number of bytes to read.
+   * @method
+   * @param {string} name - Field name to read.
+   * @param {number} count - Number of bytes to read.
    * @returns {Buffer} Read bytes in a buffer.
-   * @memberof RawPdu
    */
   readBytes(name, count) {
     this.checkOffset(count, name);
@@ -144,10 +144,9 @@ class RawPdu {
 
   /**
    * Reads unsigned short from PDU.
-   *
-   * @param {String} name - Field name to read.
-   * @returns {Number} Read unsigned short.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to read.
+   * @returns {number} Read unsigned short.
    */
   readUInt16(name) {
     this.checkOffset(2, name);
@@ -156,10 +155,9 @@ class RawPdu {
 
   /**
    * Reads unsigned int from PDU.
-   *
-   * @param {String} name - Field name to read.
-   * @returns {Number} Read unsigned int.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to read.
+   * @returns {number} Read unsigned int.
    */
   readUInt32(name) {
     this.checkOffset(4, name);
@@ -168,11 +166,10 @@ class RawPdu {
 
   /**
    * Reads string from PDU.
-   *
-   * @param {String} name - Field name to read.
-   * @param {Number} count - Number of bytes to read.
-   * @returns {String} Read string.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to read.
+   * @param {number} count - Number of bytes to read.
+   * @returns {string} Read string.
    */
   readString(name, count) {
     const bytes = this.readBytes(name, count);
@@ -181,10 +178,9 @@ class RawPdu {
 
   /**
    * Skips bytes in PDU.
-   *
-   * @param {String} name - Field name to skip.
-   * @param {Number} count - Number of bytes to skip.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to skip.
+   * @param {number} count - Number of bytes to skip.
    */
   skipBytes(name, count) {
     this.checkOffset(count, name);
@@ -195,10 +191,9 @@ class RawPdu {
   //#region Write Methods
   /**
    * Writes byte to PDU.
-   *
-   * @param {String} name - Field name to write.
-   * @param {Number} value - Byte value.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to write.
+   * @param {number} value - Byte value.
    */
   writeByte(name, value) {
     this.buffer.writeUInt8(value);
@@ -206,11 +201,10 @@ class RawPdu {
 
   /**
    * Writes byte to PDU multiple times.
-   *
-   * @param {String} name - Field name to write.
-   * @param {Number} value - Byte value.
-   * @param {Number} count - Number of times to write PDU value.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to write.
+   * @param {number} value - Byte value.
+   * @param {number} count - Number of times to write PDU value.
    */
   writeByteMultiple(name, value, count) {
     for (let i = 0; i < count; i++) {
@@ -220,10 +214,9 @@ class RawPdu {
 
   /**
    * Writes bytes to PDU.
-   *
-   * @param {String} name - Field name to write.
+   * @method
+   * @param {string} name - Field name to write.
    * @param {Buffer} value - Byte values.
-   * @memberof RawPdu
    */
   writeBytes(name, value) {
     this.buffer.writeBuffer(value);
@@ -231,10 +224,9 @@ class RawPdu {
 
   /**
    * Writes unsigned short to PDU.
-   *
-   * @param {String} name - Field name to write.
-   * @param {Number} value - Unsigned short value.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to write.
+   * @param {number} value - Unsigned short value.
    */
   writeUInt16(name, value) {
     this.buffer.writeUInt16BE(value);
@@ -242,10 +234,9 @@ class RawPdu {
 
   /**
    * Writes unsigned int to PDU.
-   *
-   * @param {String} name - Field name to write.
-   * @param {Number} value - Unsigned int value.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to write.
+   * @param {number} value - Unsigned int value.
    */
   writeUInt32(name, value) {
     this.buffer.writeUInt32BE(value);
@@ -253,10 +244,9 @@ class RawPdu {
 
   /**
    * Writes string to PDU.
-   *
-   * @param {String} name - Field name to write.
-   * @param {String} value - String value.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to write.
+   * @param {string} value - String value.
    */
   writeString(name, value) {
     for (let i = 0, len = value.length; i < len; ++i) {
@@ -266,12 +256,11 @@ class RawPdu {
 
   /**
    * Writes string to PDU with padding.
-   *
-   * @param {String} name - Field name to write.
-   * @param {String} value - String value.
-   * @param {Number} count - Number of characters to write.
-   * @param {String} pad - Padding character.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name to write.
+   * @param {string} value - String value.
+   * @param {number} count - Number of characters to write.
+   * @param {string} pad - Padding character.
    */
   writeStringWithPadding(name, value, count, pad) {
     this.writeString(name, value.padEnd(count, pad));
@@ -279,9 +268,8 @@ class RawPdu {
 
   /**
    * Marks position to write 16-bit length value.
-   *
-   * @param {String} name - Field name.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name.
    */
   // eslint-disable-next-line no-unused-vars
   markLength16(name) {
@@ -291,8 +279,7 @@ class RawPdu {
 
   /**
    * Writes 16-bit length to top length marker.
-   *
-   * @memberof RawPdu
+   * @method
    */
   writeLength16() {
     const p1 = this.m16.pop();
@@ -304,9 +291,8 @@ class RawPdu {
 
   /**
    * Marks position to write 32-bit length value.
-   *
-   * @param {String} name - Field name.
-   * @memberof RawPdu
+   * @method
+   * @param {string} name - Field name.
    */
   // eslint-disable-next-line no-unused-vars
   markLength32(name) {
@@ -316,8 +302,7 @@ class RawPdu {
 
   /**
    * Writes 32-bit length to top length marker.
-   *
-   * @memberof RawPdu
+   * @method
    */
   writeLength32() {
     const p1 = this.m32.pop();
@@ -331,10 +316,11 @@ class RawPdu {
   //#region Private Methods
   /**
    * Trim characters from a string.
-   *
-   * @param {String} str - The string to trim.
-   * @param {Array} chars - The characters to trim from string.
-   * @returns {String} Trimmed string.
+   * @method
+   * @private
+   * @param {string} str - The string to trim.
+   * @param {Array<string>} chars - The characters to trim from string.
+   * @returns {string} Trimmed string.
    */
   _trim(str, chars) {
     let start = 0;
@@ -355,9 +341,8 @@ class RawPdu {
 class AAssociateRQ {
   /**
    * Creates an instance of AAssociateRQ.
-   *
-   * @param {Object} association - Association information.
-   * @memberof AAssociateRQ
+   * @constructor
+   * @param {Association} association - Association information.
    */
   constructor(association) {
     this.association = association;
@@ -365,9 +350,8 @@ class AAssociateRQ {
 
   /**
    * Gets the association information.
-   *
-   * @returns {Object} Association information.
-   * @memberof AAssociateRQ
+   * @method
+   * @returns {Association} Association information.
    */
   getAssociation() {
     return this.association;
@@ -375,9 +359,8 @@ class AAssociateRQ {
 
   /**
    * Writes A-ASSOCIATE-RQ to PDU.
-   *
-   * @returns {Object} PDU.
-   * @memberof AAssociateRQ
+   * @method
+   * @returns {RawPdu} PDU.
    */
   write() {
     const pdu = new RawPdu(0x01);
@@ -457,9 +440,8 @@ class AAssociateRQ {
 
   /**
    * Reads A-ASSOCIATE-RQ from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof AAssociateRQ
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     let l = pdu.getLength() - 6;
@@ -527,9 +509,8 @@ class AAssociateRQ {
 class AAssociateAC {
   /**
    * Creates an instance of AAssociateAC.
-   *
-   * @param {Object} association - Association information.
-   * @memberof AAssociateAC
+   * @constructor
+   * @param {Association} association - Association information.
    */
   constructor(association) {
     this.association = association;
@@ -537,9 +518,8 @@ class AAssociateAC {
 
   /**
    * Gets the association information.
-   *
-   * @returns {Object} Association information.
-   * @memberof AAssociateAC
+   * @method
+   * @returns {Association} Association information.
    */
   getAssociation() {
     return this.association;
@@ -547,9 +527,8 @@ class AAssociateAC {
 
   /**
    * Writes A-ASSOCIATE-AC to PDU.
-   *
-   * @returns {Object} PDU.
-   * @memberof AAssociateAC
+   * @method
+   * @returns {RawPdu} PDU.
    */
   write() {
     const pdu = new RawPdu(0x02);
@@ -586,7 +565,7 @@ class AAssociateAC {
       pdu.markLength16('Item-Length');
       pdu.writeString(
         'Transfer Syntax UID',
-        context.getAcceptedTransferSyntaxUid() || '1.2.840.10008.1.2'
+        context.getAcceptedTransferSyntaxUid() || TransferSyntax.ImplicitVRLittleEndian
       );
       pdu.writeLength16();
 
@@ -625,9 +604,8 @@ class AAssociateAC {
 
   /**
    * Reads A-ASSOCIATE-AC from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof AAssociateAC
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     let l = pdu.getLength() - 6;
@@ -714,35 +692,21 @@ class AAssociateAC {
 class AAssociateRJ {
   /**
    * Creates an instance of AAssociateRJ.
-   *
-   * @param {Number} result - Rejection result.
-   * @param {Number} source - Rejection source.
-   * @param {Number} source - Rejection reason.
-   * @memberof AAssociateRJ
+   * @constructor
+   * @param {number} [result] - Rejection result.
+   * @param {number} [source] - Rejection source.
+   * @param {number} [source] - Rejection reason.
    */
   constructor(result, source, reason) {
-    this.result = result;
-    this.source = source;
-    this.reason = reason;
-    if (!this.result) {
-      // Permanent
-      this.result = 1;
-    }
-    if (!this.source) {
-      // Service user
-      this.source = 1;
-    }
-    if (!this.reason) {
-      // No reason given (Service user)
-      this.reason = 1;
-    }
+    this.result = result || RejectResult.Permanent;
+    this.source = source || RejectSource.ServiceUser;
+    this.reason = reason || RejectReason.NoReasonGiven;
   }
 
   /**
    * Gets the rejection result.
-   *
-   * @returns {Number} Rejection result.
-   * @memberof AAssociateRJ
+   * @method
+   * @returns {number} Rejection result.
    */
   getResult() {
     return this.result;
@@ -750,9 +714,8 @@ class AAssociateRJ {
 
   /**
    * Gets the rejection source.
-   *
-   * @returns {Number} Rejection source.
-   * @memberof AAssociateRJ
+   * @method
+   * @returns {number} Rejection source.
    */
   getSource() {
     return this.source;
@@ -760,9 +723,8 @@ class AAssociateRJ {
 
   /**
    * Gets the rejection reason.
-   *
-   * @returns {Number} Rejection reason.
-   * @memberof AAssociateRJ
+   * @method
+   * @returns {number} Rejection reason.
    */
   getReason() {
     return this.reason;
@@ -770,9 +732,8 @@ class AAssociateRJ {
 
   /**
    * Writes A-ASSOCIATE-RJ to PDU.
-   *
-   * @returns {Object} PDU.
-   * @memberof AAssociateRJ
+   * @method
+   * @returns {RawPdu} PDU.
    */
   write() {
     const pdu = new RawPdu(0x03);
@@ -786,9 +747,8 @@ class AAssociateRJ {
   }
   /**
    * Reads A-ASSOCIATE-RJ from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof AAssociateRJ
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     pdu.readByte('Reserved');
@@ -803,16 +763,14 @@ class AAssociateRJ {
 class AReleaseRQ {
   /**
    * Creates an instance of AReleaseRQ.
-   *
-   * @memberof AReleaseRQ
+   * @constructor
    */
   constructor() {}
 
   /**
    * Writes A-RELEASE-RQ to PDU.
-   *
-   * @returns {Object} PDU.
-   * @memberof AReleaseRQ
+   * @method
+   * @returns {RawPdu} PDU.
    */
   write() {
     const pdu = new RawPdu(0x05);
@@ -823,9 +781,8 @@ class AReleaseRQ {
   }
   /**
    * Reads A-RELEASE-RQ from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof AReleaseRQ
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     pdu.readUInt32('Reserved');
@@ -837,16 +794,14 @@ class AReleaseRQ {
 class AReleaseRP {
   /**
    * Creates an instance of AReleaseRP.
-   *
-   * @memberof AReleaseRP
+   * @constructor
    */
   constructor() {}
 
   /**
    * Writes A-RELEASE-RP to PDU buffer.
-   *
-   * @returns {Object} PDU buffer.
-   * @memberof AReleaseRP
+   * @method
+   * @returns {RawPdu} PDU buffer.
    */
   write() {
     const pdu = new RawPdu(0x06);
@@ -857,9 +812,8 @@ class AReleaseRP {
   }
   /**
    * Reads A-RELEASE-RP from PDU buffer.
-   *
-   * @param {Object} PDU buffer.
-   * @memberof AReleaseRP
+   * @method
+   * @param {RawPdu} PDU buffer.
    */
   read(pdu) {
     pdu.readUInt32('Reserved');
@@ -871,29 +825,19 @@ class AReleaseRP {
 class AAbort {
   /**
    * Creates an instance of AAbort.
-   *
-   * @param {Number} source - Rejection source.
-   * @param {Number} reason - Rejection reason.
-   * @memberof AAbort
+   * @constructor
+   * @param {number} [source] - Rejection source.
+   * @param {number} [reason] - Rejection reason.
    */
   constructor(source, reason) {
-    this.source = source;
-    this.reason = reason;
-    if (!this.source) {
-      // Service user
-      this.source = 1;
-    }
-    if (!this.reason) {
-      // Not specified
-      this.reason = 0;
-    }
+    this.source = source || AbortSource.ServiceUser;
+    this.reason = reason || AbortReason.NotSpecified;
   }
 
   /**
    * Gets the abort source.
-   *
-   * @returns {Number} Abort source.
-   * @memberof AAbort
+   * @method
+   * @returns {number} Abort source.
    */
   getSource() {
     return this.source;
@@ -901,9 +845,8 @@ class AAbort {
 
   /**
    * Gets the abort reason.
-   *
-   * @returns {Number} Abort reason.
-   * @memberof AAbort
+   * @method
+   * @returns {number} Abort reason.
    */
   getReason() {
     return this.reason;
@@ -911,9 +854,8 @@ class AAbort {
 
   /**
    * Writes A-ABORT to PDU.
-   *
-   * @returns {Object} PDU.
-   * @memberof AAbort
+   * @method
+   * @returns {RawPdu} PDU.
    */
   write() {
     const pdu = new RawPdu(0x07);
@@ -928,9 +870,8 @@ class AAbort {
 
   /**
    * Reads A-ABORT from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof AAbort
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     pdu.readByte('Reserved');
@@ -945,12 +886,11 @@ class AAbort {
 class Pdv {
   /**
    * Creates an instance of Pdv.
-   *
-   * @param {Number} pcId - Presentation context ID.
+   * @constructor
+   * @param {number} pcId - Presentation context ID.
    * @param {Buffer} value - PDV data.
    * @param {Boolean} command - Is command.
    * @param {Boolean} last - Is last fragment of command or data.
-   * @memberof Pdv
    */
   constructor(pcId, value, command, last) {
     this.pcId = pcId;
@@ -961,9 +901,8 @@ class Pdv {
 
   /**
    * Gets the presentation context ID.
-   *
-   * @returns {Number} Presentation context ID.
-   * @memberof Pdv
+   * @method
+   * @returns {number} Presentation context ID.
    */
   getPresentationContextId() {
     return this.pcId;
@@ -971,9 +910,8 @@ class Pdv {
 
   /**
    * Gets the PDV data.
-   *
+   * @method
    * @returns {Buffer} PDV data.
-   * @memberof Pdv
    */
 
   getValue() {
@@ -982,9 +920,8 @@ class Pdv {
 
   /**
    * Gets whether PDV is command.
-   *
+   * @method
    * @returns {Boolean} Is command.
-   * @memberof Pdv
    */
   isCommand() {
     return this.command;
@@ -992,9 +929,8 @@ class Pdv {
 
   /**
    * Gets whether PDV is last fragment of command or data.
-   *
+   * @method
    * @returns {Boolean} Is last fragment.
-   * @memberof Pdv
    */
   isLastFragment() {
     return this.last;
@@ -1002,9 +938,8 @@ class Pdv {
 
   /**
    * Gets the PDV length.
-   *
-   * @returns {Number} PDV length.
-   * @memberof Pdv
+   * @method
+   * @returns {number} PDV length.
    */
   getLength() {
     return this.value.length + 6;
@@ -1012,9 +947,8 @@ class Pdv {
 
   /**
    * Writes PDV to PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof Pdv
+   * @method
+   * @param {RawPdu} PDU.
    */
   write(pdu) {
     const mch = (this.last ? 2 : 0) + (this.command ? 1 : 0);
@@ -1027,9 +961,8 @@ class Pdv {
 
   /**
    * Reads PDV from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof Pdv
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     const len = pdu.readUInt32('PDV-Length');
@@ -1048,8 +981,7 @@ class Pdv {
 class PDataTF {
   /**
    * Creates an instance of PDataTF.
-   *
-   * @memberof PDataTF
+   * @constructor
    */
   constructor() {
     this.pdvs = [];
@@ -1057,9 +989,8 @@ class PDataTF {
 
   /**
    * Gets PDVs in P-DATA-TF.
-   *
-   * @returns {Array} PDVs in this P-DATA-TF.
-   * @memberof PDataTF
+   * @method
+   * @returns {Array<Pdv>} PDVs in this P-DATA-TF.
    */
   getPdvs() {
     return this.pdvs;
@@ -1067,9 +998,8 @@ class PDataTF {
 
   /**
    * Gets PDV count in P-DATA-TF.
-   *
-   * @returns {Number} PDV count.
-   * @memberof PDataTF
+   * @method
+   * @returns {number} PDV count.
    */
   getPdvCount() {
     return this.pdvs.length;
@@ -1077,19 +1007,25 @@ class PDataTF {
 
   /**
    * Adds a PDV in P-DATA-TF.
-   *
-   * @param {Object} pdv - PDV.
-   * @memberof PDataTF
+   * @method
+   * @param {Pdv} pdv - PDV.
    */
   addPdv(pdv) {
     return this.pdvs.push(pdv);
   }
 
   /**
+   * Clears all PDVs in P-DATA-TF.
+   * @method
+   */
+  clearPdvs() {
+    this.pdvs.length = 0;
+  }
+
+  /**
    * Gets the total length of the PDVs in P-DATA-TF.
-   *
-   * @returns {Number} Length of PDVs.
-   * @memberof PDataTF
+   * @method
+   * @returns {number} Length of PDVs.
    */
   getLengthOfPdvs() {
     let len = 0;
@@ -1101,9 +1037,8 @@ class PDataTF {
 
   /**
    * Writes P-DATA-TF to PDU.
-   *
-   * @returns {Object} PDU.
-   * @memberof PDataTF
+   * @method
+   * @returns {RawPdu} PDU.
    */
   write() {
     const pdu = new RawPdu(0x04);
@@ -1115,9 +1050,8 @@ class PDataTF {
 
   /**
    * Reads P-DATA-TF from PDU.
-   *
-   * @param {Object} PDU.
-   * @memberof PDataTF
+   * @method
+   * @param {RawPdu} PDU.
    */
   read(pdu) {
     const len = pdu.getLength();

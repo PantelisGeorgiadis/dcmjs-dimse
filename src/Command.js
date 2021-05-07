@@ -8,24 +8,19 @@ const { Mixin } = require('ts-mixer');
 class Command {
   /**
    * Creates an instance of Command.
-   *
-   * @param {Object} commandDataset - Command dataset.
-   * @param {Object} dataset - Dataset.
-   * @memberof Command
+   * @constructor
+   * @param {Dataset} [commandDataset] - Command dataset.
+   * @param {Dataset} [dataset] - Dataset.
    */
   constructor(commandDataset, dataset) {
-    this.commandDataset = commandDataset;
+    this.commandDataset = commandDataset || new Dataset();
     this.dataset = dataset;
-    if (!this.commandDataset) {
-      this.commandDataset = new Dataset();
-    }
   }
 
   /**
    * Gets command dataset.
-   *
-   * @returns {Object} Command dataset.
-   * @memberof Command
+   * @method
+   * @returns {Dataset} Command dataset.
    */
   getCommandDataset() {
     return this.commandDataset;
@@ -33,9 +28,8 @@ class Command {
 
   /**
    * Sets command dataset.
-   *
-   * @param {Object} dataset - Command dataset.
-   * @memberof Command
+   * @method
+   * @param {Dataset} dataset - Command dataset.
    */
   setCommandDataset(dataset) {
     this.commandDataset = dataset;
@@ -43,29 +37,27 @@ class Command {
 
   /**
    * Gets dataset.
-   *
-   * @returns {Object} Dataset.
-   * @memberof Command
+   * @method
+   * @returns {Dataset} Dataset.
    */
   getDataset() {
     return this.dataset;
   }
 
   /**
-   * Sets dataset.
-   *
-   * @param {Object} dataset - Dataset.
-   * @memberof Command
+   * Sets dataset and updates CommandDataSetType element.
+   * @method
+   * @param {Dataset} dataset - Dataset.
    */
   setDataset(dataset) {
     this.dataset = dataset;
+    this.commandDataset.setElement('CommandDataSetType', this.dataset ? 0x0202 : 0x0101);
   }
 
   /**
    * Gets command field type.
-   *
-   * @returns {Number} Command field type.
-   * @memberof Response
+   * @method
+   * @returns {number} Command field type.
    */
   getCommandFieldType() {
     return this.commandDataset.getElement('CommandField');
@@ -73,9 +65,8 @@ class Command {
 
   /**
    * Command has dataset.
-   *
+   * @method
    * @returns {Boolean} Command has dataset.
-   * @memberof Response
    */
   hasDataset() {
     return this.commandDataset.getElement('CommandDataSetType') !== 0x0101;
@@ -83,10 +74,10 @@ class Command {
 
   /**
    * Gets the command description.
-   *
-   * @param {Boolean} includeCommandDataset - Include command dataset in the description.
-   * @param {Boolean} includeDataset - Include dataset in the description.
-   * @memberof Command
+   * @method
+   * @param {Boolean} [includeCommandDataset] - Include command dataset in the description.
+   * @param {Boolean} [includeDataset] - Include dataset in the description.
+   * @returns {string} Command description.
    */
   toString(includeCommandDataset, includeDataset) {
     includeCommandDataset = includeCommandDataset || false;
@@ -112,9 +103,10 @@ class Command {
   //#region Private Methods
   /**
    * Returns a readable string from message type.
-   *
-   * @param {Number} type - Command field type.
-   * @returns {String} Readable string.
+   * @method
+   * @private
+   * @param {number} type - Command field type.
+   * @returns {string} Readable string.
    */
   _typeToString(type) {
     switch (type) {
@@ -176,12 +168,11 @@ class Command {
 class Request extends Mixin(Command, EventEmitter) {
   /**
    * Creates an instance of Request.
-   *
-   * @param {Number} type - Command field type.
-   * @param {String} affectedClass - Affected SOP Class UID.
-   * @param {Number} priority - Request priority.
+   * @constructor
+   * @param {number} type - Command field type.
+   * @param {string} affectedClass - Affected SOP Class UID.
+   * @param {number} priority - Request priority.
    * @param {Boolean} hasDataset - Request has dataset.
-   * @memberof Request
    */
   constructor(type, affectedClass, priority, hasDataset) {
     super(
@@ -196,9 +187,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Gets affected SOP class UID.
-   *
-   * @returns {String} Affected SOP class UID.
-   * @memberof Request
+   * @method
+   * @returns {string} Affected SOP class UID.
    */
   getAffectedSopClassUid() {
     const command = this.getCommandDataset();
@@ -207,9 +197,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Sets affected SOP class UID.
-   *
-   * @param {String} affectedSopClassUid - Affected SOP class UID.
-   * @memberof Request
+   * @method
+   * @param {string} affectedSopClassUid - Affected SOP class UID.
    */
   setAffectedSopClassUid(affectedSopClassUid) {
     const command = this.getCommandDataset();
@@ -218,9 +207,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Gets affected SOP instance UID.
-   *
-   * @returns {String} Affected SOP instance UID.
-   * @memberof Request
+   * @method
+   * @returns {string} Affected SOP instance UID.
    */
   getAffectedSopInstanceUid() {
     const command = this.getCommandDataset();
@@ -229,9 +217,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Sets affected SOP instance UID.
-   *
-   * @param {String} affectedSopInstanceUid - Affected SOP instance UID.
-   * @memberof Request
+   * @method
+   * @param {string} affectedSopInstanceUid - Affected SOP instance UID.
    */
   setAffectedSopInstanceUid(affectedSopInstanceUid) {
     const command = this.getCommandDataset();
@@ -240,9 +227,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Gets request message ID.
-   *
-   * @return {Number} Request message ID.
-   * @memberof Request
+   * @method
+   * @return {number} Request message ID.
    */
   getMessageId() {
     const command = this.getCommandDataset();
@@ -251,9 +237,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Sets request message ID.
-   *
-   * @param {Number} messageId - Request message ID.
-   * @memberof Request
+   * @method
+   * @param {number} messageId - Request message ID.
    */
   setMessageId(messageId) {
     const command = this.getCommandDataset();
@@ -262,9 +247,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Raise response event.
-   *
-   * @param {Object} response - Response.
-   * @memberof Request
+   * @method
+   * @param {Response} response - Response.
    */
   raiseResponseEvent(response) {
     this.emit('response', response);
@@ -274,9 +258,8 @@ class Request extends Mixin(Command, EventEmitter) {
    * Raise instance event.
    * Special event for datasets coming from C-GET operations,
    * as C-STORE requests.
-   *
-   * @param {Object} dataset - Dataset.
-   * @memberof Request
+   * @method
+   * @param {Dataset} dataset - Dataset.
    */
   raiseInstanceEvent(dataset) {
     this.emit('instance', dataset);
@@ -284,8 +267,7 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Raise done event.
-   *
-   * @memberof Request
+   * @method
    */
   raiseDoneEvent() {
     this.emit('done');
@@ -293,8 +275,8 @@ class Request extends Mixin(Command, EventEmitter) {
 
   /**
    * Gets the request description.
-   *
-   * @memberof Request
+   * @method
+   * @return {string} Request description.
    */
   toString() {
     return `${super.toString()} [id: ${this.getMessageId()}]`;
@@ -306,13 +288,12 @@ class Request extends Mixin(Command, EventEmitter) {
 class Response extends Command {
   /**
    * Creates an instance of Response.
-   * @param {Number} type - Command field type.
-   * @param {String} affectedClass - Affected SOP Class UID.
+   * @constructor
+   * @param {number} type - Command field type.
+   * @param {string} affectedClass - Affected SOP Class UID.
    * @param {Boolean} hasDataset - Response has dataset.
-   * @param {Number} status - Response status.
-   * @param {String} errorComment - Response error comment.
-   *
-   * @memberof Response
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Response error comment.
    */
   constructor(type, affectedClass, hasDataset, status, errorComment) {
     super(
@@ -328,9 +309,8 @@ class Response extends Command {
 
   /**
    * Gets affected SOP class UID.
-   *
-   * @returns {String} Affected SOP class UID.
-   * @memberof Response
+   * @method
+   * @returns {string} Affected SOP class UID.
    */
   getAffectedSopClassUid() {
     const command = this.getCommandDataset();
@@ -339,9 +319,8 @@ class Response extends Command {
 
   /**
    * Sets affected SOP class UID.
-   *
-   * @param {String} affectedSopClassUid - Affected SOP class UID.
-   * @memberof Response
+   * @method
+   * @param {string} affectedSopClassUid - Affected SOP class UID.
    */
   setAffectedSopClassUid(affectedSopClassUid) {
     const command = this.getCommandDataset();
@@ -350,9 +329,8 @@ class Response extends Command {
 
   /**
    * Gets affected SOP instance UID.
-   *
-   * @returns {String} Affected SOP instance UID.
-   * @memberof Response
+   * @method
+   * @returns {string} Affected SOP instance UID.
    */
   getAffectedSopInstanceUid() {
     const command = this.getCommandDataset();
@@ -361,9 +339,8 @@ class Response extends Command {
 
   /**
    * Sets affected SOP instance UID.
-   *
-   * @param {String} affectedSopInstanceUid - Affected SOP instance UID.
-   * @memberof Response
+   * @method
+   * @param {string} affectedSopInstanceUid - Affected SOP instance UID.
    */
   setAffectedSopInstanceUid(affectedSopInstanceUid) {
     const command = this.getCommandDataset();
@@ -371,21 +348,9 @@ class Response extends Command {
   }
 
   /**
-   * Sets status.
-   *
-   * @param {Number} status - Status.
-   * @memberof Response
-   */
-  setStatus(status) {
-    const command = this.getCommandDataset();
-    command.setElement('Status', status);
-  }
-
-  /**
    * Gets status.
-   *
-   * @returns {Number} Status.
-   * @memberof Response
+   * @method
+   * @returns {number} Status.
    */
   getStatus() {
     const command = this.getCommandDataset();
@@ -393,10 +358,19 @@ class Response extends Command {
   }
 
   /**
+   * Sets status.
+   * @method
+   * @param {number} status - Status.
+   */
+  setStatus(status) {
+    const command = this.getCommandDataset();
+    command.setElement('Status', status);
+  }
+
+  /**
    * Gets error comment.
-   *
-   * @returns {String} Error comment.
-   * @memberof Response
+   * @method
+   * @returns {string} Error comment.
    */
   getErrorComment() {
     const command = this.getCommandDataset();
@@ -405,9 +379,8 @@ class Response extends Command {
 
   /**
    * Sets error comment.
-   *
-   * @param {String} errorComment - Error comment.
-   * @memberof Response
+   * @method
+   * @param {string} errorComment - Error comment.
    */
   setErrorComment(errorComment) {
     const command = this.getCommandDataset();
@@ -416,9 +389,8 @@ class Response extends Command {
 
   /**
    * Gets response message ID.
-   *
-   * @return {Number} Response message ID.
-   * @memberof Response
+   * @method
+   * @return {number} Response message ID.
    */
   getMessageIdBeingRespondedTo() {
     const command = this.getCommandDataset();
@@ -427,9 +399,8 @@ class Response extends Command {
 
   /**
    * Sets response message ID.
-   *
-   * @param {Number} messageId - Response message ID.
-   * @memberof Response
+   * @method
+   * @param {number} messageId - Response message ID.
    */
   setMessageIdBeingRespondedTo(messageId) {
     const command = this.getCommandDataset();
@@ -438,8 +409,8 @@ class Response extends Command {
 
   /**
    * Gets the response description.
-   *
-   * @memberof Response
+   * @method
+   * @return {string} Response description.
    */
   toString() {
     return `${super.toString()} [id: ${this.getMessageIdBeingRespondedTo()}; status: ${this._statusToString(
@@ -450,9 +421,10 @@ class Response extends Command {
   //#region Private Methods
   /**
    * Returns a readable string from status.
-   *
-   * @param {Number} status - Status code.
-   * @returns {String} Readable string.
+   * @method
+   * @private
+   * @param {number} status - Status code.
+   * @returns {string} Readable status string.
    */
   _statusToString(status) {
     switch (status) {
@@ -510,9 +482,8 @@ class Response extends Command {
 class CEchoRequest extends Request {
   /**
    * Creates an instance of CEchoRequest.
-   * @param {Number} priority - Request priority.
-   *
-   * @memberof CEchoRequest
+   * @constructor
+   * @param {number} [priority] - Request priority.
    */
   constructor(priority) {
     super(CommandFieldType.CEchoRequest, SopClass.Verification, priority || Priority.Medium, false);
@@ -524,13 +495,30 @@ class CEchoRequest extends Request {
 class CEchoResponse extends Response {
   /**
    * Creates an instance of CEchoResponse.
-   * @param {Number} status - Response status.
-   * @param {String} errorComment - Error comment.
-   *
-   * @memberof CEchoResponse
+   * @constructor
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
    */
   constructor(status, errorComment) {
     super(CommandFieldType.CEchoResponse, SopClass.Verification, false, status, errorComment);
+  }
+
+  /**
+   * Creates an echo response from a request.
+   * @method
+   * @static
+   * @param {CEchoRequest} request - Echo request.
+   * @returns {CEchoResponse} Echo response.
+   * @throws Error if request is not an instance of CEchoRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof CEchoRequest)) {
+      throw new Error('Request should be an instance of CEchoRequest');
+    }
+    const response = new CEchoResponse(Status.ProcessingFailure);
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
   }
 }
 //#endregion
@@ -539,9 +527,8 @@ class CEchoResponse extends Response {
 class CFindRequest extends Request {
   /**
    * Creates an instance of CFindRequest.
-   * @param {Number} priority - Request priority.
-   *
-   * @memberof CFindRequest
+   * @constructor
+   * @param {number} [priority] - Request priority.
    */
   constructor(priority) {
     super(
@@ -554,11 +541,11 @@ class CFindRequest extends Request {
 
   /**
    * Creates study find request.
-   *
+   * @method
+   * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Study find request.
-   * @memberof CFindRequest
+   * @param {number} [priority] - Request priority.
+   * @return {CFindRequest} Study find request.
    */
   static createStudyFindRequest(elements, priority) {
     const baseElements = {
@@ -588,11 +575,11 @@ class CFindRequest extends Request {
 
   /**
    * Creates series find request.
-   *
+   * @method
+   * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Series find request.
-   * @memberof CFindRequest
+   * @param {number} [priority] - Request priority.
+   * @return {CFindRequest} Series find request.
    */
   static createSeriesFindRequest(elements, priority) {
     const baseElements = {
@@ -616,11 +603,11 @@ class CFindRequest extends Request {
 
   /**
    * Creates image find request.
-   *
+   * @method
+   * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Image find request.
-   * @memberof CFindRequest
+   * @param {number} [priority] - Request priority.
+   * @return {CFindRequest} Image find request.
    */
   static createImageFindRequest(elements, priority) {
     const baseElements = {
@@ -641,11 +628,11 @@ class CFindRequest extends Request {
 
   /**
    * Creates worklist find request.
-   *
+   * @method
+   * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Worklist find request.
-   * @memberof CFindRequest
+   * @param {number} [priority] - Request priority.
+   * @return {CFindRequest} Worklist find request.
    */
   static createWorklistFindRequest(elements, priority) {
     const baseElements = {
@@ -716,10 +703,9 @@ class CFindRequest extends Request {
 class CFindResponse extends Response {
   /**
    * Creates an instance of CEchoResponse.
-   * @param {Number} status - Response status.
-   * @param {String} errorComment - Error comment.
-   *
-   * @memberof CFindResponse
+   * @constructor
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
    */
   constructor(status, errorComment) {
     super(
@@ -730,6 +716,24 @@ class CFindResponse extends Response {
       errorComment
     );
   }
+
+  /**
+   * Creates a find response from a request.
+   * @method
+   * @static
+   * @param {CFindRequest} request - Find request.
+   * @returns {CFindResponse} Find response.
+   * @throws Error if request is not an instance of CFindRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof CFindRequest)) {
+      throw new Error('Request should be an instance of CFindRequest');
+    }
+    const response = new CFindResponse(Status.ProcessingFailure);
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
 }
 //#endregion
 
@@ -737,10 +741,9 @@ class CFindResponse extends Response {
 class CStoreRequest extends Request {
   /**
    * Creates an instance of CStoreRequest.
+   * @constructor
    * @param {Object|String} datasetOrFile - Dataset or part10 file path.
-   * @param {Number} priority - Request priority.
-   *
-   * @memberof CStoreRequest
+   * @param {number} [priority] - Request priority.
    */
   constructor(datasetOrFile, priority) {
     super(CommandFieldType.CStoreRequest, '', priority || Priority.Medium, true);
@@ -764,13 +767,32 @@ class CStoreRequest extends Request {
 class CStoreResponse extends Response {
   /**
    * Creates an instance of CStoreResponse.
-   * @param {Number} status - Response status.
-   * @param {String} errorComment - Error comment.
-   *
-   * @memberof CStoreResponse
+   * @constructor
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
    */
   constructor(status, errorComment) {
     super(CommandFieldType.CStoreResponse, '', false, status, errorComment);
+  }
+
+  /**
+   * Creates a store response from a request.
+   * @method
+   * @static
+   * @param {CStoreRequest} request - Store request.
+   * @returns {CStoreResponse} Store response.
+   * @throws Error if request is not an instance of CStoreRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof CStoreRequest)) {
+      throw new Error('Request should be an instance of CStoreRequest');
+    }
+    const response = new CStoreResponse(Status.ProcessingFailure);
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+    response.setAffectedSopClassUid(request.getAffectedSopClassUid());
+    response.setAffectedSopInstanceUid(request.getAffectedSopInstanceUid());
+
+    return response;
   }
 }
 //#endregion
@@ -779,9 +801,8 @@ class CStoreResponse extends Response {
 class CMoveRequest extends Request {
   /**
    * Creates an instance of CMoveRequest.
-   * @param {Number} priority - Request priority.
-   *
-   * @memberof CMoveRequest
+   * @constructor
+   * @param {number} [priority] - Request priority.
    */
   constructor(priority) {
     super(
@@ -794,12 +815,12 @@ class CMoveRequest extends Request {
 
   /**
    * Creates study move request.
-   *
-   * @param {String} destinationAet - Move destination AET.
-   * @param {String} studyInstanceUid - Study instance UID of the study to move.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Study move request.
-   * @memberof CMoveRequest
+   * @method
+   * @static
+   * @param {string} destinationAet - Move destination AET.
+   * @param {string} studyInstanceUid - Study instance UID of the study to move.
+   * @param {number} [priority] - Request priority.
+   * @return {CMoveRequest} Study move request.
    */
   static createStudyMoveRequest(destinationAet, studyInstanceUid, priority) {
     const elements = {
@@ -818,13 +839,13 @@ class CMoveRequest extends Request {
 
   /**
    * Creates series move request.
-   *
-   * @param {String} destinationAet - Move destination AET.
-   * @param {String} studyInstanceUid - Study instance UID of the study to move.
-   * @param {String} seriesInstanceUid - Series instance UID of the series to move.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Series move request.
-   * @memberof CMoveRequest
+   * @method
+   * @static
+   * @param {string} destinationAet - Move destination AET.
+   * @param {string} studyInstanceUid - Study instance UID of the study to move.
+   * @param {string} seriesInstanceUid - Series instance UID of the series to move.
+   * @param {number} [priority] - Request priority.
+   * @return {CMoveRequest} Series move request.
    */
   static createSeriesMoveRequest(destinationAet, studyInstanceUid, seriesInstanceUid, priority) {
     const elements = {
@@ -844,14 +865,14 @@ class CMoveRequest extends Request {
 
   /**
    * Creates image move request.
-   *
-   * @param {String} destinationAet - Move destination AET.
-   * @param {String} studyInstanceUid - Study instance UID of the study to move.
-   * @param {String} seriesInstanceUid - Series instance UID of the series to move.
-   * @param {String} sopInstanceUid - SOP instance UID of the series to move.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Image move request.
-   * @memberof CMoveRequest
+   * @method
+   * @static
+   * @param {string} destinationAet - Move destination AET.
+   * @param {string} studyInstanceUid - Study instance UID of the study to move.
+   * @param {string} seriesInstanceUid - Series instance UID of the series to move.
+   * @param {string} sopInstanceUid - SOP instance UID of the series to move.
+   * @param {number} [priority] - Request priority.
+   * @return {CMoveRequest} Image move request.
    */
   static createImageMoveRequest(
     destinationAet,
@@ -882,10 +903,9 @@ class CMoveRequest extends Request {
 class CMoveResponse extends Response {
   /**
    * Creates an instance of CMoveResponse.
-   * @param {Number} status - Response status.
-   * @param {String} errorComment - Error comment.
-   *
-   * @memberof CMoveResponse
+   * @constructor
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
    */
   constructor(status, errorComment) {
     super(
@@ -899,9 +919,8 @@ class CMoveResponse extends Response {
 
   /**
    * Gets remaining sub operations.
-   *
-   * @returns {Number} Remaining sub operations.
-   * @memberof CMoveResponse
+   * @method
+   * @returns {number} Remaining sub operations.
    */
   getRemaining() {
     const command = this.getCommandDataset();
@@ -910,9 +929,8 @@ class CMoveResponse extends Response {
 
   /**
    * Gets completed sub operations.
-   *
-   * @returns {Number} Completed sub operations.
-   * @memberof CMoveResponse
+   * @method
+   * @returns {number} Completed sub operations.
    */
   getCompleted() {
     const command = this.getCommandDataset();
@@ -921,9 +939,8 @@ class CMoveResponse extends Response {
 
   /**
    * Gets sub operations with warnings.
-   *
-   * @returns {Number} Sub operations with warnings.
-   * @memberof CMoveResponse
+   * @method
+   * @returns {number} Sub operations with warnings.
    */
   getWarnings() {
     const command = this.getCommandDataset();
@@ -932,13 +949,30 @@ class CMoveResponse extends Response {
 
   /**
    * Gets failed sub operations.
-   *
-   * @returns {Number} Failed sub operations.
-   * @memberof CMoveResponse
+   * @method
+   * @returns {number} Failed sub operations.
    */
   getFailures() {
     const command = this.getCommandDataset();
     return command.getElement('NumberOfFailedSuboperations');
+  }
+
+  /**
+   * Creates a move response from a request.
+   * @method
+   * @static
+   * @param {CMoveRequest} request - Move request.
+   * @returns {CMoveResponse} Move response.
+   * @throws Error if request is not an instance of CMoveRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof CMoveRequest)) {
+      throw new Error('Request should be an instance of CMoveRequest');
+    }
+    const response = new CMoveResponse(Status.ProcessingFailure);
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
   }
 }
 //#endregion
@@ -947,9 +981,8 @@ class CMoveResponse extends Response {
 class CGetRequest extends Request {
   /**
    * Creates an instance of CGetRequest.
-   * @param {Number} priority - Request priority.
-   *
-   * @memberof CGetRequest
+   * @constructor
+   * @param {number} [priority] - Request priority.
    */
   constructor(priority) {
     super(
@@ -962,11 +995,11 @@ class CGetRequest extends Request {
 
   /**
    * Creates study get request.
-   *
-   * @param {String} studyInstanceUid - Study instance UID of the study to get.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Study get request.
-   * @memberof CGetRequest
+   * @method
+   * @static
+   * @param {string} studyInstanceUid - Study instance UID of the study to get.
+   * @param {number} [priority] - Request priority.
+   * @return {CGetRequest} Study get request.
    */
   static createStudyGetRequest(studyInstanceUid, priority) {
     const elements = {
@@ -982,12 +1015,12 @@ class CGetRequest extends Request {
 
   /**
    * Creates series get request.
-   *
-   * @param {String} studyInstanceUid - Study instance UID of the study to get.
-   * @param {String} seriesInstanceUid - Series instance UID of the series to get.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Series get request.
-   * @memberof CGetRequest
+   * @method
+   * @static
+   * @param {string} studyInstanceUid - Study instance UID of the study to get.
+   * @param {string} seriesInstanceUid - Series instance UID of the series to get.
+   * @param {number} priority - Request priority.
+   * @return {CGetRequest} Series get request.
    */
   static createSeriesGetRequest(studyInstanceUid, seriesInstanceUid, priority) {
     const elements = {
@@ -1004,13 +1037,13 @@ class CGetRequest extends Request {
 
   /**
    * Creates image get request.
-   *
-   * @param {String} studyInstanceUid - Study instance UID of the study to get.
-   * @param {String} seriesInstanceUid - Series instance UID of the series to get.
-   * @param {String} sopInstanceUid - SOP instance UID of the series to get.
-   * @param {Number} priority - Request priority.
-   * @return {Object} Image get request.
-   * @memberof CGetRequest
+   * @method
+   * @static
+   * @param {string} studyInstanceUid - Study instance UID of the study to get.
+   * @param {string} seriesInstanceUid - Series instance UID of the series to get.
+   * @param {string} sopInstanceUid - SOP instance UID of the series to get.
+   * @param {number} priority - Request priority.
+   * @return {CGetRequest} Image get request.
    */
   static createImageGetRequest(studyInstanceUid, seriesInstanceUid, sopInstanceUid, priority) {
     const elements = {
@@ -1032,10 +1065,9 @@ class CGetRequest extends Request {
 class CGetResponse extends Response {
   /**
    * Creates an instance of CGetResponse.
-   * @param {Number} status - Response status.
-   * @param {String} errorComment - Error comment.
-   *
-   * @memberof CGetResponse
+   * @constructor
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
    */
   constructor(status, errorComment) {
     super(
@@ -1049,9 +1081,8 @@ class CGetResponse extends Response {
 
   /**
    * Gets remaining sub operations.
-   *
-   * @returns {Number} Remaining sub operations.
-   * @memberof CGetResponse
+   * @method
+   * @returns {number} Remaining sub operations.
    */
   getRemaining() {
     const command = this.getCommandDataset();
@@ -1060,9 +1091,8 @@ class CGetResponse extends Response {
 
   /**
    * Gets completed sub operations.
-   *
-   * @returns {Number} Completed sub operations.
-   * @memberof CGetResponse
+   * @method
+   * @returns {number} Completed sub operations.
    */
   getCompleted() {
     const command = this.getCommandDataset();
@@ -1071,9 +1101,8 @@ class CGetResponse extends Response {
 
   /**
    * Gets sub operations with warnings.
-   *
-   * @returns {Number} Sub operations with warnings.
-   * @memberof CGetResponse
+   * @method
+   * @returns {number} Sub operations with warnings.
    */
   getWarnings() {
     const command = this.getCommandDataset();
@@ -1082,13 +1111,30 @@ class CGetResponse extends Response {
 
   /**
    * Gets failed sub operations.
-   *
-   * @returns {Number} Failed sub operations.
-   * @memberof CGetResponse
+   * @method
+   * @returns {number} Failed sub operations.
    */
   getFailures() {
     const command = this.getCommandDataset();
     return command.getElement('NumberOfFailedSuboperations');
+  }
+
+  /**
+   * Creates a get response from a request.
+   * @method
+   * @static
+   * @param {CGetRequest} request - Get request.
+   * @returns {CGetResponse} Get response.
+   * @throws Error if request is not an instance of CGetRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof CGetRequest)) {
+      throw new Error('Request should be an instance of CGetRequest');
+    }
+    const response = new CGetResponse(Status.ProcessingFailure);
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
   }
 }
 //#endregion

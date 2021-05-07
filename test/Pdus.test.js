@@ -80,7 +80,7 @@ describe('PDU', () => {
 
   it('should correctly write and read an association reject PDU', () => {
     // CallingAENotRecognized
-    const rej1 = new AAssociateRJ(1, 1, 3);
+    const rej1 = new AAssociateRJ(1, 2, 3);
     const pdu = rej1.write();
 
     const rej2 = new AAssociateRJ();

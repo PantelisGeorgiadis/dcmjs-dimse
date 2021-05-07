@@ -1,15 +1,16 @@
 const { Association } = require('./Association');
 const Network = require('./Network');
 const { Request } = require('./Command');
+const log = require('./log');
 
 const { EventEmitter } = require('events');
+const { Socket } = require('net');
 
 //#region Client
 class Client extends EventEmitter {
   /**
    * Creates an instance of Client.
-   *
-   * @memberof Client
+   * @constructor
    */
   constructor() {
     super();
@@ -18,9 +19,9 @@ class Client extends EventEmitter {
 
   /**
    * Adds a request.
-   *
-   * @param {Object} request - DICOM request.
-   * @memberof Client
+   * @method
+   * @param {Request} request - DICOM request.
+   * @throws Error if request is not an instance of the Request class.
    */
   addRequest(request) {
     // Check if request is actually a request!
@@ -36,8 +37,7 @@ class Client extends EventEmitter {
 
   /**
    * Clears all requests.
-   *
-   * @memberof Client
+   * @method
    */
   clearRequests() {
     this.requests.length = 0;
@@ -45,14 +45,18 @@ class Client extends EventEmitter {
 
   /**
    * Sends requests to the remote host.
-   *
-   * @param {String} host - Remote host.
-   * @param {Number} port - Remote port.
-   * @param {String} callingAeTitle - Local AE title.
-   * @param {String} calledAeTitle - Remote AE title.
-   * @memberof Client
+   * @method
+   * @param {string} host - Remote host.
+   * @param {number} port - Remote port.
+   * @param {string} callingAeTitle - Local AE title.
+   * @param {string} calledAeTitle - Remote AE title.
+   * @param {Object} [opts] - Network options.
+   * @param {number} [opts.connectTimeout] - Connection timeout in milliseconds.
+   * @param {number} [opts.associationTimeout] - Association timeout in milliseconds.
+   * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
+   * @throws Error if there are zero requests to perform.
    */
-  send(host, port, callingAeTitle, calledAeTitle) {
+  send(host, port, callingAeTitle, calledAeTitle, opts) {
     // Check for requests
     if (this.requests.length === 0) {
       throw new Error('There are no requests to perform.');
@@ -64,35 +68,46 @@ class Client extends EventEmitter {
       association.addPresentationContextFromRequest(request);
     });
 
+    const handleNetworkError = err => {
+      throw err;
+    };
+
     // Initialize network
-    const network = new Network();
+    const socket = new Socket();
+    const network = new Network(socket, opts);
     network.on('connect', () => {
-      network.associate(association);
+      this.emit('connected');
+      network.sendAssociationRequest(association);
     });
-    // eslint-disable-next-line no-unused-vars
     network.on('associationAccepted', association => {
+      this.emit('associationAccepted', association);
       network.sendRequests(this.requests);
     });
-    network.on('done', () => {
-      network.release();
-    });
-    network.on('onCStoreRequest', (request, response) => {
-      this.emit('onCStoreRequest', request, response);
-    });
     network.on('associationReleaseResponse', () => {
-      network.close();
+      this.emit('associationReleased');
+      socket.end();
     });
     network.on('associationRejected', (result, source, reason) => {
-      throw new Error(
-        `Association rejected. Result: ${result}, source: ${source}, reason: ${reason}`
-      );
+      this.emit('associationRejected', result, source, reason);
+      socket.end();
     });
-    network.on('error', err => {
-      throw err;
+    network.on('done', () => {
+      network.sendAssociationReleaseRequest();
+    });
+    network.on('cStoreRequest', e => {
+      this.emit('cStoreRequest', e);
+    });
+    network.on('networkError', err => {
+      socket.end();
+      handleNetworkError(err);
+    });
+    network.on('close', () => {
+      this.emit('closed');
     });
 
     // Connect
-    network.connect(host, port);
+    log.info(`Connecting to ${host}:${port}`);
+    socket.connect({ host, port });
   }
 }
 //#endregion
