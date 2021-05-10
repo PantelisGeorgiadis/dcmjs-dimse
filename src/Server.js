@@ -14,6 +14,8 @@ class Scp extends Network {
    * @param {number} [opts.connectTimeout] - Connection timeout in milliseconds.
    * @param {number} [opts.associationTimeout] - Association timeout in milliseconds.
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
+   * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
+   * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    */
   constructor(socket, opts) {
     super(socket, opts);
@@ -146,6 +148,8 @@ class Server extends EventEmitter {
    * @param {number} [opts.connectTimeout] - Connection timeout in milliseconds.
    * @param {number} [opts.associationTimeout] - Association timeout in milliseconds.
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
+   * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
+   * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    */
   listen(port, opts) {
     // Initialize network

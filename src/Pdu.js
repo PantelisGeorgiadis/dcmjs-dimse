@@ -889,8 +889,8 @@ class Pdv {
    * @constructor
    * @param {number} pcId - Presentation context ID.
    * @param {Buffer} value - PDV data.
-   * @param {Boolean} command - Is command.
-   * @param {Boolean} last - Is last fragment of command or data.
+   * @param {boolean} command - Is command.
+   * @param {boolean} last - Is last fragment of command or data.
    */
   constructor(pcId, value, command, last) {
     this.pcId = pcId;
@@ -921,7 +921,7 @@ class Pdv {
   /**
    * Gets whether PDV is command.
    * @method
-   * @returns {Boolean} Is command.
+   * @returns {boolean} Is command.
    */
   isCommand() {
     return this.command;
@@ -930,7 +930,7 @@ class Pdv {
   /**
    * Gets whether PDV is last fragment of command or data.
    * @method
-   * @returns {Boolean} Is last fragment.
+   * @returns {boolean} Is last fragment.
    */
   isLastFragment() {
     return this.last;

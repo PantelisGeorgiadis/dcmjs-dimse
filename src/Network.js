@@ -30,7 +30,6 @@ const log = require('./log');
 
 const { EventEmitter } = require('events');
 const { SmartBuffer } = require('smart-buffer');
-const chunks = require('buffer-chunks');
 
 //#region Network
 class Network extends EventEmitter {
@@ -42,6 +41,8 @@ class Network extends EventEmitter {
    * @param {number} [opts.connectTimeout] - Connection timeout in milliseconds.
    * @param {number} [opts.associationTimeout] - Association timeout in milliseconds.
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
+   * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
+   * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    */
   constructor(socket, opts) {
     super();
@@ -56,6 +57,9 @@ class Network extends EventEmitter {
     this.connectTimeout = opts.connectTimeout || 3 * 60 * 1000;
     this.associationTimeout = opts.associationTimeout || 1 * 60 * 1000;
     this.pduTimeout = opts.pduTimeout || 1 * 60 * 1000;
+    this.logCommandDatasets = opts.logCommandDatasets || false;
+    this.logDatasets = opts.logDatasets || false;
+    this.logId = '';
     this.connected = false;
     this.connectedTime = undefined;
     this.lastPduTime = undefined;
@@ -74,7 +78,8 @@ class Network extends EventEmitter {
     const rq = new AAssociateRQ(this.association);
     const rqPdu = rq.write();
 
-    log.info(`Association request:\n${this.association.toString()}`);
+    this.logId = this.association.getCalledAeTitle();
+    log.info(`${this.logId} -> Association request:\n${this.association.toString()}`);
     this._sendPdu(rqPdu);
   }
 
@@ -92,7 +97,7 @@ class Network extends EventEmitter {
     const rq = new AAssociateAC(this.association);
     const rqPdu = rq.write();
 
-    log.info(`Association accept:\n${this.association.toString()}`);
+    log.info(`${this.logId} -> Association accept:\n${this.association.toString()}`);
     this._sendPdu(rqPdu);
   }
 
@@ -108,8 +113,48 @@ class Network extends EventEmitter {
     const rqPdu = rq.write();
 
     log.info(
-      `Association reject [result: ${rq.getResult()}; source: ${rq.getSource()}; reason: ${rq.getReason()}]`
+      `${
+        this.logId
+      } -> Association reject [result: ${rq.getResult()}; source: ${rq.getSource()}; reason: ${rq.getReason()}]`
     );
+    this._sendPdu(rqPdu);
+  }
+
+  /**
+   * Sends association release request.
+   * @method
+   */
+  sendAssociationReleaseRequest() {
+    const rq = new AReleaseRQ();
+    const rqPdu = rq.write();
+
+    log.info(`${this.logId} -> Association release request`);
+    this._sendPdu(rqPdu);
+  }
+
+  /**
+   * Sends association release response.
+   * @method
+   */
+  sendAssociationReleaseResponse() {
+    const rq = new AReleaseRP();
+    const rqPdu = rq.write();
+
+    log.info(`${this.logId} -> Association release response`);
+    this._sendPdu(rqPdu);
+  }
+
+  /**
+   * Sends abort request.
+   * @method
+   * @param {number} [source] - Rejection source.
+   * @param {number} [reason] - Rejection reason.
+   */
+  sendAbort(source, reason) {
+    const rq = new AAbort(source, reason);
+    const rqPdu = rq.write();
+
+    log.info(`${this.logId} -> Abort [source: ${rq.getSource()}; reason: ${rq.getReason()}]`);
     this._sendPdu(rqPdu);
   }
 
@@ -145,44 +190,6 @@ class Network extends EventEmitter {
     processNextDimse();
   }
 
-  /**
-   * Sends association release request.
-   * @method
-   */
-  sendAssociationReleaseRequest() {
-    const rq = new AReleaseRQ();
-    const rqPdu = rq.write();
-
-    log.info('Association release request');
-    this._sendPdu(rqPdu);
-  }
-
-  /**
-   * Sends association release response.
-   * @method
-   */
-  sendAssociationReleaseResponse() {
-    const rq = new AReleaseRP();
-    const rqPdu = rq.write();
-
-    log.info('Association release response');
-    this._sendPdu(rqPdu);
-  }
-
-  /**
-   * Sends abort request.
-   * @method
-   * @param {number} [source] - Rejection source.
-   * @param {number} [reason] - Rejection reason.
-   */
-  sendAbort(source, reason) {
-    const rq = new AAbort(source, reason);
-    const rqPdu = rq.write();
-
-    log.info(`Abort [source: ${rq.getSource()}; reason: ${rq.getReason()}]`);
-    this._sendPdu(rqPdu);
-  }
-
   //#region Private Methods
   /**
    * Advances the message ID.
@@ -204,7 +211,7 @@ class Network extends EventEmitter {
       const buffer = pdu.writePdu();
       this.socket.write(buffer);
     } catch (err) {
-      log.error(`Error sending PDU [type: ${pdu.getType()}]: ${err.message}`);
+      log.error(`${this.logId} -> Error sending PDU [type: ${pdu.getType()}]: ${err.message}`);
       this.emit('networkError', err);
     }
   }
@@ -245,7 +252,7 @@ class Network extends EventEmitter {
         this.association.getMaxPduLength()
       );
     } catch (err) {
-      log.error(`Error sending DIMSE: ${err.message}`);
+      log.error(`${this.logId} -> Error sending DIMSE: ${err.message}`);
       this.emit('networkError', err);
     }
   }
@@ -265,7 +272,12 @@ class Network extends EventEmitter {
     const commandDataset = command.getCommandDataset();
     const commandBuffer = commandDataset.getDenaturalizedDataset();
 
-    log.info(`${command.toString()} [pc: ${pcId}]`);
+    log.info(
+      `${this.logId} -> ${command.toString({
+        includeCommandDataset: this.logCommandDatasets,
+        includeDataset: this.logDatasets
+      })} [pc: ${pcId}]`
+    );
 
     const pDataTf = new PDataTF();
     const pdv = new Pdv(pcId, commandBuffer, true, true);
@@ -277,7 +289,15 @@ class Network extends EventEmitter {
     const dataset = command.getDataset();
     if (dataset) {
       const datasetBuffer = dataset.getDenaturalizedDataset();
-      const datasetBufferChunks = chunks(datasetBuffer, maxPduLength - 6);
+
+      const datasetBufferChunks = [];
+      const datasetBufferLength = datasetBuffer.length;
+      const chunkSize = maxPduLength - 6;
+      let i = 0;
+      while (i < datasetBufferLength) {
+        datasetBufferChunks.push(datasetBuffer.slice(i, (i += chunkSize)));
+      }
+
       for (let i = 0; i < datasetBufferChunks.length; i++) {
         const last = datasetBufferChunks.length === i + 1;
         const pdv = new Pdv(pcId, datasetBufferChunks[i], false, last);
@@ -308,14 +328,16 @@ class Network extends EventEmitter {
           this.association = new Association();
           const pdu = new AAssociateRQ(this.association);
           pdu.read(raw);
-          log.info(`Association request:\n${this.association.toString()}`);
+          this.logId = this.association.getCallingAeTitle();
+          log.info(`${this.logId} <- Association request:\n${this.association.toString()}`);
           this.emit('associationRequested', this.association);
           break;
         }
         case 0x02: {
           const pdu = new AAssociateAC(this.association);
           pdu.read(raw);
-          log.info(`Association accept:\n${this.association.toString()}`);
+          this.logId = this.association.getCalledAeTitle();
+          log.info(`${this.logId} <- Association accept:\n${this.association.toString()}`);
           this.emit('associationAccepted', this.association);
           break;
         }
@@ -323,7 +345,9 @@ class Network extends EventEmitter {
           const pdu = new AAssociateRJ();
           pdu.read(raw);
           log.info(
-            `Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
+            `${
+              this.logId
+            } <- Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
           );
           this.emit('associationRejected', pdu.getResult(), pdu.getSource(), pdu.getReason());
           break;
@@ -337,21 +361,25 @@ class Network extends EventEmitter {
         case 0x05: {
           const pdu = new AReleaseRQ();
           pdu.read(raw);
-          log.info('Association release request');
+          log.info(`${this.logId} <- Association release request`);
           this.emit('associationReleaseRequested');
           break;
         }
         case 0x06: {
           const pdu = new AReleaseRP();
           pdu.read(raw);
-          log.info('Association release response');
+          log.info(`${this.logId} <- Association release response`);
           this.emit('associationReleaseResponse');
           break;
         }
         case 0x07: {
           const pdu = new AAbort();
           pdu.read(raw);
-          log.info(`Association abort [source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`);
+          log.info(
+            `${
+              this.logId
+            } <- Association abort [source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
+          );
           this.emit('abort');
           break;
         }
@@ -363,7 +391,7 @@ class Network extends EventEmitter {
           throw new Error('Unknown PDU type');
       }
     } catch (err) {
-      log.error(`Error reading PDU [type: ${raw.getType()}]: ${err.message}`);
+      log.error(`${this.logId} -> Error reading PDU [type: ${raw.getType()}]: ${err.message}`);
       this.emit('networkError', err);
     }
   }
@@ -427,7 +455,12 @@ class Network extends EventEmitter {
                 break;
             }
 
-            log.info(`${this.dimse.toString()} [pc: ${pdv.getPresentationContextId()}]`);
+            log.info(
+              `${this.logId} <- ${this.dimse.toString({
+                includeCommandDataset: this.logCommandDatasets,
+                includeDataset: this.logDatasets
+              })} [pc: ${pdv.getPresentationContextId()}]`
+            );
 
             if (!this.dimse.hasDataset()) {
               this._performDimse(presentationContext, this.dimse);
@@ -448,7 +481,7 @@ class Network extends EventEmitter {
         }
       });
     } catch (err) {
-      log.error(`Error reading DIMSE: ${err.message}`);
+      log.error(`${this.logId} -> Error reading DIMSE: ${err.message}`);
       this.emit('networkError', err);
     }
   }
@@ -544,19 +577,19 @@ class Network extends EventEmitter {
     });
     this.socket.on('error', err => {
       this._reset();
-      const error = `Connection error: ${err.message}`;
+      const error = `${this.logId} -> Connection error: ${err.message}`;
       log.error(error);
       this.emit('networkError', new Error(error));
     });
     this.socket.on('timeout', () => {
       this._reset();
-      const error = 'Connection timeout';
+      const error = `${this.logId} -> Connection timeout`;
       log.error(error);
       this.emit('networkError', new Error(error));
     });
     this.socket.on('close', () => {
       this._reset();
-      log.info('Connection closed');
+      log.info(`${this.logId} -> Connection closed`);
       this.emit('close');
     });
 
@@ -569,14 +602,14 @@ class Network extends EventEmitter {
         !this.lastPduTime &&
         current - this.connectedTime >= this.associationTimeout
       ) {
-        error = `Exceeded association timeout (${this.associationTimeout}), closing connection...`;
+        error = `${this.logId} -> Exceeded association timeout (${this.associationTimeout}), closing connection...`;
         timedOut = true;
       } else if (
         this.connected &&
         this.lastPduTime &&
         current - this.lastPduTime >= this.pduTimeout
       ) {
-        error = `Exceeded PDU timeout (${this.pduTimeout}), closing connection...`;
+        error = `${this.logId} -> Exceeded PDU timeout (${this.pduTimeout}), closing connection...`;
         timedOut = true;
       }
       if (timedOut) {

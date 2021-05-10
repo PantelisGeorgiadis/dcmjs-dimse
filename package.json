@@ -34,7 +34,6 @@
   },
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
-    "buffer-chunks": "^0.1.1",
     "dcmjs": "^0.18.6",
     "smart-buffer": "^4.1.0",
     "ts-mixer": "^5.4.1",

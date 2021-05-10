@@ -54,6 +54,8 @@ class Client extends EventEmitter {
    * @param {number} [opts.connectTimeout] - Connection timeout in milliseconds.
    * @param {number} [opts.associationTimeout] - Association timeout in milliseconds.
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
+   * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
+   * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    * @throws Error if there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {

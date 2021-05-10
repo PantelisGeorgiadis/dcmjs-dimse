@@ -66,7 +66,7 @@ class Command {
   /**
    * Command has dataset.
    * @method
-   * @returns {Boolean} Command has dataset.
+   * @returns {boolean} Command has dataset.
    */
   hasDataset() {
     return this.commandDataset.getElement('CommandDataSetType') !== 0x0101;
@@ -75,17 +75,21 @@ class Command {
   /**
    * Gets the command description.
    * @method
-   * @param {Boolean} [includeCommandDataset] - Include command dataset in the description.
-   * @param {Boolean} [includeDataset] - Include dataset in the description.
+   * @param {Object} [opts] - Description generation options.
+   * @param {boolean} [opts.includeCommandDataset] - Include command dataset in the description.
+   * @param {boolean} [opts.includeDataset] - Include dataset in the description.
    * @returns {string} Command description.
    */
-  toString(includeCommandDataset, includeDataset) {
-    includeCommandDataset = includeCommandDataset || false;
-    includeDataset = includeDataset || false;
+  toString(opts) {
+    const options = opts || {};
+    const includeCommandDataset = options.includeCommandDataset || false;
+    const includeDataset = options.includeDataset || false;
+
     const str = [];
     str.push(
       `${this._typeToString(this.getCommandFieldType())} [HasDataset: ${this.hasDataset()}]`
     );
+
     if (includeCommandDataset) {
       str.push('DIMSE Command Dataset:');
       str.push('===============================================');
@@ -172,7 +176,7 @@ class Request extends Mixin(Command, EventEmitter) {
    * @param {number} type - Command field type.
    * @param {string} affectedClass - Affected SOP Class UID.
    * @param {number} priority - Request priority.
-   * @param {Boolean} hasDataset - Request has dataset.
+   * @param {boolean} hasDataset - Request has dataset.
    */
   constructor(type, affectedClass, priority, hasDataset) {
     super(
@@ -276,10 +280,13 @@ class Request extends Mixin(Command, EventEmitter) {
   /**
    * Gets the request description.
    * @method
+   * @param {Object} [opts] - Description generation options.
+   * @param {boolean} [opts.includeCommandDataset] - Include command dataset in the description.
+   * @param {boolean} [opts.includeDataset] - Include dataset in the description.
    * @return {string} Request description.
    */
-  toString() {
-    return `${super.toString()} [id: ${this.getMessageId()}]`;
+  toString(opts) {
+    return `${super.toString(opts)} [id: ${this.getMessageId()}]`;
   }
 }
 //#endregion
@@ -291,7 +298,7 @@ class Response extends Command {
    * @constructor
    * @param {number} type - Command field type.
    * @param {string} affectedClass - Affected SOP Class UID.
-   * @param {Boolean} hasDataset - Response has dataset.
+   * @param {boolean} hasDataset - Response has dataset.
    * @param {number} status - Response status.
    * @param {string} errorComment - Response error comment.
    */
@@ -410,10 +417,15 @@ class Response extends Command {
   /**
    * Gets the response description.
    * @method
+   * @param {Object} [opts] - Description generation options.
+   * @param {boolean} [opts.includeCommandDataset] - Include command dataset in the description.
+   * @param {boolean} [opts.includeDataset] - Include dataset in the description.
    * @return {string} Response description.
    */
-  toString() {
-    return `${super.toString()} [id: ${this.getMessageIdBeingRespondedTo()}; status: ${this._statusToString(
+  toString(opts) {
+    return `${super.toString(
+      opts
+    )} [id: ${this.getMessageIdBeingRespondedTo()}; status: ${this._statusToString(
       this.getStatus()
     )}]`;
   }
