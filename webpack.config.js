@@ -6,6 +6,7 @@ const pkg = require('./package.json');
 const rootPath = process.cwd();
 const context = path.join(rootPath, 'src');
 const outputPath = path.join(rootPath, 'build');
+const filename = path.parse(pkg.main).base;
 
 const getCurrentDate = () => {
   const today = new Date();
@@ -31,7 +32,7 @@ module.exports = {
   },
   target: 'node',
   output: {
-    filename: pkg.main,
+    filename,
     library: pkg.name,
     libraryTarget: 'umd',
     path: outputPath,

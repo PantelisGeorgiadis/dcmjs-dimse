@@ -30,6 +30,7 @@ const {
   Implementation
 } = require('./Constants');
 const log = require('./log');
+const version = require('./version');
 
 //#region requests
 const requests = {
@@ -78,7 +79,8 @@ const DcmjsDimse = {
   requests,
   responses,
   constants,
-  log
+  log,
+  version
 };
 
 //#region Exports

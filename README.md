@@ -1,13 +1,18 @@
+[![NPM version][npm-version-image]][npm-url] [![build][build-image]][build-url] [![MIT License][license-image]][license-url] 
+
 # dcmjs-dimse
-DICOM DIMSE implementation for Node.js using Steve Pieper's [dcmjs](https://github.com/dcmjs-org/dcmjs) library.
-This library was inspired by [fo-dicom](https://github.com/fo-dicom/fo-dicom) and [mdcm](https://github.com/fo-dicom/mdcm).
-Part of the networking code was taken from [dicom-dimse](https://github.com/OHIF/dicom-dimse).
+DICOM DIMSE implementation for Node.js using Steve Pieper's [dcmjs][dcmjs-url] library.
+This library was inspired by [fo-dicom][fo-dicom-url] and [mdcm][mdcm-url].
+Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 
 ### Note
 **This effort is a work-in-progress and should not be used for production or clinical purposes.**
 
+### Install
+
+	npm install dcmjs-dimse
+
 ### Build
-![build master](https://github.com/PantelisGeorgiadis/dcmjs-dimse/actions/workflows/build.yml/badge.svg?branch=master)
 
 	npm install
 	npm run build
@@ -190,3 +195,17 @@ server.close();
 
 ### License
 dcmjs-dimse is released under the MIT License.
+
+[npm-url]: https://npmjs.org/package/dcmjs-dimse
+[npm-version-image]: https://img.shields.io/npm/v/dcmjs-dimse.svg?style=flat
+
+[build-url]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/actions/workflows/build.yml
+[build-image]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/actions/workflows/build.yml/badge.svg?branch=master
+
+[license-image]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat
+[license-url]: LICENSE.txt
+
+[dcmjs-url]: https://github.com/dcmjs-org/dcmjs
+[fo-dicom-url]: https://github.com/fo-dicom/fo-dicom
+[mdcm-url]: https://github.com/fo-dicom/mdcm
+[dicom-dimse-url]: https://github.com/OHIF/dicom-dimse
