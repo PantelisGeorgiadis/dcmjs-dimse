@@ -5,7 +5,7 @@ const {
   Uid,
   SopClass,
   StorageClass,
-  TransferSyntax
+  TransferSyntax,
 } = require('./Constants');
 
 //#region PresentationContext
@@ -257,7 +257,7 @@ class Association {
    */
   addPresentationContext(abstractSyntaxUid, presentationContextId) {
     let pcId = presentationContextId || 1;
-    this.presentationContexts.forEach(pc => {
+    this.presentationContexts.forEach((pc) => {
       const id = pc.id;
       if (id >= pcId) {
         pcId = id + 2;
@@ -265,7 +265,7 @@ class Association {
     });
     this.presentationContexts.push({
       id: pcId,
-      context: new PresentationContext(pcId, abstractSyntaxUid)
+      context: new PresentationContext(pcId, abstractSyntaxUid),
     });
 
     return pcId;
@@ -290,7 +290,7 @@ class Association {
    * @throws Error if presentation context ID is not found within the presentation contexts collection.
    */
   getPresentationContext(pcId) {
-    const presentationContext = this.presentationContexts.find(p => p.id === pcId);
+    const presentationContext = this.presentationContexts.find((p) => p.id === pcId);
     if (!presentationContext) {
       throw new Error(`Invalid presentation context ID: ${pcId}`);
     }
@@ -320,7 +320,7 @@ class Association {
     if (request instanceof CStoreRequest) {
       let contextExists = false;
       const presentationContexts = this.getPresentationContexts();
-      presentationContexts.forEach(pc => {
+      presentationContexts.forEach((pc) => {
         const context = this.getPresentationContext(pc.id);
         if (sopClassUid === context.getAbstractSyntaxUid()) {
           contextExists = true;
@@ -349,7 +349,7 @@ class Association {
       pcId = this.addPresentationContext(sopClassUid);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
-      Object.keys(StorageClass).forEach(uid => {
+      Object.keys(StorageClass).forEach((uid) => {
         const storageClassUid = StorageClass[uid];
         const storagePcId = this.addPresentationContext(storageClassUid);
         this.addTransferSyntaxToPresentationContext(
@@ -378,7 +378,7 @@ class Association {
   getAcceptedPresentationContextFromRequest(request) {
     let acceptedContext = undefined;
     const contexts = this.getPresentationContexts();
-    contexts.forEach(pc => {
+    contexts.forEach((pc) => {
       const context = this.getPresentationContext(pc.id);
       if (
         context.getAbstractSyntaxUid() === request.getAffectedSopClassUid() &&
@@ -405,18 +405,18 @@ class Association {
     str.push(`Called AE Title:         ${this.calledAeTitle}`);
     str.push(`Calling AE Title:        ${this.callingAeTitle}`);
     str.push(`Presentation Contexts:   ${this.presentationContexts.length}`);
-    this.presentationContexts.forEach(pc => {
+    this.presentationContexts.forEach((pc) => {
       const context = this.getPresentationContext(pc.id);
       str.push(`  Presentation Context:  ${pc.id} [${context.getResultDescription()}]`);
       str.push(
-        `      Abstract:  ${this._uidNameFromValue(
-          [SopClass, StorageClass],
+        `      Abstract:  ${
+          this._uidNameFromValue([SopClass, StorageClass], context.getAbstractSyntaxUid()) ||
           context.getAbstractSyntaxUid()
-        ) || context.getAbstractSyntaxUid()}`
+        }`
       );
 
       const syntaxes = context.getTransferSyntaxUids();
-      syntaxes.forEach(tx => {
+      syntaxes.forEach((tx) => {
         str.push(`      Transfer:  ${this._uidNameFromValue(TransferSyntax, tx) || tx}`);
       });
     });
@@ -436,7 +436,7 @@ class Association {
    */
   _uidNameFromValue(uids, uid) {
     const mergedUids = Array.isArray(uids) ? Object.assign({}, ...uids) : uids;
-    return Object.keys(mergedUids).find(key => mergedUids[key] === uid);
+    return Object.keys(mergedUids).find((key) => mergedUids[key] === uid);
   }
   //#endregion
 }

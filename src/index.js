@@ -11,7 +11,7 @@ const {
   CMoveRequest,
   CMoveResponse,
   CGetRequest,
-  CGetResponse
+  CGetResponse,
 } = require('./Command');
 const {
   CommandFieldType,
@@ -27,7 +27,7 @@ const {
   StorageClass,
   SopClass,
   TransferSyntax,
-  Implementation
+  Implementation,
 } = require('./Constants');
 const log = require('./log');
 const version = require('./version');
@@ -38,7 +38,7 @@ const requests = {
   CFindRequest,
   CStoreRequest,
   CMoveRequest,
-  CGetRequest
+  CGetRequest,
 };
 //#endregion
 
@@ -48,7 +48,7 @@ const responses = {
   CFindResponse,
   CStoreResponse,
   CMoveResponse,
-  CGetResponse
+  CGetResponse,
 };
 //#endregion
 
@@ -67,7 +67,7 @@ const constants = {
   StorageClass,
   SopClass,
   TransferSyntax,
-  Implementation
+  Implementation,
 };
 //#endregion
 
@@ -80,7 +80,7 @@ const DcmjsDimse = {
   responses,
   constants,
   log,
-  version
+  version,
 };
 
 //#region Exports

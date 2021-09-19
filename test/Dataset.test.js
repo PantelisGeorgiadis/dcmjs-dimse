@@ -16,7 +16,7 @@ describe('Dataset', () => {
       {
         PatientName: patientName,
         PatientID: patientID,
-        AccessionNumber: accessionNumber
+        AccessionNumber: accessionNumber,
       },
       TransferSyntax.ImplicitVRLittleEndian
     );

@@ -11,7 +11,7 @@ const {
   RejectReason,
   TransferSyntax,
   SopClass,
-  StorageClass
+  StorageClass,
 } = dcmjsDimse.constants;
 
 const path = require('path');
@@ -19,7 +19,7 @@ const path = require('path');
 function performEcho(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
   const request = new CEchoRequest();
-  request.on('response', response => {
+  request.on('response', (response) => {
     if (response.getStatus() === Status.Success) {
       console.log('Happy!');
     }
@@ -31,7 +31,7 @@ function performEcho(host, port, callingAeTitle, calledAeTitle) {
 function performCFindStudy(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
   const request = CFindRequest.createStudyFindRequest({ PatientName: '*' });
-  request.on('response', request => {
+  request.on('response', (request) => {
     if (request.getStatus() === Status.Pending && request.hasDataset()) {
       console.log(request.getDataset());
     }
@@ -43,7 +43,7 @@ function performCFindStudy(host, port, callingAeTitle, calledAeTitle) {
 function performCFindMwl(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
   const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
-  request.on('response', request => {
+  request.on('response', (request) => {
     if (request.getStatus() === Status.Pending && request.hasDataset()) {
       console.log(request.getDataset());
     }
@@ -86,7 +86,7 @@ class ExampleScp extends Scp {
     }
 
     const contexts = association.getPresentationContexts();
-    contexts.forEach(c => {
+    contexts.forEach((c) => {
       const context = association.getPresentationContext(c.id);
       if (
         context.getAbstractSyntaxUid() === SopClass.Verification ||
@@ -143,7 +143,7 @@ const server = new Server(ExampleScp);
 server.listen(port);
 
 const operations = [performEcho, performCFindStudy, performCFindMwl, performCStore];
-operations.forEach(o => {
+operations.forEach((o) => {
   Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle]);
 });
 

@@ -8,7 +8,7 @@ const log = createLogger({
       return `${timestamp} -- ${level.toUpperCase()} -- ${message}`;
     })
   ),
-  transports: [new transports.Console()]
+  transports: [new transports.Console()],
 });
 
 //#region Exports

@@ -4,7 +4,7 @@ const {
   RejectReason,
   AbortSource,
   AbortReason,
-  TransferSyntax
+  TransferSyntax,
 } = require('./Constants');
 
 const { SmartBuffer } = require('smart-buffer');
@@ -27,7 +27,7 @@ class RawPdu {
     }
 
     this.buffer = SmartBuffer.fromOptions({
-      encoding: 'ascii'
+      encoding: 'ascii',
     });
     this.type = typeOrBuffer;
   }
@@ -86,7 +86,7 @@ class RawPdu {
    */
   writePdu() {
     const outBuffer = SmartBuffer.fromOptions({
-      encoding: 'ascii'
+      encoding: 'ascii',
     });
     const length = this.getLength();
 
@@ -379,7 +379,7 @@ class AAssociateRQ {
     pdu.writeLength16();
 
     const contexts = this.association.getPresentationContexts();
-    contexts.forEach(pc => {
+    contexts.forEach((pc) => {
       const context = this.association.getPresentationContext(pc.id);
       // Presentation Context
       pdu.writeByte('Item-Type', 0x20);
@@ -397,7 +397,7 @@ class AAssociateRQ {
 
       // Transfer Syntaxes
       const syntaxes = context.getTransferSyntaxUids();
-      syntaxes.forEach(tx => {
+      syntaxes.forEach((tx) => {
         pdu.writeByte('Item-Type', 0x40);
         pdu.writeByte('Reserved', 0x00);
         pdu.markLength16('Item-Length');
@@ -547,7 +547,7 @@ class AAssociateAC {
     pdu.writeLength16();
 
     const contexts = this.association.getPresentationContexts();
-    contexts.forEach(pc => {
+    contexts.forEach((pc) => {
       const context = this.association.getPresentationContext(pc.id);
 
       // Presentation Context
@@ -1029,7 +1029,7 @@ class PDataTF {
    */
   getLengthOfPdvs() {
     let len = 0;
-    this.pdvs.forEach(pdv => {
+    this.pdvs.forEach((pdv) => {
       len += pdv.getLength();
     });
     return len;
@@ -1042,7 +1042,7 @@ class PDataTF {
    */
   write() {
     const pdu = new RawPdu(0x04);
-    this.pdvs.forEach(pdv => {
+    this.pdvs.forEach((pdv) => {
       pdv.write(pdu);
     });
     return pdu;
@@ -1075,6 +1075,6 @@ module.exports = {
   AReleaseRP,
   AAbort,
   Pdv,
-  PDataTF
+  PDataTF,
 };
 //#endregion

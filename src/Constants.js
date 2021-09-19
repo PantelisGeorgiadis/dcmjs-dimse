@@ -26,8 +26,9 @@ const CommandFieldType = {
   NCreateResponse: 0x8140,
   NDeleteRequest: 0x0150,
   NDeleteResponse: 0x8150,
-  CCancelRequest: 0x0fff
+  CCancelRequest: 0x0fff,
 };
+Object.freeze(CommandFieldType);
 //#endregion
 
 //#region PresentationContextResult
@@ -41,8 +42,9 @@ const PresentationContextResult = {
   RejectUser: 1,
   RejectNoReason: 2,
   RejectAbstractSyntaxNotSupported: 3,
-  RejectTransferSyntaxesNotSupported: 4
+  RejectTransferSyntaxesNotSupported: 4,
 };
+Object.freeze(PresentationContextResult);
 //#endregion
 
 //#region AbortSource
@@ -53,8 +55,9 @@ const PresentationContextResult = {
 const AbortSource = {
   Unknown: 0,
   ServiceUser: 1,
-  ServiceProvider: 2
+  ServiceProvider: 2,
 };
+Object.freeze(AbortSource);
 //#endregion
 
 //#region AbortReason
@@ -65,8 +68,9 @@ const AbortSource = {
 const AbortReason = {
   Unknown: 0,
   ServiceUser: 1,
-  ServiceProvider: 2
+  ServiceProvider: 2,
 };
+Object.freeze(AbortReason);
 //#endregion
 
 //#region RejectResult
@@ -80,8 +84,9 @@ const RejectResult = {
   UnexpectedPdu: 2,
   UnrecognizedPduParameter: 4,
   UnexpectedPduParameter: 5,
-  InvalidPduParameter: 6
+  InvalidPduParameter: 6,
 };
+Object.freeze(RejectResult);
 //#endregion
 
 //#region RejectSource
@@ -92,8 +97,9 @@ const RejectResult = {
 const RejectSource = {
   ServiceUser: 1,
   ServiceProviderAcse: 2,
-  ServiceProviderPresentation: 3
+  ServiceProviderPresentation: 3,
 };
+Object.freeze(RejectSource);
 //#endregion
 
 //#region RejectReason
@@ -110,8 +116,9 @@ const RejectReason = {
   // Service provider
   ProtocolVersionNotSupported: 1,
   TemporaryCongestion: 1,
-  LocalLimitExceeded: 2
+  LocalLimitExceeded: 2,
 };
+Object.freeze(RejectReason);
 //#endregion
 
 //#region Priority
@@ -122,8 +129,9 @@ const RejectReason = {
 const Priority = {
   Low: 0x0002,
   Medium: 0x0000,
-  High: 0x0001
+  High: 0x0001,
 };
+Object.freeze(Priority);
 //#endregion
 
 //#region Status
@@ -152,8 +160,9 @@ const Status = {
   ProcessingFailure: 0x0110,
   ResourceLimitation: 0x0213,
   UnrecognizedOperation: 0x0211,
-  NoSuchActionType: 0x0123
+  NoSuchActionType: 0x0123,
 };
+Object.freeze(Status);
 //#endregion
 
 //#region Uid
@@ -162,8 +171,9 @@ const Status = {
  * @constant {Object}
  */
 const Uid = {
-  ApplicationContextName: '1.2.840.10008.3.1.1.1'
+  ApplicationContextName: '1.2.840.10008.3.1.1.1',
 };
+Object.freeze(Uid);
 //#endregion
 
 //#region StorageClass
@@ -232,8 +242,9 @@ const StorageClass = {
   XRay3dCraniofacialImageStorage: '1.2.840.10008.5.1.4.1.1.13.1.2',
   XRayAngiographicImageStorage: '1.2.840.10008.5.1.4.1.1.12.1',
   XRayRadiationDoseSRStorage: '1.2.840.10008.5.1.4.1.1.88.67',
-  XRayRadiofluoroscopicImageStorage: '1.2.840.10008.5.1.4.1.1.12.2'
+  XRayRadiofluoroscopicImageStorage: '1.2.840.10008.5.1.4.1.1.12.2',
 };
+Object.freeze(StorageClass);
 //#endregion
 
 //#region SopClass
@@ -246,8 +257,9 @@ const SopClass = {
   StudyRootQueryRetrieveInformationModelFind: '1.2.840.10008.5.1.4.1.2.2.1',
   ModalityWorklistInformationModelFind: '1.2.840.10008.5.1.4.31',
   StudyRootQueryRetrieveInformationModelMove: '1.2.840.10008.5.1.4.1.2.2.2',
-  StudyRootQueryRetrieveInformationModelGet: '1.2.840.10008.5.1.4.1.2.2.3'
+  StudyRootQueryRetrieveInformationModelGet: '1.2.840.10008.5.1.4.1.2.2.3',
 };
+Object.freeze(SopClass);
 //#endregion
 
 //#region TransferSyntax
@@ -257,8 +269,9 @@ const SopClass = {
  */
 const TransferSyntax = {
   ImplicitVRLittleEndian: '1.2.840.10008.1.2',
-  ExplicitVRLittleEndian: '1.2.840.10008.1.2.1'
+  ExplicitVRLittleEndian: '1.2.840.10008.1.2.1',
 };
+Object.freeze(TransferSyntax);
 //#endregion
 
 //#region Implementation
@@ -269,8 +282,9 @@ const TransferSyntax = {
 const Implementation = {
   ImplementationClassUid: '1.3.6.1.4.1.41293.8',
   ImplementationVersion: 'DCMJS-DIMSE-V0.1',
-  MaxPduLength: 262144
+  MaxPduLength: 262144,
 };
+Object.freeze(Implementation);
 //#endregion
 
 //#region Exports
@@ -288,6 +302,6 @@ module.exports = {
   StorageClass,
   SopClass,
   TransferSyntax,
-  Implementation
+  Implementation,
 };
 //#endregion

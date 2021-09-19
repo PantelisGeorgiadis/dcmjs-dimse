@@ -11,7 +11,7 @@ const {
   CStoreRequest,
   CStoreResponse,
   CGetRequest,
-  CGetResponse
+  CGetResponse,
 } = require('./../src/Command');
 const Dataset = require('../src/Dataset');
 const { CommandFieldType, SopClass, TransferSyntax } = require('./../src/Constants');
@@ -25,7 +25,7 @@ describe('Command', () => {
     const command = new Command(
       new Dataset({
         CommandField: 1,
-        CommandDataSetType: 0x0101
+        CommandDataSetType: 0x0101,
       })
     );
     const commandDataset = command.getCommandDataset();
@@ -76,7 +76,7 @@ describe('Command', () => {
     const request = CFindRequest.createStudyFindRequest({
       PatientName: 'JOHN^DOE',
       PatientID: '12345678',
-      AccessionNumber: '87654321'
+      AccessionNumber: '87654321',
     });
     const dataset = request.getDataset();
 
@@ -116,7 +116,7 @@ describe('Command', () => {
         PatientID: patientID,
         AccessionNumber: accessionNumber,
         StudyDescription: studyDescription,
-        SeriesDescription: seriesDescription
+        SeriesDescription: seriesDescription,
       },
       TransferSyntax.ImplicitVRLittleEndian
     );

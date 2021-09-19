@@ -7,14 +7,14 @@ const {
   CFindRequest,
   CFindResponse,
   CStoreRequest,
-  CStoreResponse
+  CStoreResponse,
 } = require('../src/Command');
 const {
   SopClass,
   TransferSyntax,
   PresentationContextResult,
   Status,
-  StorageClass
+  StorageClass,
 } = require('./../src/Constants');
 const log = require('./../src/log');
 
@@ -23,7 +23,7 @@ const expect = chai.expect;
 
 const datasets = [
   new Dataset({ PatientID: '12345', PatientName: 'JOHN^DOE' }),
-  new Dataset({ PatientID: '54321', PatientName: 'JANE^DOE' })
+  new Dataset({ PatientID: '54321', PatientName: 'JANE^DOE' }),
 ];
 
 class RejectingScp extends Scp {
@@ -45,7 +45,7 @@ class AcceptingScp extends Scp {
   associationRequested(association) {
     this.association = association;
     const contexts = association.getPresentationContexts();
-    contexts.forEach(c => {
+    contexts.forEach((c) => {
       const context = association.getPresentationContext(c.id);
       if (
         context.getAbstractSyntaxUid() === SopClass.Verification ||
@@ -68,7 +68,7 @@ class AcceptingScp extends Scp {
   cFindRequest(request) {
     const requestDataset = request.getDataset();
     const foundDataset = datasets.find(
-      d => d.getElement('PatientID') === requestDataset.getElement('PatientID')
+      (d) => d.getElement('PatientID') === requestDataset.getElement('PatientID')
     );
 
     const responses = [];
@@ -109,7 +109,7 @@ describe('Client/Server', () => {
 
     const client = new Client();
     const request = new CEchoRequest();
-    request.on('response', response => {
+    request.on('response', (response) => {
       status = response.getStatus();
     });
     client.addRequest(request);
@@ -131,7 +131,7 @@ describe('Client/Server', () => {
 
     const client = new Client();
     const request = new CEchoRequest();
-    request.on('response', response => {
+    request.on('response', (response) => {
       status = response.getStatus();
     });
     client.addRequest(request);
@@ -150,7 +150,7 @@ describe('Client/Server', () => {
 
     const client = new Client();
     const request = CFindRequest.createStudyFindRequest({ PatientID: '12345' });
-    request.on('response', response => {
+    request.on('response', (response) => {
       if (response.getStatus() === Status.Pending) {
         ret = response.getDataset();
       }
@@ -172,7 +172,7 @@ describe('Client/Server', () => {
 
     const client = new Client();
     const request = CFindRequest.createWorklistFindRequest({ PatientID: '54321' });
-    request.on('response', response => {
+    request.on('response', (response) => {
       if (response.getStatus() === Status.Pending) {
         ret = response.getDataset();
       }
@@ -195,12 +195,12 @@ describe('Client/Server', () => {
       new Dataset({
         SOPClassUID: StorageClass.MrImageStorage,
         PatientID: '45678',
-        PatientName: 'JOHN^SMITH'
+        PatientName: 'JOHN^SMITH',
       })
     );
     client.addRequest(storeRequest);
     const findRequest = CFindRequest.createStudyFindRequest({ PatientID: '45678' });
-    findRequest.on('response', response => {
+    findRequest.on('response', (response) => {
       if (response.getStatus() === Status.Pending) {
         ret = response.getDataset();
       }

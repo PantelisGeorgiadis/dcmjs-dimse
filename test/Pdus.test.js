@@ -6,13 +6,13 @@ const {
   AAssociateRJ,
   Pdv,
   PDataTF,
-  AAbort
+  AAbort,
 } = require('../src/Pdu');
 const {
   Implementation,
   PresentationContextResult,
   SopClass,
-  TransferSyntax
+  TransferSyntax,
 } = require('./../src/Constants');
 
 const chai = require('chai');

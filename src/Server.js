@@ -20,25 +20,25 @@ class Scp extends Network {
   constructor(socket, opts) {
     super(socket, opts);
 
-    this.on('associationRequested', association => {
+    this.on('associationRequested', (association) => {
       this.associationRequested(association);
     });
     this.on('associationReleaseRequested', () => {
       this.associationReleaseRequested();
     });
-    this.on('cEchoRequest', e => {
+    this.on('cEchoRequest', (e) => {
       e.response = this.cEchoRequest(e.request);
     });
-    this.on('cFindRequest', e => {
+    this.on('cFindRequest', (e) => {
       e.responses = this.cFindRequest(e.request);
     });
-    this.on('cStoreRequest', e => {
+    this.on('cStoreRequest', (e) => {
       e.response = this.cStoreRequest(e.request);
     });
-    this.on('cMoveRequest', e => {
+    this.on('cMoveRequest', (e) => {
       e.responses = this.cMoveRequest(e.request);
     });
-    this.on('cGetRequest', e => {
+    this.on('cGetRequest', (e) => {
       e.responses = this.cGetRequest(e.request);
     });
   }
@@ -156,25 +156,21 @@ class Server extends EventEmitter {
     this.server = createServer();
     this.server.listen(port);
 
-    const handleServerError = err => {
-      throw err;
-    };
-
     this.server.on('listening', () => {
       log.info(`DICOM server listening on port ${port}`);
     });
-    this.server.on('connection', socket => {
+    this.server.on('connection', (socket) => {
       log.info(`Client connecting from ${socket.remoteAddress}:${socket.remotePort}`);
       const client = new this.scp.class(socket, opts);
       client.connected = true;
       this.clients.push(client);
 
-      this.clients = this.clients.filter(item => item.connected);
+      this.clients = this.clients.filter((item) => item.connected);
     });
-    this.server.on('error', err => {
+    this.server.on('error', (err) => {
       const error = `Server error: ${err.message}`;
       log.error(error);
-      handleServerError(new Error(error));
+      this.emit('networkError', err);
     });
   }
 
@@ -187,7 +183,7 @@ class Server extends EventEmitter {
       this.server.close();
 
       // Close all live sockets
-      this.clients.forEach(client => client.socket.destroy());
+      this.clients.forEach((client) => client.socket.destroy());
       this.clients = [];
     }
   }

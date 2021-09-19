@@ -8,7 +8,7 @@ const {
   AReleaseRP,
   AAbort,
   Pdv,
-  PDataTF
+  PDataTF,
 } = require('./Pdu');
 const { CommandFieldType, Status, TransferSyntax, Implementation } = require('./Constants');
 const {
@@ -23,7 +23,7 @@ const {
   CMoveRequest,
   CMoveResponse,
   CGetRequest,
-  CGetResponse
+  CGetResponse,
 } = require('./Command');
 const Dataset = require('./Dataset');
 const log = require('./log');
@@ -166,7 +166,7 @@ class Network extends EventEmitter {
   sendRequests(requests) {
     this.requests = requests;
     const requestsWithAcceptedContext = [];
-    requests.forEach(request => {
+    requests.forEach((request) => {
       const context = this.association.getAcceptedPresentationContextFromRequest(request);
       if (context) {
         request.setMessageId(this._getNextMessageId());
@@ -275,7 +275,7 @@ class Network extends EventEmitter {
     log.info(
       `${this.logId} -> ${command.toString({
         includeCommandDataset: this.logCommandDatasets,
-        includeDataset: this.logDatasets
+        includeDataset: this.logDatasets,
       })} [pc: ${pcId}]`
     );
 
@@ -405,10 +405,10 @@ class Network extends EventEmitter {
   _processPDataTf(pdu) {
     try {
       const pdvs = pdu.getPdvs();
-      pdvs.forEach(pdv => {
+      pdvs.forEach((pdv) => {
         if (!this.dimseBuffer) {
           this.dimseBuffer = SmartBuffer.fromOptions({
-            encoding: 'ascii'
+            encoding: 'ascii',
           });
         }
         this.dimseBuffer.writeBuffer(pdv.getValue());
@@ -458,7 +458,7 @@ class Network extends EventEmitter {
             log.info(
               `${this.logId} <- ${this.dimse.toString({
                 includeCommandDataset: this.logCommandDatasets,
-                includeDataset: this.logDatasets
+                includeDataset: this.logDatasets,
               })} [pc: ${pdv.getPresentationContextId()}]`
             );
 
@@ -497,7 +497,7 @@ class Network extends EventEmitter {
     if (dimse instanceof Response) {
       const response = Object.assign(Object.create(Object.getPrototypeOf(dimse)), dimse);
       const request = this.requests.find(
-        r => r.getMessageId() === dimse.getMessageIdBeingRespondedTo()
+        (r) => r.getMessageId() === dimse.getMessageIdBeingRespondedTo()
       );
       if (request) {
         request.raiseResponseEvent(response);
@@ -522,7 +522,7 @@ class Network extends EventEmitter {
         throw new Error('cFindRequest handler should provide response(s)');
       }
       const responses = !Array.isArray(e.responses) ? [e.responses] : e.responses;
-      responses.forEach(response => {
+      responses.forEach((response) => {
         this._sendDimse({ context: presentationContext, command: response });
       });
     } else if (dimse.getCommandFieldType() == CommandFieldType.CStoreRequest) {
@@ -539,7 +539,7 @@ class Network extends EventEmitter {
         throw new Error('cMoveRequest handler should provide response(s)');
       }
       const responses = !Array.isArray(e.responses) ? [e.responses] : e.responses;
-      responses.forEach(response => {
+      responses.forEach((response) => {
         this._sendDimse({ context: presentationContext, command: response });
       });
     } else if (dimse.getCommandFieldType() == CommandFieldType.CGetRequest) {
@@ -549,7 +549,7 @@ class Network extends EventEmitter {
         throw new Error('cGetRequest handler should provide response(s)');
       }
       const responses = !Array.isArray(e.responses) ? [e.responses] : e.responses;
-      responses.forEach(response => {
+      responses.forEach((response) => {
         this._sendDimse({ context: presentationContext, command: response });
       });
     }
@@ -568,14 +568,14 @@ class Network extends EventEmitter {
       this.emit('connect');
     });
     const pduAccumulator = new PduAccumulator();
-    pduAccumulator.on('pdu', data => {
+    pduAccumulator.on('pdu', (data) => {
       this.lastPduTime = Date.now();
       this._processPdu(data);
     });
-    this.socket.on('data', data => {
+    this.socket.on('data', (data) => {
       pduAccumulator.accumulate(data);
     });
-    this.socket.on('error', err => {
+    this.socket.on('error', (err) => {
       this._reset();
       const error = `${this.logId} -> Connection error: ${err.message}`;
       log.error(error);

@@ -28,7 +28,7 @@ class Dataset {
       const naturalizedDataset = DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
 
       this.elements = {};
-      Object.keys(naturalizedDataset).forEach(item => {
+      Object.keys(naturalizedDataset).forEach((item) => {
         this.elements[item] = naturalizedDataset[item];
       });
       return;

@@ -5,7 +5,7 @@ const {
   SopClass,
   TransferSyntax,
   PresentationContextResult,
-  Priority
+  Priority,
 } = require('./../src/Constants');
 
 const chai = require('chai');

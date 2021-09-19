@@ -184,7 +184,7 @@ class Request extends Mixin(Command, EventEmitter) {
         AffectedSOPClassUID: affectedClass,
         CommandField: type,
         Priority: priority,
-        CommandDataSetType: hasDataset ? 0x0202 : 0x0101
+        CommandDataSetType: hasDataset ? 0x0202 : 0x0101,
       })
     );
   }
@@ -309,7 +309,7 @@ class Response extends Command {
         CommandField: type,
         CommandDataSetType: hasDataset ? 0x0202 : 0x0101,
         Status: status,
-        ErrorComment: errorComment
+        ErrorComment: errorComment,
       })
     );
   }
@@ -574,7 +574,7 @@ class CFindRequest extends Request {
       StudyTime: '',
       StudyDescription: '',
       NumberOfStudyRelatedSeries: '',
-      NumberOfStudyRelatedInstances: ''
+      NumberOfStudyRelatedInstances: '',
     };
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'STUDY';
@@ -602,7 +602,7 @@ class CFindRequest extends Request {
       Modality: '',
       SeriesDate: '',
       SeriesTime: '',
-      NumberOfSeriesRelatedInstances: ''
+      NumberOfSeriesRelatedInstances: '',
     };
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'SERIES';
@@ -627,7 +627,7 @@ class CFindRequest extends Request {
       SeriesInstanceUID: '',
       SOPInstanceUID: '',
       InstanceNumber: '',
-      Modality: ''
+      Modality: '',
     };
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'IMAGE';
@@ -695,9 +695,9 @@ class CFindRequest extends Request {
           ScheduledProcedureStepID: '',
           RequestedContrastAgent: '',
           PreMedication: '',
-          AnatomicalOrientationType: ''
-        }
-      ]
+          AnatomicalOrientationType: '',
+        },
+      ],
     };
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = '';
@@ -837,7 +837,7 @@ class CMoveRequest extends Request {
   static createStudyMoveRequest(destinationAet, studyInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
-      QueryRetrieveLevel: 'STUDY'
+      QueryRetrieveLevel: 'STUDY',
     };
 
     const moveRequest = new CMoveRequest(priority);
@@ -863,7 +863,7 @@ class CMoveRequest extends Request {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
-      QueryRetrieveLevel: 'SERIES'
+      QueryRetrieveLevel: 'SERIES',
     };
 
     const moveRequest = new CMoveRequest(priority);
@@ -897,7 +897,7 @@ class CMoveRequest extends Request {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
       SOPInstanceUID: sopInstanceUid,
-      QueryRetrieveLevel: 'IMAGE'
+      QueryRetrieveLevel: 'IMAGE',
     };
 
     const moveRequest = new CMoveRequest(priority);
@@ -1016,7 +1016,7 @@ class CGetRequest extends Request {
   static createStudyGetRequest(studyInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
-      QueryRetrieveLevel: 'STUDY'
+      QueryRetrieveLevel: 'STUDY',
     };
 
     const getRequest = new CGetRequest(priority);
@@ -1038,7 +1038,7 @@ class CGetRequest extends Request {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
-      QueryRetrieveLevel: 'SERIES'
+      QueryRetrieveLevel: 'SERIES',
     };
 
     const getRequest = new CGetRequest(priority);
@@ -1062,7 +1062,7 @@ class CGetRequest extends Request {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
       SOPInstanceUID: sopInstanceUid,
-      QueryRetrieveLevel: 'IMAGE'
+      QueryRetrieveLevel: 'IMAGE',
     };
 
     const getRequest = new CGetRequest(priority);
@@ -1165,6 +1165,6 @@ module.exports = {
   CMoveRequest,
   CMoveResponse,
   CGetRequest,
-  CGetResponse
+  CGetResponse,
 };
 //#endregion

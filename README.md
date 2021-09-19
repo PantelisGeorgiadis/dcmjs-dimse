@@ -27,56 +27,88 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 
 #### C-Echo SCU
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { CEchoRequest } = dcmjsDimse.requests;
+
 const client = new Client();
 const request = new CEchoRequest();
-request.on('response', response => {
+request.on('response', (response) => {
   if (response.getStatus() === Status.Success) {
     console.log('Happy!');
   }
 });
 client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
 #### C-Find SCU (Studies)
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { CFindRequest } = dcmjsDimse.requests;
+
 const client = new Client();
 const request = CFindRequest.createStudyFindRequest({ PatientID: '12345', PatientName: '*' });
-request.on('response', response => {
+request.on('response', (response) => {
   if (response.getStatus() === Status.Pending && response.hasDataset()) {
     console.log(response.getDataset());
   }
 });
 client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
 #### C-Find SCU (Worklist)
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { CFindRequest } = dcmjsDimse.requests;
+
 const client = new Client();
 const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
-request.on('response', response => {
+request.on('response', (response) => {
   if (response.getStatus() === Status.Pending && response.hasDataset()) {
     console.log(response.getDataset());
   }
 });
 client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
 #### C-Store SCU
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { CStoreRequest } = dcmjsDimse.requests;
+
 const client = new Client();
 const request = new CStoreRequest('test.dcm');
 client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
 #### C-Move SCU
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { CMoveRequest } = dcmjsDimse.requests;
+
 const client = new Client();
 const request = CMoveRequest.createStudyMoveRequest('DEST-AE', studyInstanceUid);
-request.on('response', response => {
+request.on('response', (response) => {
   if (response.getStatus() === Status.Pending) {
     console.log('Remaining: ' + response.getRemaining());
     console.log('Completed: ' + response.getCompleted());
@@ -85,14 +117,21 @@ request.on('response', response => {
   }
 });
 client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
 #### C-Get SCU
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { CGetRequest } = dcmjsDimse.requests;
+
 const client = new Client();
 const request = CGetRequest.createStudyGetRequest(studyInstanceUid);
-request.on('response', response => {
+request.on('response', (response) => {
   if (response.getStatus() === Status.Pending) {
     console.log('Remaining: ' + response.getRemaining());
     console.log('Completed: ' + response.getCompleted());
@@ -100,18 +139,25 @@ request.on('response', response => {
     console.log('Failed: ' + response.getFailures());
   }
 });
-client.on('cStoreRequest', e => {
+client.on('cStoreRequest', (e) => {
   console.log(e.request.getDataset());
 
   e.response = CStoreResponse.fromRequest(e.request);
   e.response.setStatus(Status.Success);
 });
 client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
 #### SCP
 ```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Server, Scp } = dcmjsDimse;
+const { CEchoResponse, CFindResponse, CStoreResponse } = dcmjsDimse.responses;
+
 class DcmjsDimseScp extends Scp {
   constructor(socket, opts) {
     super(socket, opts);
@@ -133,7 +179,7 @@ class DcmjsDimseScp extends Scp {
     }
 
     const contexts = association.getPresentationContexts();
-    contexts.forEach(c => {
+    contexts.forEach((c) => {
       const context = association.getPresentationContext(c.id);
       if (
         context.getAbstractSyntaxUid() === SopClass.Verification ||
@@ -187,6 +233,9 @@ class DcmjsDimseScp extends Scp {
 }
 
 const server = new Server(DcmjsDimseScp);
+server.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
 server.listen(port);
 
 // When done

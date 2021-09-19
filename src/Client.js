@@ -66,13 +66,9 @@ class Client extends EventEmitter {
 
     // Create association object
     const association = new Association(callingAeTitle, calledAeTitle);
-    this.requests.forEach(request => {
+    this.requests.forEach((request) => {
       association.addPresentationContextFromRequest(request);
     });
-
-    const handleNetworkError = err => {
-      throw err;
-    };
 
     // Initialize network
     const socket = new Socket();
@@ -81,7 +77,7 @@ class Client extends EventEmitter {
       this.emit('connected');
       network.sendAssociationRequest(association);
     });
-    network.on('associationAccepted', association => {
+    network.on('associationAccepted', (association) => {
       this.emit('associationAccepted', association);
       network.sendRequests(this.requests);
     });
@@ -96,12 +92,12 @@ class Client extends EventEmitter {
     network.on('done', () => {
       network.sendAssociationReleaseRequest();
     });
-    network.on('cStoreRequest', e => {
+    network.on('cStoreRequest', (e) => {
       this.emit('cStoreRequest', e);
     });
-    network.on('networkError', err => {
+    network.on('networkError', (err) => {
       socket.end();
-      handleNetworkError(err);
+      this.emit('networkError', err);
     });
     network.on('close', () => {
       this.emit('closed');
