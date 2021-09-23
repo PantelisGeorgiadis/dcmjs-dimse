@@ -53,8 +53,8 @@ Object.freeze(PresentationContextResult);
  * @constant {Object}
  */
 const AbortSource = {
-  Unknown: 0,
-  ServiceUser: 1,
+  ServiceUser: 0,
+  Reserved: 1,
   ServiceProvider: 2,
 };
 Object.freeze(AbortSource);

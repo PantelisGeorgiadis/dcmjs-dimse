@@ -1,6 +1,6 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",

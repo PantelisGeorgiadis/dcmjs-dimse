@@ -30,6 +30,7 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 const dcmjsDimse = require('dcmjs-dimse');
 const { Client } = dcmjsDimse;
 const { CEchoRequest } = dcmjsDimse.requests;
+const { Status } = dcmjsDimse.constants;
 
 const client = new Client();
 const request = new CEchoRequest();
@@ -50,6 +51,7 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 const dcmjsDimse = require('dcmjs-dimse');
 const { Client } = dcmjsDimse;
 const { CFindRequest } = dcmjsDimse.requests;
+const { Status } = dcmjsDimse.constants;
 
 const client = new Client();
 const request = CFindRequest.createStudyFindRequest({ PatientID: '12345', PatientName: '*' });
@@ -70,6 +72,7 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 const dcmjsDimse = require('dcmjs-dimse');
 const { Client } = dcmjsDimse;
 const { CFindRequest } = dcmjsDimse.requests;
+const { Status } = dcmjsDimse.constants;
 
 const client = new Client();
 const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
@@ -105,6 +108,7 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 const dcmjsDimse = require('dcmjs-dimse');
 const { Client } = dcmjsDimse;
 const { CMoveRequest } = dcmjsDimse.requests;
+const { Status } = dcmjsDimse.constants;
 
 const client = new Client();
 const request = CMoveRequest.createStudyMoveRequest('DEST-AE', studyInstanceUid);
@@ -128,6 +132,8 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 const dcmjsDimse = require('dcmjs-dimse');
 const { Client } = dcmjsDimse;
 const { CGetRequest } = dcmjsDimse.requests;
+const { CStoreResponse } = dcmjsDimse.responses;
+const { Status } = dcmjsDimse.constants;
 
 const client = new Client();
 const request = CGetRequest.createStudyGetRequest(studyInstanceUid);
@@ -157,6 +163,16 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 const dcmjsDimse = require('dcmjs-dimse');
 const { Server, Scp } = dcmjsDimse;
 const { CEchoResponse, CFindResponse, CStoreResponse } = dcmjsDimse.responses;
+const {
+  Status,
+  PresentationContextResult,
+  RejectResult,
+  RejectSource,
+  RejectReason,
+  TransferSyntax,
+  SopClass,
+  StorageClass,
+} = dcmjsDimse.constants;
 
 class DcmjsDimseScp extends Scp {
   constructor(socket, opts) {
