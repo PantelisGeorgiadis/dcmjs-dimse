@@ -54,11 +54,15 @@ class Client extends EventEmitter {
    * @param {number} [opts.connectTimeout] - Connection timeout in milliseconds.
    * @param {number} [opts.associationTimeout] - Association timeout in milliseconds.
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
+   * @param {number} [opts.associationLingerTimeout] - Association linger timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    * @throws Error if there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
+    opts = opts || {};
+    this.associationLingerTimeout = opts.associationLingerTimeout || 0;
+
     // Check for requests
     if (this.requests.length === 0) {
       throw new Error('There are no requests to perform.');
@@ -90,10 +94,13 @@ class Client extends EventEmitter {
       socket.end();
     });
     network.on('done', () => {
-      network.sendAssociationReleaseRequest();
+      setTimeout(() => network.sendAssociationReleaseRequest(), this.associationLingerTimeout);
     });
     network.on('cStoreRequest', (e) => {
       this.emit('cStoreRequest', e);
+    });
+    network.on('nEventReportRequest', (e) => {
+      this.emit('nEventReportRequest', e);
     });
     network.on('networkError', (err) => {
       socket.end();

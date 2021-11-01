@@ -87,7 +87,6 @@ class Dataset {
   /**
    * Gets elements encoded in a DICOM dataset buffer.
    * @method
-   * @param {string} transferSyntaxUid - Transfer Syntax UID.
    * @returns {Buffer} DICOM dataset.
    */
   getDenaturalizedDataset() {
@@ -96,6 +95,35 @@ class Dataset {
     DicomMessage.write(denaturalizedDataset, stream, this.transferSyntaxUid, {});
 
     return Buffer.from(stream.getBuffer());
+  }
+
+  /**
+   * Gets elements encoded in a DICOM dataset buffer meant for a command.
+   * @method
+   * @returns {Buffer} DICOM dataset.
+   */
+  getDenaturalizedCommandDataset() {
+    const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
+
+    const datasetStream = new WriteBufferStream();
+    const elementsStream = new WriteBufferStream();
+    DicomMessage.write(
+      denaturalizedDataset,
+      elementsStream,
+      TransferSyntax.ImplicitVRLittleEndian,
+      {}
+    );
+    DicomMessage.writeTagObject(
+      datasetStream,
+      '00000000',
+      'UL',
+      elementsStream.size,
+      TransferSyntax.ImplicitVRLittleEndian,
+      {}
+    );
+    datasetStream.concat(elementsStream);
+
+    return Buffer.from(datasetStream.getBuffer());
   }
 
   /**
@@ -113,6 +141,16 @@ class Dataset {
     const elements = DicomMetaDictionary.naturalizeDataset(dicomDict.dict);
 
     return new Dataset(elements, transferSyntaxUid);
+  }
+
+  /**
+   * Generates a UUID-derived UID.
+   * @method
+   * @static
+   * @returns {string} UUID-derived UID.
+   */
+  static generateDerivedUid() {
+    return DicomMetaDictionary.uid();
   }
 
   /**

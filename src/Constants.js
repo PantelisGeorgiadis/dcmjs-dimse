@@ -121,19 +121,6 @@ const RejectReason = {
 Object.freeze(RejectReason);
 //#endregion
 
-//#region Priority
-/**
- * Priority.
- * @constant {Object}
- */
-const Priority = {
-  Low: 0x0002,
-  Medium: 0x0000,
-  High: 0x0001,
-};
-Object.freeze(Priority);
-//#endregion
-
 //#region Status
 /**
  * Statuses.
@@ -256,8 +243,22 @@ const SopClass = {
   Verification: '1.2.840.10008.1.1',
   StudyRootQueryRetrieveInformationModelFind: '1.2.840.10008.5.1.4.1.2.2.1',
   ModalityWorklistInformationModelFind: '1.2.840.10008.5.1.4.31',
+  ModalityPerformedProcedureStep: '1.2.840.10008.3.1.2.3.3',
   StudyRootQueryRetrieveInformationModelMove: '1.2.840.10008.5.1.4.1.2.2.2',
   StudyRootQueryRetrieveInformationModelGet: '1.2.840.10008.5.1.4.1.2.2.3',
+  StorageCommitmentPushModel: '1.2.840.10008.1.20.1',
+  BasicFilmSession: '1.2.840.10008.5.1.1.1',
+  PrintJob: '1.2.840.10008.5.1.1.14',
+  BasicAnnotationBox: '1.2.840.10008.5.1.1.15',
+  Printer: '1.2.840.10008.5.1.1.16',
+  PrinterConfigurationRetrieval: '1.2.840.10008.5.1.1.16.376',
+  BasicGrayscalePrintManagementMeta: '1.2.840.10008.5.1.1.9',
+  BasicColorPrintManagementMeta: '1.2.840.10008.5.1.1.18',
+  BasicFilmBox: '1.2.840.10008.5.1.1.2',
+  PresentationLut: '1.2.840.10008.5.1.1.23',
+  BasicGrayscaleImageBox: '1.2.840.10008.5.1.1.4',
+  BasicColorImageBox: '1.2.840.10008.5.1.1.4.1',
+  InstanceAvailabilityNotification: '1.2.840.10008.5.1.4.33',
 };
 Object.freeze(SopClass);
 //#endregion
@@ -296,7 +297,6 @@ module.exports = {
   RejectResult,
   RejectSource,
   RejectReason,
-  Priority,
   Status,
   Uid,
   StorageClass,

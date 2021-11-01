@@ -1,5 +1,6 @@
 const { CStoreRequest, CGetRequest } = require('./Command');
 const {
+  CommandFieldType,
   Implementation,
   PresentationContextResult,
   Uid,
@@ -314,7 +315,7 @@ class Association {
    * @returns {number} Presentation context ID.
    */
   addPresentationContextFromRequest(request) {
-    const sopClassUid = request.getAffectedSopClassUid();
+    const sopClassUid = this._getSopClassFromRequest(request);
     let pcId = undefined;
 
     if (request instanceof CStoreRequest) {
@@ -381,7 +382,7 @@ class Association {
     contexts.forEach((pc) => {
       const context = this.getPresentationContext(pc.id);
       if (
-        context.getAbstractSyntaxUid() === request.getAffectedSopClassUid() &&
+        context.getAbstractSyntaxUid() === this._getSopClassFromRequest(request) &&
         context.getResult() === PresentationContextResult.Accept
       ) {
         acceptedContext = context;
@@ -437,6 +438,33 @@ class Association {
   _uidNameFromValue(uids, uid) {
     const mergedUids = Array.isArray(uids) ? Object.assign({}, ...uids) : uids;
     return Object.keys(mergedUids).find((key) => mergedUids[key] === uid);
+  }
+
+  /**
+   * Gets SOP class UID based on the request type.
+   * @method
+   * @private
+   * @param {Request} request - Request.
+   * @returns {string} SOP class UID.
+   */
+  _getSopClassFromRequest(request) {
+    switch (request.getCommandFieldType()) {
+      case CommandFieldType.NGetRequest:
+      case CommandFieldType.NSetRequest:
+      case CommandFieldType.NActionRequest:
+      case CommandFieldType.NDeleteRequest:
+        return request.getRequestedSopClassUid();
+      case CommandFieldType.CStoreRequest:
+      case CommandFieldType.CFindRequest:
+      case CommandFieldType.CGetRequest:
+      case CommandFieldType.CMoveRequest:
+      case CommandFieldType.CEchoRequest:
+      case CommandFieldType.NEventReportRequest:
+      case CommandFieldType.NCreateRequest:
+        return request.getAffectedSopClassUid();
+      default:
+        return request.getAffectedSopClassUid();
+    }
   }
   //#endregion
 }

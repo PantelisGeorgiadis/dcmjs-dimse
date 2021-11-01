@@ -8,6 +8,12 @@ const {
   CFindResponse,
   CStoreRequest,
   CStoreResponse,
+  NActionRequest,
+  NActionResponse,
+  NEventReportRequest,
+  NEventReportResponse,
+  NGetRequest,
+  NGetResponse,
 } = require('../src/Command');
 const {
   SopClass,
@@ -51,6 +57,8 @@ class AcceptingScp extends Scp {
         context.getAbstractSyntaxUid() === SopClass.Verification ||
         context.getAbstractSyntaxUid() === SopClass.StudyRootQueryRetrieveInformationModelFind ||
         context.getAbstractSyntaxUid() === SopClass.ModalityWorklistInformationModelFind ||
+        context.getAbstractSyntaxUid() === SopClass.Printer ||
+        context.getAbstractSyntaxUid() === SopClass.StorageCommitmentPushModel ||
         context.getAbstractSyntaxUid() === StorageClass.MrImageStorage
       ) {
         context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
@@ -91,6 +99,47 @@ class AcceptingScp extends Scp {
     response.setStatus(Status.Success);
     return response;
   }
+  nActionRequest(request) {
+    const nEventRequest = new NEventReportRequest(
+      request.getRequestedSopClassUid(),
+      request.getRequestedSopInstanceUid(),
+      request.getActionTypeId()
+    );
+    const actionDataset = request.getDataset();
+    const transactionUid = actionDataset.getElement('TransactionUID');
+    const referencedSOPSequenceItem = actionDataset.getElement('ReferencedSOPSequence');
+    const sopInstanceUid = referencedSOPSequenceItem.ReferencedSOPInstanceUID;
+
+    nEventRequest.setDataset(
+      new Dataset({
+        TransactionUID: transactionUid,
+        FailedSOPSequence: [
+          {
+            ReferencedSOPClassUID: StorageClass.MrImageStorage,
+            ReferencedSOPInstanceUID: sopInstanceUid,
+            FailureReason: 0x0112,
+          },
+        ],
+      })
+    );
+    this.sendRequests(nEventRequest);
+
+    const response = NActionResponse.fromRequest(request);
+    response.setStatus(Status.Success);
+    return response;
+  }
+  nGetRequest(request) {
+    const response = NGetResponse.fromRequest(request);
+    const attributes = request.getAttributeIdentifierList();
+    const dataset = new Dataset();
+    attributes.forEach((attribute) => {
+      // Echo the requested attribute name
+      dataset.setElement(attribute, attribute);
+    });
+    response.setDataset(dataset);
+    response.setStatus(Status.Success);
+    return response;
+  }
   associationReleaseRequested() {
     this.sendAssociationReleaseResponse();
   }
@@ -109,9 +158,6 @@ describe('Client/Server', () => {
 
     const client = new Client();
     const request = new CEchoRequest();
-    request.on('response', (response) => {
-      status = response.getStatus();
-    });
     client.addRequest(request);
     client.on('associationRejected', (result, source, reason) => {
       rejected = true;
@@ -190,6 +236,8 @@ describe('Client/Server', () => {
     const server = new Server(AcceptingScp);
     server.listen(2105);
 
+    let ret = undefined;
+
     const client = new Client();
     const storeRequest = new CStoreRequest(
       new Dataset({
@@ -212,5 +260,74 @@ describe('Client/Server', () => {
       server.close();
     });
     client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should correctly perform and serve a N-ACTION operation', () => {
+    const server = new Server(AcceptingScp);
+    server.listen(2106);
+
+    let ret = undefined;
+    const sopInstanceUid = Dataset.generateDerivedUid();
+    const transactionUid = Dataset.generateDerivedUid();
+
+    const client = new Client();
+    const request = new NActionRequest(
+      SopClass.StorageCommitmentPushModel,
+      Dataset.generateDerivedUid(),
+      0x0001
+    );
+    request.setDataset(
+      new Dataset({
+        TransactionUID: transactionUid,
+        ReferencedSOPSequence: [
+          {
+            ReferencedSOPClassUID: StorageClass.MrImageStorage,
+            ReferencedSOPInstanceUID: sopInstanceUid,
+          },
+        ],
+      })
+    );
+    client.addRequest(request);
+    client.on('nEventReportRequest', (e) => {
+      ret = e.request.getDataset();
+      e.response = NEventReportResponse.fromRequest(e.request);
+      e.response.setStatus(Status.Success);
+    });
+    client.on('closed', () => {
+      expect(ret.getElement('TransactionUID')).to.be.eq(transactionUid);
+      const failedSOPSequenceItem = ret.getElement('FailedSOPSequence');
+      expect(failedSOPSequenceItem.ReferencedSOPInstanceUID).to.be.eq(sopInstanceUid);
+      expect(failedSOPSequenceItem.FailureReason).to.be.eq(0x0112);
+      server.close();
+    });
+    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should correctly perform and serve a N-GET operation', () => {
+    const server = new Server(AcceptingScp);
+    server.listen(2107);
+
+    let ret = undefined;
+
+    const client = new Client();
+    const request = new NGetRequest(SopClass.Printer, '1.2.840.10008.5.1.1.17', [
+      'PrinterStatus',
+      'PrinterName',
+      'Manufacturer',
+    ]);
+    request.on('response', (response) => {
+      if (response.getStatus() === Status.Success) {
+        ret = response.getDataset();
+      }
+    });
+    client.addRequest(request);
+    client.on('closed', () => {
+      // The SCP is echoing the requested attribute name
+      expect(ret.getElement('PrinterStatus')).to.be.eq('PrinterStatus');
+      expect(ret.getElement('PrinterName')).to.be.eq('PrinterName');
+      expect(ret.getElement('Manufacturer')).to.be.eq('Manufacturer');
+      server.close();
+    });
+    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
   });
 });

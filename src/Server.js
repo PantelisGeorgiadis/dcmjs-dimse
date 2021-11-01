@@ -41,6 +41,24 @@ class Scp extends Network {
     this.on('cGetRequest', (e) => {
       e.responses = this.cGetRequest(e.request);
     });
+    this.on('nCreateRequest', (e) => {
+      e.response = this.nCreateRequest(e.request);
+    });
+    this.on('nActionRequest', (e) => {
+      e.response = this.nActionRequest(e.request);
+    });
+    this.on('nDeleteRequest', (e) => {
+      e.response = this.nDeleteRequest(e.request);
+    });
+    this.on('nEventReportRequest', (e) => {
+      e.response = this.nEventReportRequest(e.request);
+    });
+    this.on('nGetRequest', (e) => {
+      e.response = this.nGetRequest(e.request);
+    });
+    this.on('nSetRequest', (e) => {
+      e.response = this.nSetRequest(e.request);
+    });
   }
 
   /**
@@ -65,10 +83,10 @@ class Scp extends Network {
   }
 
   /**
-   * Echo request received.
+   * C-ECHO request received.
    * @method
-   * @param {CEchoRequest} request - Echo request.
-   * @returns {CEchoResponse} Echo response.
+   * @param {CEchoRequest} request - C-ECHO request.
+   * @returns {CEchoResponse} C-ECHO response.
    * @throws Error if derived class does not implement the cEchoRequest method.
    */
   // eslint-disable-next-line no-unused-vars
@@ -77,10 +95,10 @@ class Scp extends Network {
   }
 
   /**
-   * Find request received.
+   * C-FIND request received.
    * @method
-   * @param {CFindRequest} request - Find request.
-   * @returns {CFindResponse|Array<CFindResponse>} Find response(s).
+   * @param {CFindRequest} request - C-FIND request.
+   * @returns {CFindResponse|Array<CFindResponse>} C-FIND response(s).
    * @throws Error if derived class does not implement the cFindRequest method.
    */
   // eslint-disable-next-line no-unused-vars
@@ -89,10 +107,10 @@ class Scp extends Network {
   }
 
   /**
-   * Store request received.
+   * C-STORE request received.
    * @method
-   * @param {CStoreRequest} request - Store request.
-   * @returns {CStoreResponse} Store response.
+   * @param {CStoreRequest} request - C-STORE request.
+   * @returns {CStoreResponse} C-STORE response.
    * @throws Error if derived class does not implement the cStoreRequest method.
    */
   // eslint-disable-next-line no-unused-vars
@@ -101,10 +119,10 @@ class Scp extends Network {
   }
 
   /**
-   * Move request received.
+   * C-MOVE request received.
    * @method
-   * @param {CMoveRequest} request - Move request.
-   * @returns {CMoveResponse|Array<CMoveResponse>} Move response(s).
+   * @param {CMoveRequest} request - C-MOVE request.
+   * @returns {CMoveResponse|Array<CMoveResponse>} C-MOVE response(s).
    * @throws Error if derived class does not implement the cMoveRequest method.
    */
   // eslint-disable-next-line no-unused-vars
@@ -113,15 +131,87 @@ class Scp extends Network {
   }
 
   /**
-   * Get request received.
+   * C-GET request received.
    * @method
-   * @param {CGetRequest} request - Get request.
-   * @returns {CGetResponse|Array<CGetResponse>} Get response(s).
+   * @param {CGetRequest} request - C-GET request.
+   * @returns {CGetResponse|Array<CGetResponse>} C-GET response(s).
    * @throws Error if derived class does not implement the cGetRequest method.
    */
   // eslint-disable-next-line no-unused-vars
   cGetRequest(request) {
     throw new Error('cGetRequest method must be implemented');
+  }
+
+  /**
+   * N-CREATE request received.
+   * @method
+   * @param {NCreateRequest} request - N-CREATE request.
+   * @returns {NCreateResponse} N-CREATE response.
+   * @throws Error if derived class does not implement the nCreateRequest method.
+   */
+  // eslint-disable-next-line no-unused-vars
+  nCreateRequest(request) {
+    throw new Error('nCreateRequest method must be implemented');
+  }
+
+  /**
+   * N-ACTION request received.
+   * @method
+   * @param {NActionRequest} request - N-ACTION request.
+   * @returns {NActionResponse} N-ACTION response.
+   * @throws Error if derived class does not implement the nActionRequest method.
+   */
+  // eslint-disable-next-line no-unused-vars
+  nActionRequest(request) {
+    throw new Error('nActionRequest method must be implemented');
+  }
+
+  /**
+   * N-DELETE request received.
+   * @method
+   * @param {NDeleteRequest} request - N-DELETE request.
+   * @returns {NDeleteResponse} N-DELETE response.
+   * @throws Error if derived class does not implement the nDeleteRequest method.
+   */
+  // eslint-disable-next-line no-unused-vars
+  nDeleteRequest(request) {
+    throw new Error('nDeleteRequest method must be implemented');
+  }
+
+  /**
+   * N-EVENT-REPORT request received.
+   * @method
+   * @param {NEventReportRequest} request - N-EVENT-REPORT request.
+   * @returns {NEventReportResponse} N-EVENT-REPORT response.
+   * @throws Error if derived class does not implement the nEventReportRequest method.
+   */
+  // eslint-disable-next-line no-unused-vars
+  nEventReportRequest(request) {
+    throw new Error('nEventReportRequest method must be implemented');
+  }
+
+  /**
+   * N-GET request received.
+   * @method
+   * @param {NGetRequest} request - N-GET request.
+   * @returns {NGetResponse} N-GET response.
+   * @throws Error if derived class does not implement the nGetRequest method.
+   */
+  // eslint-disable-next-line no-unused-vars
+  nGetRequest(request) {
+    throw new Error('nGetRequest method must be implemented');
+  }
+
+  /**
+   * N-SET request received.
+   * @method
+   * @param {NSetRequest} request - N-SET request.
+   * @returns {NSetResponse} N-SET response.
+   * @throws Error if derived class does not implement the nSetRequest method.
+   */
+  // eslint-disable-next-line no-unused-vars
+  nSetRequest(request) {
+    throw new Error('nSetRequest method must be implemented');
   }
 }
 //#endregion

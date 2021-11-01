@@ -1,6 +1,8 @@
-const { CommandFieldType, SopClass, Priority, Status } = require('./Constants');
+const { CommandFieldType, SopClass, Status } = require('./Constants');
 const Dataset = require('./Dataset');
 
+const dcmjs = require('dcmjs');
+const { DicomMetaDictionary } = dcmjs.data;
 const { EventEmitter } = require('events');
 const { Mixin } = require('ts-mixer');
 
@@ -174,19 +176,27 @@ class Request extends Mixin(Command, EventEmitter) {
    * Creates an instance of Request.
    * @constructor
    * @param {number} type - Command field type.
-   * @param {string} affectedClass - Affected SOP Class UID.
-   * @param {number} priority - Request priority.
+   * @param {string} affectedOrRequestedClassUid - Affected or requested SOP Class UID.
    * @param {boolean} hasDataset - Request has dataset.
    */
-  constructor(type, affectedClass, priority, hasDataset) {
+  constructor(type, affectedOrRequestedClassUid, hasDataset) {
     super(
       new Dataset({
-        AffectedSOPClassUID: affectedClass,
         CommandField: type,
-        Priority: priority,
         CommandDataSetType: hasDataset ? 0x0202 : 0x0101,
       })
     );
+    switch (type) {
+      case CommandFieldType.NGetRequest:
+      case CommandFieldType.NSetRequest:
+      case CommandFieldType.NActionRequest:
+      case CommandFieldType.NDeleteRequest:
+        this.setRequestedSopClassUid(affectedOrRequestedClassUid);
+        break;
+      default:
+        this.setAffectedSopClassUid(affectedOrRequestedClassUid);
+        break;
+    }
   }
 
   /**
@@ -210,6 +220,26 @@ class Request extends Mixin(Command, EventEmitter) {
   }
 
   /**
+   * Gets requested SOP class UID.
+   * @method
+   * @returns {string} Requested SOP class UID.
+   */
+  getRequestedSopClassUid() {
+    const command = this.getCommandDataset();
+    return command.getElement('RequestedSOPClassUID');
+  }
+
+  /**
+   * Sets requested SOP class UID.
+   * @method
+   * @param {string} requestedSopClassUid - Requested SOP class UID.
+   */
+  setRequestedSopClassUid(requestedSopClassUid) {
+    const command = this.getCommandDataset();
+    command.setElement('RequestedSOPClassUID', requestedSopClassUid);
+  }
+
+  /**
    * Gets affected SOP instance UID.
    * @method
    * @returns {string} Affected SOP instance UID.
@@ -227,6 +257,26 @@ class Request extends Mixin(Command, EventEmitter) {
   setAffectedSopInstanceUid(affectedSopInstanceUid) {
     const command = this.getCommandDataset();
     command.setElement('AffectedSOPInstanceUID', affectedSopInstanceUid);
+  }
+
+  /**
+   * Gets requested SOP instance UID.
+   * @method
+   * @returns {string} Requested SOP instance UID.
+   */
+  getRequestedSopInstanceUid() {
+    const command = this.getCommandDataset();
+    return command.getElement('RequestedSOPInstanceUID');
+  }
+
+  /**
+   * Sets requested SOP instance UID.
+   * @method
+   * @param {string} requestedSopInstanceUid - Requested SOP instance UID.
+   */
+  setRequestedSopInstanceUid(requestedSopInstanceUid) {
+    const command = this.getCommandDataset();
+    command.setElement('RequestedSOPInstanceUID', requestedSopInstanceUid);
   }
 
   /**
@@ -297,21 +347,31 @@ class Response extends Command {
    * Creates an instance of Response.
    * @constructor
    * @param {number} type - Command field type.
-   * @param {string} affectedClass - Affected SOP Class UID.
+   * @param {string} affectedOrRequestedClassUid - Affected or requested SOP Class UID.
    * @param {boolean} hasDataset - Response has dataset.
    * @param {number} status - Response status.
    * @param {string} errorComment - Response error comment.
    */
-  constructor(type, affectedClass, hasDataset, status, errorComment) {
+  constructor(type, affectedOrRequestedClassUid, hasDataset, status, errorComment) {
     super(
       new Dataset({
-        AffectedSOPClassUID: affectedClass,
         CommandField: type,
         CommandDataSetType: hasDataset ? 0x0202 : 0x0101,
         Status: status,
         ErrorComment: errorComment,
       })
     );
+    switch (type) {
+      case CommandFieldType.NGetRequest:
+      case CommandFieldType.NSetRequest:
+      case CommandFieldType.NActionRequest:
+      case CommandFieldType.NDeleteRequest:
+        this.setRequestedSopClassUid(affectedOrRequestedClassUid);
+        break;
+      default:
+        this.setAffectedSopClassUid(affectedOrRequestedClassUid);
+        break;
+    }
   }
 
   /**
@@ -335,6 +395,26 @@ class Response extends Command {
   }
 
   /**
+   * Gets requested SOP class UID.
+   * @method
+   * @returns {string} Requested SOP class UID.
+   */
+  getRequestedSopClassUid() {
+    const command = this.getCommandDataset();
+    return command.getElement('RequestedSOPClassUID');
+  }
+
+  /**
+   * Sets requested SOP class UID.
+   * @method
+   * @param {string} requestedSopClassUid - Requested SOP class UID.
+   */
+  setRequestedSopClassUid(requestedSopClassUid) {
+    const command = this.getCommandDataset();
+    command.setElement('RequestedSOPClassUID', requestedSopClassUid);
+  }
+
+  /**
    * Gets affected SOP instance UID.
    * @method
    * @returns {string} Affected SOP instance UID.
@@ -352,6 +432,26 @@ class Response extends Command {
   setAffectedSopInstanceUid(affectedSopInstanceUid) {
     const command = this.getCommandDataset();
     command.setElement('AffectedSOPInstanceUID', affectedSopInstanceUid);
+  }
+
+  /**
+   * Gets requested SOP instance UID.
+   * @method
+   * @returns {string} Requested SOP instance UID.
+   */
+  getRequestedSopInstanceUid() {
+    const command = this.getCommandDataset();
+    return command.getElement('RequestedSOPInstanceUID');
+  }
+
+  /**
+   * Sets requested SOP instance UID.
+   * @method
+   * @param {string} requestedSopInstanceUid - Requested SOP instance UID.
+   */
+  setRequestedSopInstanceUid(requestedSopInstanceUid) {
+    const command = this.getCommandDataset();
+    command.setElement('RequestedSOPInstanceUID', requestedSopInstanceUid);
   }
 
   /**
@@ -495,10 +595,9 @@ class CEchoRequest extends Request {
   /**
    * Creates an instance of CEchoRequest.
    * @constructor
-   * @param {number} [priority] - Request priority.
    */
-  constructor(priority) {
-    super(CommandFieldType.CEchoRequest, SopClass.Verification, priority || Priority.Medium, false);
+  constructor() {
+    super(CommandFieldType.CEchoRequest, SopClass.Verification, false);
   }
 }
 //#endregion
@@ -516,11 +615,11 @@ class CEchoResponse extends Response {
   }
 
   /**
-   * Creates an echo response from a request.
+   * Creates a C-ECHO response from a request.
    * @method
    * @static
-   * @param {CEchoRequest} request - Echo request.
-   * @returns {CEchoResponse} Echo response.
+   * @param {CEchoRequest} request - C-ECHO request.
+   * @returns {CEchoResponse} C-ECHO response.
    * @throws Error if request is not an instance of CEchoRequest.
    */
   static fromRequest(request) {
@@ -540,14 +639,12 @@ class CFindRequest extends Request {
   /**
    * Creates an instance of CFindRequest.
    * @constructor
-   * @param {number} [priority] - Request priority.
    */
-  constructor(priority) {
+  constructor() {
     super(
       CommandFieldType.CFindRequest,
       SopClass.StudyRootQueryRetrieveInformationModelFind,
-      priority || Priority.Medium,
-      true
+      false
     );
   }
 
@@ -556,10 +653,9 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {number} [priority] - Request priority.
    * @return {CFindRequest} Study find request.
    */
-  static createStudyFindRequest(elements, priority) {
+  static createStudyFindRequest(elements) {
     const baseElements = {
       PatientID: '',
       PatientName: '',
@@ -579,7 +675,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'STUDY';
 
-    const findRequest = new CFindRequest(priority);
+    const findRequest = new CFindRequest();
     findRequest.setDataset(new Dataset(mergedElements));
 
     return findRequest;
@@ -590,10 +686,9 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {number} [priority] - Request priority.
    * @return {CFindRequest} Series find request.
    */
-  static createSeriesFindRequest(elements, priority) {
+  static createSeriesFindRequest(elements) {
     const baseElements = {
       StudyInstanceUID: '',
       SeriesInstanceUID: '',
@@ -607,7 +702,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'SERIES';
 
-    const findRequest = new CFindRequest(priority);
+    const findRequest = new CFindRequest();
     findRequest.setDataset(new Dataset(mergedElements));
 
     return findRequest;
@@ -618,10 +713,9 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {number} [priority] - Request priority.
    * @return {CFindRequest} Image find request.
    */
-  static createImageFindRequest(elements, priority) {
+  static createImageFindRequest(elements) {
     const baseElements = {
       StudyInstanceUID: '',
       SeriesInstanceUID: '',
@@ -632,7 +726,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'IMAGE';
 
-    const findRequest = new CFindRequest(priority);
+    const findRequest = new CFindRequest();
     findRequest.setDataset(new Dataset(mergedElements));
 
     return findRequest;
@@ -643,10 +737,9 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
-   * @param {number} [priority] - Request priority.
    * @return {CFindRequest} Worklist find request.
    */
-  static createWorklistFindRequest(elements, priority) {
+  static createWorklistFindRequest(elements) {
     const baseElements = {
       PatientID: '',
       PatientName: '',
@@ -702,7 +795,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = '';
 
-    const findRequest = new CFindRequest(priority);
+    const findRequest = new CFindRequest();
     findRequest.setAffectedSopClassUid(SopClass.ModalityWorklistInformationModelFind);
     findRequest.setDataset(new Dataset(mergedElements));
 
@@ -730,11 +823,11 @@ class CFindResponse extends Response {
   }
 
   /**
-   * Creates a find response from a request.
+   * Creates a C-FIND response from a request.
    * @method
    * @static
-   * @param {CFindRequest} request - Find request.
-   * @returns {CFindResponse} Find response.
+   * @param {CFindRequest} request - C-FIND request.
+   * @returns {CFindResponse} C-FIND response.
    * @throws Error if request is not an instance of CFindRequest.
    */
   static fromRequest(request) {
@@ -755,10 +848,9 @@ class CStoreRequest extends Request {
    * Creates an instance of CStoreRequest.
    * @constructor
    * @param {Object|String} datasetOrFile - Dataset or part10 file path.
-   * @param {number} [priority] - Request priority.
    */
-  constructor(datasetOrFile, priority) {
-    super(CommandFieldType.CStoreRequest, '', priority || Priority.Medium, true);
+  constructor(datasetOrFile) {
+    super(CommandFieldType.CStoreRequest, '', false);
     if (datasetOrFile instanceof Dataset) {
       this.setAffectedSopClassUid(datasetOrFile.getElement('SOPClassUID'));
       this.setAffectedSopInstanceUid(datasetOrFile.getElement('SOPInstanceUID'));
@@ -788,11 +880,11 @@ class CStoreResponse extends Response {
   }
 
   /**
-   * Creates a store response from a request.
+   * Creates a C-STORE response from a request.
    * @method
    * @static
-   * @param {CStoreRequest} request - Store request.
-   * @returns {CStoreResponse} Store response.
+   * @param {CStoreRequest} request - C-STORE request.
+   * @returns {CStoreResponse} C-STORE response.
    * @throws Error if request is not an instance of CStoreRequest.
    */
   static fromRequest(request) {
@@ -814,14 +906,12 @@ class CMoveRequest extends Request {
   /**
    * Creates an instance of CMoveRequest.
    * @constructor
-   * @param {number} [priority] - Request priority.
    */
-  constructor(priority) {
+  constructor() {
     super(
       CommandFieldType.CMoveRequest,
       SopClass.StudyRootQueryRetrieveInformationModelMove,
-      priority || Priority.Medium,
-      true
+      false
     );
   }
 
@@ -831,16 +921,15 @@ class CMoveRequest extends Request {
    * @static
    * @param {string} destinationAet - Move destination AET.
    * @param {string} studyInstanceUid - Study instance UID of the study to move.
-   * @param {number} [priority] - Request priority.
    * @return {CMoveRequest} Study move request.
    */
-  static createStudyMoveRequest(destinationAet, studyInstanceUid, priority) {
+  static createStudyMoveRequest(destinationAet, studyInstanceUid) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       QueryRetrieveLevel: 'STUDY',
     };
 
-    const moveRequest = new CMoveRequest(priority);
+    const moveRequest = new CMoveRequest();
     moveRequest.setDataset(new Dataset(elements));
 
     const command = moveRequest.getCommandDataset();
@@ -856,17 +945,16 @@ class CMoveRequest extends Request {
    * @param {string} destinationAet - Move destination AET.
    * @param {string} studyInstanceUid - Study instance UID of the study to move.
    * @param {string} seriesInstanceUid - Series instance UID of the series to move.
-   * @param {number} [priority] - Request priority.
    * @return {CMoveRequest} Series move request.
    */
-  static createSeriesMoveRequest(destinationAet, studyInstanceUid, seriesInstanceUid, priority) {
+  static createSeriesMoveRequest(destinationAet, studyInstanceUid, seriesInstanceUid) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
       QueryRetrieveLevel: 'SERIES',
     };
 
-    const moveRequest = new CMoveRequest(priority);
+    const moveRequest = new CMoveRequest();
     moveRequest.setDataset(new Dataset(elements));
 
     const command = moveRequest.getCommandDataset();
@@ -883,15 +971,13 @@ class CMoveRequest extends Request {
    * @param {string} studyInstanceUid - Study instance UID of the study to move.
    * @param {string} seriesInstanceUid - Series instance UID of the series to move.
    * @param {string} sopInstanceUid - SOP instance UID of the series to move.
-   * @param {number} [priority] - Request priority.
    * @return {CMoveRequest} Image move request.
    */
   static createImageMoveRequest(
     destinationAet,
     studyInstanceUid,
     seriesInstanceUid,
-    sopInstanceUid,
-    priority
+    sopInstanceUid
   ) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
@@ -900,7 +986,7 @@ class CMoveRequest extends Request {
       QueryRetrieveLevel: 'IMAGE',
     };
 
-    const moveRequest = new CMoveRequest(priority);
+    const moveRequest = new CMoveRequest();
     moveRequest.setDataset(new Dataset(elements));
 
     const command = moveRequest.getCommandDataset();
@@ -970,11 +1056,11 @@ class CMoveResponse extends Response {
   }
 
   /**
-   * Creates a move response from a request.
+   * Creates a C-MOVE response from a request.
    * @method
    * @static
-   * @param {CMoveRequest} request - Move request.
-   * @returns {CMoveResponse} Move response.
+   * @param {CMoveRequest} request - C-MOVE request.
+   * @returns {CMoveResponse} C-MOVE response.
    * @throws Error if request is not an instance of CMoveRequest.
    */
   static fromRequest(request) {
@@ -994,15 +1080,9 @@ class CGetRequest extends Request {
   /**
    * Creates an instance of CGetRequest.
    * @constructor
-   * @param {number} [priority] - Request priority.
    */
-  constructor(priority) {
-    super(
-      CommandFieldType.CGetRequest,
-      SopClass.StudyRootQueryRetrieveInformationModelGet,
-      priority || Priority.Medium,
-      true
-    );
+  constructor() {
+    super(CommandFieldType.CGetRequest, SopClass.StudyRootQueryRetrieveInformationModelGet, false);
   }
 
   /**
@@ -1010,16 +1090,15 @@ class CGetRequest extends Request {
    * @method
    * @static
    * @param {string} studyInstanceUid - Study instance UID of the study to get.
-   * @param {number} [priority] - Request priority.
    * @return {CGetRequest} Study get request.
    */
-  static createStudyGetRequest(studyInstanceUid, priority) {
+  static createStudyGetRequest(studyInstanceUid) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       QueryRetrieveLevel: 'STUDY',
     };
 
-    const getRequest = new CGetRequest(priority);
+    const getRequest = new CGetRequest();
     getRequest.setDataset(new Dataset(elements));
 
     return getRequest;
@@ -1031,17 +1110,16 @@ class CGetRequest extends Request {
    * @static
    * @param {string} studyInstanceUid - Study instance UID of the study to get.
    * @param {string} seriesInstanceUid - Series instance UID of the series to get.
-   * @param {number} priority - Request priority.
    * @return {CGetRequest} Series get request.
    */
-  static createSeriesGetRequest(studyInstanceUid, seriesInstanceUid, priority) {
+  static createSeriesGetRequest(studyInstanceUid, seriesInstanceUid) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
       QueryRetrieveLevel: 'SERIES',
     };
 
-    const getRequest = new CGetRequest(priority);
+    const getRequest = new CGetRequest();
     getRequest.setDataset(new Dataset(elements));
 
     return getRequest;
@@ -1054,10 +1132,9 @@ class CGetRequest extends Request {
    * @param {string} studyInstanceUid - Study instance UID of the study to get.
    * @param {string} seriesInstanceUid - Series instance UID of the series to get.
    * @param {string} sopInstanceUid - SOP instance UID of the series to get.
-   * @param {number} priority - Request priority.
    * @return {CGetRequest} Image get request.
    */
-  static createImageGetRequest(studyInstanceUid, seriesInstanceUid, sopInstanceUid, priority) {
+  static createImageGetRequest(studyInstanceUid, seriesInstanceUid, sopInstanceUid) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
@@ -1065,7 +1142,7 @@ class CGetRequest extends Request {
       QueryRetrieveLevel: 'IMAGE',
     };
 
-    const getRequest = new CGetRequest(priority);
+    const getRequest = new CGetRequest();
     getRequest.setDataset(new Dataset(elements));
 
     return getRequest;
@@ -1132,11 +1209,11 @@ class CGetResponse extends Response {
   }
 
   /**
-   * Creates a get response from a request.
+   * Creates a C-GET response from a request.
    * @method
    * @static
-   * @param {CGetRequest} request - Get request.
-   * @returns {CGetResponse} Get response.
+   * @param {CGetRequest} request - C-GET request.
+   * @returns {CGetResponse} C-GET response.
    * @throws Error if request is not an instance of CGetRequest.
    */
   static fromRequest(request) {
@@ -1144,6 +1221,488 @@ class CGetResponse extends Response {
       throw new Error('Request should be an instance of CGetRequest');
     }
     const response = new CGetResponse(Status.ProcessingFailure);
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
+}
+//#endregion
+
+//#region NCreateRequest
+class NCreateRequest extends Request {
+  /**
+   * Creates an instance of NCreateRequest.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid) {
+    super(CommandFieldType.NCreateRequest, affectedSopClassUid, false);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+  }
+}
+//#endregion
+
+//#region NCreateResponse
+class NCreateResponse extends Response {
+  /**
+   * Creates an instance of NCreateResponse.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, status, errorComment) {
+    super(CommandFieldType.NCreateResponse, affectedSopClassUid, false, status, errorComment);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+  }
+
+  /**
+   * Creates an N-CREATE response from a request.
+   * @method
+   * @static
+   * @param {NCreateRequest} request - N-CREATE request.
+   * @returns {NCreateResponse} N-CREATE response.
+   * @throws Error if request is not an instance of NCreateRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof NCreateRequest)) {
+      throw new Error('Request should be an instance of NCreateRequest');
+    }
+    const response = new NCreateResponse(
+      request.getAffectedSopClassUid(),
+      request.getAffectedSopInstanceUid(),
+      Status.ProcessingFailure
+    );
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
+}
+//#endregion
+
+//#region NActionRequest
+class NActionRequest extends Request {
+  /**
+   * Creates an instance of NActionRequest.
+   * @constructor
+   * @param {string} requestedSopClassUid - Requested SOP Class UID.
+   * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
+   * @param {number} actionTypeId - Action type ID.
+   */
+  constructor(requestedSopClassUid, requestedSopInstanceUid, actionTypeId) {
+    super(CommandFieldType.NActionRequest, requestedSopClassUid, false);
+    this.setRequestedSopInstanceUid(requestedSopInstanceUid);
+    this.setActionTypeId(actionTypeId);
+  }
+
+  /**
+   * Gets action type ID.
+   * @method
+   * @return {number} Action type ID.
+   */
+  getActionTypeId() {
+    const command = this.getCommandDataset();
+    return command.getElement('ActionTypeID');
+  }
+
+  /**
+   * Sets action type ID.
+   * @method
+   * @param {number} actionTypeId - Action type ID.
+   */
+  setActionTypeId(actionTypeId) {
+    const command = this.getCommandDataset();
+    command.setElement('ActionTypeID', actionTypeId);
+  }
+}
+//#endregion
+
+//#region NActionResponse
+class NActionResponse extends Response {
+  /**
+   * Creates an instance of NActionResponse.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} actionTypeId - Action type ID.
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, actionTypeId, status, errorComment) {
+    super(CommandFieldType.NActionResponse, affectedSopClassUid, false, status, errorComment);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+    this.setActionTypeId(actionTypeId);
+  }
+
+  /**
+   * Gets action type ID.
+   * @method
+   * @return {number} Action type ID.
+   */
+  getActionTypeId() {
+    const command = this.getCommandDataset();
+    return command.getElement('ActionTypeID');
+  }
+
+  /**
+   * Sets action type ID.
+   * @method
+   * @param {number} actionTypeId - Action type ID.
+   */
+  setActionTypeId(actionTypeId) {
+    const command = this.getCommandDataset();
+    command.setElement('ActionTypeID', actionTypeId);
+  }
+
+  /**
+   * Creates an N-ACTION response from a request.
+   * @method
+   * @static
+   * @param {NActionRequest} request - N-ACTION request.
+   * @returns {NActionResponse} N-ACTION response.
+   * @throws Error if request is not an instance of NActionRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof NActionRequest)) {
+      throw new Error('Request should be an instance of NActionRequest');
+    }
+    const response = new NActionResponse(
+      request.getRequestedSopClassUid(),
+      request.getRequestedSopInstanceUid(),
+      request.getActionTypeId(),
+      Status.ProcessingFailure
+    );
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
+}
+//#endregion
+
+//#region NDeleteRequest
+class NDeleteRequest extends Request {
+  /**
+   * Creates an instance of NDeleteRequest.
+   * @constructor
+   * @param {string} requestedSopClassUid - Requested SOP Class UID.
+   * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
+   */
+  constructor(requestedSopClassUid, requestedSopInstanceUid) {
+    super(CommandFieldType.NDeleteRequest, requestedSopClassUid, false);
+    this.setRequestedSopInstanceUid(requestedSopInstanceUid);
+  }
+}
+//#endregion
+
+//#region NDeleteResponse
+class NDeleteResponse extends Response {
+  /**
+   * Creates an instance of NDeleteResponse.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, status, errorComment) {
+    super(CommandFieldType.NDeleteResponse, affectedSopClassUid, false, status, errorComment);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+  }
+
+  /**
+   * Creates an N-DELETE response from a request.
+   * @method
+   * @static
+   * @param {NDeleteRequest} request - N-DELETE request.
+   * @returns {NDeleteResponse} N-DELETE response.
+   * @throws Error if request is not an instance of NDeleteRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof NDeleteRequest)) {
+      throw new Error('Request should be an instance of NDeleteRequest');
+    }
+    const response = new NDeleteResponse(
+      request.getRequestedSopClassUid(),
+      request.getRequestedSopInstanceUid(),
+      Status.ProcessingFailure
+    );
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
+}
+//#endregion
+
+//#region NEventReportRequest
+class NEventReportRequest extends Request {
+  /**
+   * Creates an instance of NEventReportRequest.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} eventTypeID - Event type ID.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, eventTypeID) {
+    super(CommandFieldType.NEventReportRequest, affectedSopClassUid, false);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+    this.setEventTypeId(eventTypeID);
+  }
+
+  /**
+   * Gets event type ID.
+   * @method
+   * @return {number} Event type ID.
+   */
+  getEventTypeId() {
+    const command = this.getCommandDataset();
+    return command.getElement('EventTypeID');
+  }
+
+  /**
+   * Sets event type ID.
+   * @method
+   * @param {number} actionTypeId - Event type ID.
+   */
+  setEventTypeId(eventTypeId) {
+    const command = this.getCommandDataset();
+    command.setElement('EventTypeID', eventTypeId);
+  }
+}
+//#endregion
+
+//#region NEventReportResponse
+class NEventReportResponse extends Response {
+  /**
+   * Creates an instance of NEventReportResponse.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} eventTypeID - Event type ID.
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, eventTypeID, status, errorComment) {
+    super(CommandFieldType.NEventReportResponse, affectedSopClassUid, false, status, errorComment);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+    this.setEventTypeId(eventTypeID);
+  }
+
+  /**
+   * Gets event type ID.
+   * @method
+   * @return {number} Event type ID.
+   */
+  getEventTypeId() {
+    const command = this.getCommandDataset();
+    return command.getElement('EventTypeID');
+  }
+
+  /**
+   * Sets event type ID.
+   * @method
+   * @param {number} actionTypeId - Event type ID.
+   */
+  setEventTypeId(eventTypeId) {
+    const command = this.getCommandDataset();
+    command.setElement('EventTypeID', eventTypeId);
+  }
+
+  /**
+   * Creates an N-EVENT-REPORT response from a request.
+   * @method
+   * @static
+   * @param {NEventReportRequest} request - N-EVENT-REPORT request.
+   * @returns {NEventReportResponse} N-EVENT-REPORT response.
+   * @throws Error if request is not an instance of NEventReportRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof NEventReportRequest)) {
+      throw new Error('Request should be an instance of NEventReportRequest');
+    }
+    const response = new NEventReportResponse(
+      request.getAffectedSopClassUid(),
+      request.getAffectedSopInstanceUid(),
+      request.getEventTypeId(),
+      Status.ProcessingFailure
+    );
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
+}
+//#endregion
+
+//#region NGetRequest
+class NGetRequest extends Request {
+  /**
+   * Creates an instance of NGetRequest.
+   * @constructor
+   * @param {string} requestedSopClassUid - Requested SOP Class UID.
+   * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
+   * @param {Array<string>} attributeIdentifierList - The requested attributes identifier list.
+   */
+  constructor(requestedSopClassUid, requestedSopInstanceUid, attributeIdentifierList) {
+    super(CommandFieldType.NGetRequest, requestedSopClassUid, false);
+    this.setRequestedSopInstanceUid(requestedSopInstanceUid);
+    this.setAttributeIdentifierList(
+      !Array.isArray(attributeIdentifierList) ? [attributeIdentifierList] : attributeIdentifierList
+    );
+  }
+
+  /**
+   * Gets requested attributes identifier list.
+   * @method
+   * @return {Array<string>} The requested attributes identifier list.
+   */
+  getAttributeIdentifierList() {
+    const command = this.getCommandDataset();
+    const attributes = command.getElement('AttributeIdentifierList');
+    const attributeItems = [];
+    if (attributes != undefined && Array.isArray(attributes) && attributes.length > 0) {
+      attributes.forEach((attribute) => {
+        const group = attribute >> 16;
+        const element = attribute & 0xffff;
+        const tag = `(${this._getPaddedHexString(group, 4)},${this._getPaddedHexString(
+          element,
+          4
+        )})`;
+        const dictionaryEntry = DicomMetaDictionary.dictionary[tag.toUpperCase()];
+        if (dictionaryEntry) {
+          attributeItems.push(dictionaryEntry.name);
+        }
+      });
+    }
+
+    return attributeItems;
+  }
+
+  /**
+   * Sets requested attributes identifier list.
+   * @method
+   * @param {Array<string>} attributeIdentifierList - The requested attributes identifier list.
+   */
+  setAttributeIdentifierList(attributeIdentifierList) {
+    const attributeItems = [];
+    Object.keys(DicomMetaDictionary.dictionary).forEach((tag) => {
+      const dictionaryEntry = DicomMetaDictionary.dictionary[tag];
+      if (
+        dictionaryEntry.version === 'DICOM' &&
+        attributeIdentifierList.includes(dictionaryEntry.name)
+      ) {
+        const group = parseInt(dictionaryEntry.tag.substring(1, 5), 16);
+        const element = parseInt(dictionaryEntry.tag.substring(6, 10), 16);
+        attributeItems.push((group << 16) | (element & 0xffff));
+      }
+    });
+    const command = this.getCommandDataset();
+    command.setElement('AttributeIdentifierList', attributeItems);
+  }
+
+  //#region Private Methods
+  /**
+   * Returns a padded hexadecimal string.
+   * @method
+   * @private
+   * @param {number} num - Number to convert to hex string.
+   * @param {number} length - Number of resulting characters.
+   * @returns {string} Padded hexadecimal string.
+   */
+  _getPaddedHexString(num, length) {
+    const str = num.toString(16);
+    return '0'.repeat(length - str.length) + str;
+  }
+  //#endregion
+}
+//#endregion
+
+//#region NGetResponse
+class NGetResponse extends Response {
+  /**
+   * Creates an instance of NEventReportResponse.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, status, errorComment) {
+    super(CommandFieldType.NGetResponse, affectedSopClassUid, false, status, errorComment);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+  }
+
+  /**
+   * Creates an N-GET response from a request.
+   * @method
+   * @static
+   * @param {NGetRequest} request - N-GET request.
+   * @returns {NGetResponse} N-GET response.
+   * @throws Error if request is not an instance of NGetRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof NGetRequest)) {
+      throw new Error('Request should be an instance of NGetRequest');
+    }
+    const response = new NGetResponse(
+      request.getRequestedSopClassUid(),
+      request.getRequestedSopInstanceUid(),
+      Status.ProcessingFailure
+    );
+    response.setMessageIdBeingRespondedTo(request.getMessageId());
+
+    return response;
+  }
+}
+//#endregion
+
+//#region NSetRequest
+class NSetRequest extends Request {
+  /**
+   * Creates an instance of NSetRequest.
+   * @constructor
+   * @param {string} requestedSopClassUid - Requested SOP Class UID.
+   * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
+   */
+  constructor(requestedSopClassUid, requestedSopInstanceUid) {
+    super(CommandFieldType.NSetRequest, requestedSopClassUid, false);
+    this.setRequestedSopInstanceUid(requestedSopInstanceUid);
+  }
+}
+//#endregion
+
+//#region NSetResponse
+class NSetResponse extends Response {
+  /**
+   * Creates an instance of NEventReportResponse.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP Class UID.
+   * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {number} status - Response status.
+   * @param {string} errorComment - Error comment.
+   */
+  constructor(affectedSopClassUid, affectedSopInstanceUid, status, errorComment) {
+    super(CommandFieldType.NSetResponse, affectedSopClassUid, false, status, errorComment);
+    this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+  }
+
+  /**
+   * Creates an N-SET response from a request.
+   * @method
+   * @static
+   * @param {NSetRequest} request - N-SET request.
+   * @returns {NSetResponse} N-SET response.
+   * @throws Error if request is not an instance of NSetRequest.
+   */
+  static fromRequest(request) {
+    if (!(request instanceof NSetRequest)) {
+      throw new Error('Request should be an instance of NSetRequest');
+    }
+    const response = new NSetResponse(
+      request.getRequestedSopClassUid(),
+      request.getRequestedSopInstanceUid(),
+      Status.ProcessingFailure
+    );
     response.setMessageIdBeingRespondedTo(request.getMessageId());
 
     return response;
@@ -1166,5 +1725,17 @@ module.exports = {
   CMoveResponse,
   CGetRequest,
   CGetResponse,
+  NCreateRequest,
+  NCreateResponse,
+  NActionRequest,
+  NActionResponse,
+  NDeleteRequest,
+  NDeleteResponse,
+  NEventReportRequest,
+  NEventReportResponse,
+  NGetRequest,
+  NGetResponse,
+  NSetRequest,
+  NSetResponse,
 };
 //#endregion

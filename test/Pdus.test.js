@@ -19,7 +19,7 @@ const chai = require('chai');
 const expect = chai.expect;
 
 describe('PDU', () => {
-  it('should correctly write and read an association request PDU', () => {
+  it('should correctly write and read an A-ASSOCIATE-RQ PDU', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
     const maxPdu = 1024;
@@ -51,7 +51,7 @@ describe('PDU', () => {
     expect(pc1.getAcceptedTransferSyntaxUid()).to.be.eq(pc2.getAcceptedTransferSyntaxUid());
   });
 
-  it('should correctly write and read an association acknowledge PDU', () => {
+  it('should correctly write and read an A-ASSOCIATE-AC PDU', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
     const sop = SopClass.Verification;
@@ -78,8 +78,7 @@ describe('PDU', () => {
     expect(pc1.getResult()).to.be.eq(res);
   });
 
-  it('should correctly write and read an association reject PDU', () => {
-    // CallingAENotRecognized
+  it('should correctly write and read an A-ASSOCIATE-RJ PDU', () => {
     const rej1 = new AAssociateRJ(1, 2, 3);
     const pdu = rej1.write();
 
@@ -91,7 +90,7 @@ describe('PDU', () => {
     expect(rej1.getReason()).to.be.eq(rej2.getReason());
   });
 
-  it('should correctly write and read an abort PDU', () => {
+  it('should correctly write and read an A-ABORT PDU', () => {
     const abort1 = new AAbort(5, 4);
     const pdu = abort1.write();
 
@@ -121,7 +120,7 @@ describe('PDU', () => {
     expect(last).to.be.eq(pdv2.isLastFragment());
   });
 
-  it('should correctly write and read PDataTF', () => {
+  it('should correctly write and read a P-DATA-TF PDU', () => {
     const pcId = 2;
     const data1 = Buffer.from([3, 4, 5, 6, 7]);
     const command1 = false;

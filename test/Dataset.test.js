@@ -5,7 +5,7 @@ const chai = require('chai');
 const expect = chai.expect;
 
 describe('Dataset', () => {
-  it('should correctly covert elements to a DICOM dataset and back', () => {
+  it('should correctly convert elements to a DICOM dataset and back', () => {
     const patientName = 'JOHN^DOE';
     const patientID = '12345678';
     const accessionNumber = '87654321';
@@ -41,5 +41,14 @@ describe('Dataset', () => {
     expect(dataset3.getElement('StudyDescription')).to.be.eq(studyDescription);
     expect(dataset3.getElement('SeriesDescription')).to.be.eq(seriesDescription);
     expect(dataset3.getTransferSyntaxUid()).to.be.eq(TransferSyntax.ExplicitVRLittleEndian);
+  });
+
+  it('should create at least 100 different DICOM UIDs sequentially', () => {
+    const uids = [];
+    for (let i = 0; i < 100; i++) {
+      const uid = Dataset.generateDerivedUid();
+      expect(uids).to.not.contain(uid);
+      uids.push(uid);
+    }
   });
 });

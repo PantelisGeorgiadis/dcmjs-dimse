@@ -24,6 +24,18 @@ const {
   CMoveResponse,
   CGetRequest,
   CGetResponse,
+  NCreateRequest,
+  NCreateResponse,
+  NActionRequest,
+  NActionResponse,
+  NDeleteRequest,
+  NDeleteResponse,
+  NEventReportRequest,
+  NEventReportResponse,
+  NGetRequest,
+  NGetResponse,
+  NSetRequest,
+  NSetResponse,
 } = require('./Command');
 const Dataset = require('./Dataset');
 const log = require('./log');
@@ -49,6 +61,7 @@ class Network extends EventEmitter {
     this.messageId = 0;
     this.socket = socket;
     this.requests = [];
+    this.pending = [];
 
     this.dimseBuffer = undefined;
     this.dimse = undefined;
@@ -161,33 +174,12 @@ class Network extends EventEmitter {
   /**
    * Sends requests.
    * @method
-   * @param {Array<Request>} requests - Requests to perform.
+   * @param {Array<Request>|Request} requests - Requests to perform.
    */
   sendRequests(requests) {
-    this.requests = requests;
-    const requestsWithAcceptedContext = [];
-    requests.forEach((request) => {
-      const context = this.association.getAcceptedPresentationContextFromRequest(request);
-      if (context) {
-        request.setMessageId(this._getNextMessageId());
-        requestsWithAcceptedContext.push({ context, command: request });
-      }
-    });
-
-    const processNextDimse = () => {
-      const dimse = requestsWithAcceptedContext.shift();
-      if (!dimse) {
-        // Done with requests
-        this.emit('done');
-        return;
-      }
-      dimse.command.on('done', () => {
-        // Request is done (there are no more pending responses)
-        processNextDimse();
-      });
-      this._sendDimse(dimse);
-    };
-    processNextDimse();
+    const rqs = Array.isArray(requests) ? requests : [requests];
+    this.requests.push(...rqs);
+    this._sendNextRequests();
   }
 
   //#region Private Methods
@@ -214,6 +206,39 @@ class Network extends EventEmitter {
       log.error(`${this.logId} -> Error sending PDU [type: ${pdu.getType()}]: ${err.message}`);
       this.emit('networkError', err);
     }
+  }
+
+  /**
+   * Sends requests over the network.
+   * @method
+   * @private
+   */
+  _sendNextRequests() {
+    const processNextRequest = () => {
+      const request = this.requests.shift();
+      if (!request) {
+        // Done with requests
+        this.emit('done');
+        return;
+      }
+      const context = this.association.getAcceptedPresentationContextFromRequest(request);
+      if (context) {
+        request.setMessageId(this._getNextMessageId());
+        this.pending.push(request);
+        const dimse = { context, command: request };
+        dimse.command.on('done', () => {
+          // Request is done (there are no more pending responses)
+          processNextRequest();
+        });
+        this._sendDimse(dimse);
+      } else {
+        log.error(
+          `Could not find an accepted presentation context for request ${request.toString()}. Skipping...`
+        );
+        processNextRequest();
+      }
+    };
+    processNextRequest();
   }
 
   /**
@@ -270,7 +295,7 @@ class Network extends EventEmitter {
     maxPduLength = maxPduLength === 0 ? max : Math.min(maxPduLength, max);
 
     const commandDataset = command.getCommandDataset();
-    const commandBuffer = commandDataset.getDenaturalizedDataset();
+    const commandBuffer = commandDataset.getDenaturalizedCommandDataset();
 
     log.info(
       `${this.logId} -> ${command.toString({
@@ -450,6 +475,42 @@ class Network extends EventEmitter {
               case CommandFieldType.CGetResponse:
                 this.dimse = Object.assign(new CGetResponse(), command);
                 break;
+              case CommandFieldType.NCreateRequest:
+                this.dimse = Object.assign(new NCreateRequest(), command);
+                break;
+              case CommandFieldType.NCreateResponse:
+                this.dimse = Object.assign(new NCreateResponse(), command);
+                break;
+              case CommandFieldType.NActionRequest:
+                this.dimse = Object.assign(new NActionRequest(), command);
+                break;
+              case CommandFieldType.NActionResponse:
+                this.dimse = Object.assign(new NActionResponse(), command);
+                break;
+              case CommandFieldType.NDeleteRequest:
+                this.dimse = Object.assign(new NDeleteRequest(), command);
+                break;
+              case CommandFieldType.NDeleteResponse:
+                this.dimse = Object.assign(new NDeleteResponse(), command);
+                break;
+              case CommandFieldType.NEventReportRequest:
+                this.dimse = Object.assign(new NEventReportRequest(), command);
+                break;
+              case CommandFieldType.NEventReportResponse:
+                this.dimse = Object.assign(new NEventReportResponse(), command);
+                break;
+              case CommandFieldType.NGetRequest:
+                this.dimse = Object.assign(new NGetRequest(), command);
+                break;
+              case CommandFieldType.NGetResponse:
+                this.dimse = Object.assign(new NGetResponse(), command);
+                break;
+              case CommandFieldType.NSetRequest:
+                this.dimse = Object.assign(new NSetRequest(), command);
+                break;
+              case CommandFieldType.NSetResponse:
+                this.dimse = Object.assign(new NSetResponse(), command);
+                break;
               default:
                 this.dimse = command;
                 break;
@@ -496,7 +557,7 @@ class Network extends EventEmitter {
   _performDimse(presentationContext, dimse) {
     if (dimse instanceof Response) {
       const response = Object.assign(Object.create(Object.getPrototypeOf(dimse)), dimse);
-      const request = this.requests.find(
+      const request = this.pending.find(
         (r) => r.getMessageId() === dimse.getMessageIdBeingRespondedTo()
       );
       if (request) {
@@ -552,6 +613,48 @@ class Network extends EventEmitter {
       responses.forEach((response) => {
         this._sendDimse({ context: presentationContext, command: response });
       });
+    } else if (dimse.getCommandFieldType() == CommandFieldType.NCreateRequest) {
+      const e = { request: dimse, response: undefined };
+      this.emit('nCreateRequest', e);
+      if (!e.response) {
+        throw new Error('nCreateRequest handler should provide a response');
+      }
+      this._sendDimse({ context: presentationContext, command: e.response });
+    } else if (dimse.getCommandFieldType() == CommandFieldType.NActionRequest) {
+      const e = { request: dimse, response: undefined };
+      this.emit('nActionRequest', e);
+      if (!e.response) {
+        throw new Error('nActionRequest handler should provide a response');
+      }
+      this._sendDimse({ context: presentationContext, command: e.response });
+    } else if (dimse.getCommandFieldType() == CommandFieldType.NDeleteRequest) {
+      const e = { request: dimse, response: undefined };
+      this.emit('nDeleteRequest', e);
+      if (!e.response) {
+        throw new Error('nDeleteRequest handler should provide a response');
+      }
+      this._sendDimse({ context: presentationContext, command: e.response });
+    } else if (dimse.getCommandFieldType() == CommandFieldType.NEventReportRequest) {
+      const e = { request: dimse, response: undefined };
+      this.emit('nEventReportRequest', e);
+      if (!e.response) {
+        throw new Error('nEventReportRequest handler should provide a response');
+      }
+      this._sendDimse({ context: presentationContext, command: e.response });
+    } else if (dimse.getCommandFieldType() == CommandFieldType.NGetRequest) {
+      const e = { request: dimse, response: undefined };
+      this.emit('nGetRequest', e);
+      if (!e.response) {
+        throw new Error('nGetRequest handler should provide a response');
+      }
+      this._sendDimse({ context: presentationContext, command: e.response });
+    } else if (dimse.getCommandFieldType() == CommandFieldType.NSetRequest) {
+      const e = { request: dimse, response: undefined };
+      this.emit('nSetRequest', e);
+      if (!e.response) {
+        throw new Error('nSetRequest handler should provide a response');
+      }
+      this._sendDimse({ context: presentationContext, command: e.response });
     }
   }
 

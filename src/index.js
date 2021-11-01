@@ -12,6 +12,18 @@ const {
   CMoveResponse,
   CGetRequest,
   CGetResponse,
+  NCreateRequest,
+  NCreateResponse,
+  NActionRequest,
+  NActionResponse,
+  NDeleteRequest,
+  NDeleteResponse,
+  NEventReportRequest,
+  NEventReportResponse,
+  NGetRequest,
+  NGetResponse,
+  NSetRequest,
+  NSetResponse,
 } = require('./Command');
 const {
   CommandFieldType,
@@ -21,7 +33,6 @@ const {
   RejectResult,
   RejectSource,
   RejectReason,
-  Priority,
   Status,
   Uid,
   StorageClass,
@@ -39,6 +50,12 @@ const requests = {
   CStoreRequest,
   CMoveRequest,
   CGetRequest,
+  NCreateRequest,
+  NActionRequest,
+  NDeleteRequest,
+  NEventReportRequest,
+  NGetRequest,
+  NSetRequest,
 };
 //#endregion
 
@@ -49,6 +66,12 @@ const responses = {
   CStoreResponse,
   CMoveResponse,
   CGetResponse,
+  NCreateResponse,
+  NActionResponse,
+  NDeleteResponse,
+  NEventReportResponse,
+  NGetResponse,
+  NSetResponse,
 };
 //#endregion
 
@@ -61,7 +84,6 @@ const constants = {
   RejectResult,
   RejectSource,
   RejectReason,
-  Priority,
   Status,
   Uid,
   StorageClass,

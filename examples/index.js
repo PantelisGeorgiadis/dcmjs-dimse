@@ -16,7 +16,7 @@ const {
 
 const path = require('path');
 
-function performEcho(host, port, callingAeTitle, calledAeTitle) {
+function performCEcho(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
   const request = new CEchoRequest();
   request.on('response', (response) => {
@@ -31,9 +31,9 @@ function performEcho(host, port, callingAeTitle, calledAeTitle) {
 function performCFindStudy(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
   const request = CFindRequest.createStudyFindRequest({ PatientName: '*' });
-  request.on('response', (request) => {
-    if (request.getStatus() === Status.Pending && request.hasDataset()) {
-      console.log(request.getDataset());
+  request.on('response', (response) => {
+    if (response.getStatus() === Status.Pending && response.hasDataset()) {
+      console.log(response.getDataset());
     }
   });
   client.addRequest(request);
@@ -43,9 +43,9 @@ function performCFindStudy(host, port, callingAeTitle, calledAeTitle) {
 function performCFindMwl(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
   const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
-  request.on('response', (request) => {
-    if (request.getStatus() === Status.Pending && request.hasDataset()) {
-      console.log(request.getDataset());
+  request.on('response', (response) => {
+    if (response.getStatus() === Status.Pending && response.hasDataset()) {
+      console.log(response.getDataset());
     }
   });
   client.addRequest(request);
@@ -142,7 +142,7 @@ const calledAeTitle = 'ANY-SCP';
 const server = new Server(ExampleScp);
 server.listen(port);
 
-const operations = [performEcho, performCFindStudy, performCFindMwl, performCStore];
+const operations = [performCEcho, performCFindStudy, performCFindMwl, performCStore];
 operations.forEach((o) => {
   Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle]);
 });

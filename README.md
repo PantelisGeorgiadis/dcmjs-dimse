@@ -158,6 +158,78 @@ client.on('networkError', (e) => {
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
+#### N-Action SCU (e.g. Storage Commitment)
+```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client, Dataset } = dcmjsDimse;
+const { NActionRequest } = dcmjsDimse.requests;
+const { NEventReportResponse } = dcmjsDimse.responses;
+const { SopClass, Status, StorageClass } = dcmjsDimse.constants;
+
+const client = new Client();
+const request = new NActionRequest(
+  SopClass.StorageCommitmentPushModel,
+  Dataset.generateDerivedUid(),
+  0x0001
+);
+request.setDataset(
+  new Dataset({
+    TransactionUID: Dataset.generateDerivedUid(),
+    ReferencedSOPSequence: [
+      {
+        ReferencedSOPClassUID: StorageClass.MrImageStorage,
+        ReferencedSOPInstanceUID: Dataset.generateDerivedUid(),
+      },
+    ],
+  })
+);
+client.addRequest(request);
+client.on('nEventReportRequest', (e) => {
+  console.log(e.request.getDataset());
+
+  e.response = NEventReportResponse.fromRequest(e.request);
+  e.response.setStatus(Status.Success);
+});
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
+client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP', {
+  associationLingerTimeout: 5000,
+});
+```
+
+#### N-Get SCU (e.g. Printer)
+```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Client } = dcmjsDimse;
+const { NGetRequest } = dcmjsDimse.requests;
+const { SopClass, Status } = dcmjsDimse.constants;
+
+const client = new Client();
+const request = new NGetRequest(SopClass.Printer, '1.2.840.10008.5.1.1.17', [
+  'PrinterStatus',
+  'PrinterStatusInfo',
+  'PrinterName',
+  'Manufacturer',
+  'ManufacturersModelName',
+  'DeviceSerialNumber',
+  'SoftwareVersions',
+  'DeviceSerialNumber',
+  'DateOfLastCalibration',
+  'TimeOfLastCalibration',
+]);
+request.on('response', (response) => {
+  if (response.getStatus() === Status.Success) {
+    console.log(response.getDataset());
+  }
+});
+client.addRequest(request);
+client.on('networkError', (e) => {
+  console.log('Network error: ', e);
+});
+client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
+```
+
 #### SCP
 ```js
 const dcmjsDimse = require('dcmjs-dimse');

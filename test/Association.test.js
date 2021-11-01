@@ -5,7 +5,6 @@ const {
   SopClass,
   TransferSyntax,
   PresentationContextResult,
-  Priority,
 } = require('./../src/Constants');
 
 const chai = require('chai');
@@ -81,12 +80,7 @@ describe('Association', () => {
     const calledAet = 'CALLEDAET';
 
     const association = new Association(callingAet, calledAet);
-    const request = new Request(
-      CommandFieldType.CEchoRequest,
-      SopClass.Verification,
-      Priority.High,
-      false
-    );
+    const request = new Request(CommandFieldType.CEchoRequest, SopClass.Verification, false);
     let pcId = association.addPresentationContextFromRequest(request);
     const context = association.getPresentationContext(pcId);
     context.setResult(PresentationContextResult.Accept, TransferSyntax.ExplicitVRLittleEndian);
