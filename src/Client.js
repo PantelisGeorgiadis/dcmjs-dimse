@@ -1,13 +1,13 @@
-const { Association } = require('./Association');
+const { Association, PresentationContext } = require('./Association');
 const Network = require('./Network');
 const { Request } = require('./Command');
 const log = require('./log');
 
-const { EventEmitter } = require('events');
+const AsyncEventEmitter = require('async-eventemitter');
 const { Socket } = require('net');
 
 //#region Client
-class Client extends EventEmitter {
+class Client extends AsyncEventEmitter {
   /**
    * Creates an instance of Client.
    * @constructor
@@ -15,6 +15,7 @@ class Client extends EventEmitter {
   constructor() {
     super();
     this.requests = [];
+    this.additionalPresentationContexts = [];
   }
 
   /**
@@ -41,6 +42,24 @@ class Client extends EventEmitter {
    */
   clearRequests() {
     this.requests.length = 0;
+  }
+
+  /**
+   * Adds an additional presentation context.
+   * @method
+   * @param {PresentationContext} context - Presentation context.
+   * @throws Error if request is not an instance of the Request class.
+   */
+  addAdditionalPresentationContext(context) {
+    // Check if request is actually a context!
+    if (!(context instanceof PresentationContext)) {
+      throw new Error(`${context.toString()} is not a presentation context.`);
+    }
+    // Prevent duplicates
+    if (this.additionalPresentationContexts.includes(context)) {
+      return;
+    }
+    this.additionalPresentationContexts.push(context);
   }
 
   /**
@@ -74,6 +93,15 @@ class Client extends EventEmitter {
       association.addPresentationContextFromRequest(request);
     });
 
+    // Add additional presentation contexts
+    this.additionalPresentationContexts.forEach((context) => {
+      const pcId = association.addOrGetPresentationContext(context.getAbstractSyntaxUid());
+      const transferSyntaxes = context.getTransferSyntaxUids();
+      transferSyntaxes.forEach((transferSyntax) => {
+        association.addTransferSyntaxToPresentationContext(pcId, transferSyntax);
+      });
+    });
+
     // Initialize network
     const socket = new Socket();
     const network = new Network(socket, opts);
@@ -96,11 +124,11 @@ class Client extends EventEmitter {
     network.on('done', () => {
       setTimeout(() => network.sendAssociationReleaseRequest(), this.associationLingerTimeout);
     });
-    network.on('cStoreRequest', (e) => {
-      this.emit('cStoreRequest', e);
+    network.on('cStoreRequest', (request, callback) => {
+      this.emit('cStoreRequest', request, callback);
     });
-    network.on('nEventReportRequest', (e) => {
-      this.emit('nEventReportRequest', e);
+    network.on('nEventReportRequest', (request, callback) => {
+      this.emit('nEventReportRequest', request, callback);
     });
     network.on('networkError', (err) => {
       socket.end();

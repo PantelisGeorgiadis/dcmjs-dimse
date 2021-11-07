@@ -17,13 +17,7 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 	npm install
 	npm run build
 
-### Run examples
-
-	npm install
-	npm run build
-	npm run start:examples
-
-### Usage
+### Examples
 
 #### C-Echo SCU
 ```js
@@ -145,11 +139,12 @@ request.on('response', (response) => {
     console.log('Failed: ' + response.getFailures());
   }
 });
-client.on('cStoreRequest', (e) => {
-  console.log(e.request.getDataset());
+client.on('cStoreRequest', (request, callback) => {
+  console.log(request.getDataset());
 
-  e.response = CStoreResponse.fromRequest(e.request);
-  e.response.setStatus(Status.Success);
+  const response = CStoreResponse.fromRequest(request);
+  response.setStatus(Status.Success);
+  callback(response);
 });
 client.addRequest(request);
 client.on('networkError', (e) => {
@@ -184,11 +179,12 @@ request.setDataset(
   })
 );
 client.addRequest(request);
-client.on('nEventReportRequest', (e) => {
-  console.log(e.request.getDataset());
+client.on('nEventReportRequest', (request, callback) => {
+  console.log(request.getDataset());
 
-  e.response = NEventReportResponse.fromRequest(e.request);
-  e.response.setStatus(Status.Success);
+  const response = NEventReportResponse.fromRequest(request);
+  response.setStatus(Status.Success);
+  callback(response);
 });
 client.on('networkError', (e) => {
   console.log('Network error: ', e);
@@ -227,6 +223,126 @@ client.addRequest(request);
 client.on('networkError', (e) => {
   console.log('Network error: ', e);
 });
+client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
+```
+
+#### N-Create, N-Action, N-Set, N-Delete SCU (e.g. Print)
+```js
+const dcmjsDimse = require('dcmjs-dimse');
+const { Dataset, Client } = dcmjsDimse;
+const { PresentationContext } = dcmjsDimse.association;
+const { NCreateRequest, NSetRequest, NActionRequest, NDeleteRequest } = dcmjsDimse.requests;
+const { Status, TransferSyntax, SopClass } = dcmjsDimse.constants;
+
+const client = new Client();
+
+const pc = new PresentationContext(
+  0,
+  SopClass.BasicGrayscalePrintManagementMeta,
+  TransferSyntax.ImplicitVRLittleEndian
+);
+client.addAdditionalPresentationContext(pc);
+
+// Film Session
+const filmSessionSopInstanceUid = Dataset.generateDerivedUid();
+const filmSessionCreateRequest = new NCreateRequest(
+  SopClass.BasicFilmSession,
+  filmSessionSopInstanceUid
+);
+filmSessionCreateRequest.setDataset(
+  new Dataset({
+    FilmSessionLabel: '',
+    MediumType: 'PAPER',
+    NumberOfCopies: 1,
+  })
+);
+client.addRequest(filmSessionCreateRequest);
+
+// Film Box
+const filmBoxSopInstanceUid = Dataset.generateDerivedUid();
+const imageBoxSopInstanceUid = Dataset.generateDerivedUid();
+const filmBoxCreateRequest = new NCreateRequest(SopClass.BasicFilmBox, filmBoxSopInstanceUid);
+filmBoxCreateRequest.setDataset(
+  new Dataset({
+    ImageDisplayFormat: 'STANDARD\\1,1',
+    FilmOrientation: 'PORTRAIT',
+    FilmSizeID: 'A4',
+    MagnificationType: '',
+    BorderDensity: '',
+    EmptyImageDensity: '',
+    ReferencedImageBoxSequence: [
+      {
+        ReferencedSOPClassUID: SopClass.BasicGrayscaleImageBox,
+        ReferencedSOPInstanceUID: imageBoxSopInstanceUid,
+      },
+    ],
+  })
+);
+
+const imageBoxSetRequests = [];
+filmBoxCreateRequest.on('response', (response) => {
+  if (response.getStatus() === Status.Success) {
+    const dataset = response.getDataset();
+    const referencedImageBoxSequenceItem = dataset.getElement('ReferencedImageBoxSequence');
+
+    const imageBoxSetRequest = imageBoxSetRequests[0];
+    const imageBoxSetRequestDataset = imageBoxSetRequest.getDataset();
+    imageBoxSetRequestDataset.setElement(
+      'SOPInstanceUID',
+      referencedImageBoxSequenceItem.ReferencedSOPInstanceUID
+    );
+    imageBoxSetRequest.setRequestedSopInstanceUid(
+      referencedImageBoxSequenceItem.ReferencedSOPInstanceUID
+    );
+  }
+});
+client.addRequest(filmBoxCreateRequest);
+
+// Image Box
+const imageBoxSetRequest = new NSetRequest(SopClass.BasicGrayscaleImageBox, imageBoxSopInstanceUid);
+const width = 256;
+const height = 256;
+const pixels = new Uint8Array(width * height);
+for (let i = 0; i < height; i++) {
+  for (let j = 0; j < width; j++) {
+    pixels[j * width + i] = Math.floor(Math.random() * Math.pow(2, 8) - 1);
+  }
+}
+imageBoxSetRequest.setDataset(
+  new Dataset({
+    SOPClassUID: SopClass.BasicGrayscaleImageBox,
+    ImageBoxPosition: 1,
+    BasicGrayscaleImageSequence: [
+      {
+        _vrMap: {
+          PixelData: 'OB',
+        },
+        Columns: width,
+        Rows: height,
+        BitsAllocated: 8,
+        BitsStored: 8,
+        HighBit: 7,
+        PixelRepresentation: 0,
+        SamplesPerPixel: 1,
+        PhotometricInterpretation: 'MONOCHROME2',
+        PixelData: pixels.buffer,
+      },
+    ],
+  })
+);
+imageBoxSetRequests.push(imageBoxSetRequest);
+client.addRequest(imageBoxSetRequest);
+
+// Print!
+client.addRequest(new NActionRequest(SopClass.BasicFilmSession, filmSessionSopInstanceUid, 0x0001));
+
+// Delete Film Box
+client.addRequest(new NDeleteRequest(SopClass.BasicFilmBox, filmBoxSopInstanceUid));
+
+// Delete Film Session
+client.addRequest(new NDeleteRequest(SopClass.BasicFilmSession, filmSessionSopInstanceUid));
+
+// Send requests
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
@@ -275,7 +391,17 @@ class DcmjsDimseScp extends Scp {
         context.getAbstractSyntaxUid() === StorageClass.MrImageStorage
         // Accept other presentation contexts, as needed
       ) {
-        context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
+        const transferSyntaxes = context.getTransferSyntaxUids();
+        transferSyntaxes.forEach((transferSyntax) => {
+          if (transferSyntax === TransferSyntax.ImplicitVRLittleEndian) {
+            context.setResult(
+              PresentationContextResult.Accept,
+              TransferSyntax.ImplicitVRLittleEndian
+            );
+          } else {
+            context.setResult(PresentationContextResult.RejectTransferSyntaxesNotSupported);
+          }
+        });
       } else {
         context.setResult(PresentationContextResult.RejectAbstractSyntaxNotSupported);
       }
@@ -284,15 +410,15 @@ class DcmjsDimseScp extends Scp {
   }
 
   // Handle incoming C-ECHO requests
-  cEchoRequest(request) {
+  cEchoRequest(request, callback) {
     const response = CEchoResponse.fromRequest(request);
     response.setStatus(Status.Success);
     
-    return response;
+    callback(response);
   }
 
   // Handle incoming C-FIND requests
-  cFindRequest(request) {
+  cFindRequest(request, callback) {
     console.log(request.getDataset());
 
     const pendingResponse = CFindResponse.fromRequest(request);
@@ -302,16 +428,17 @@ class DcmjsDimseScp extends Scp {
     const finalResponse = CFindResponse.fromRequest(request);
     finalResponse.setStatus(Status.Success);
 
-    return [pendingResponse, finalResponse];
+    callback([pendingResponse, finalResponse]);
   }
 
   // Handle incoming C-STORE requests
-  cStoreRequest(request) {
+  cStoreRequest(request, callback) {
     console.log(request.getDataset());
 
     const response = CStoreResponse.fromRequest(request);
     response.setStatus(Status.Success);
-    return response;
+
+    callback(response);
   }
 
   // Handle incoming association release requests

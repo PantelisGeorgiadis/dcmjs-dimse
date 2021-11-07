@@ -1,5 +1,5 @@
 const path = require('path');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 const { BannerPlugin } = require('webpack');
 const pkg = require('./package.json');
 
@@ -39,10 +39,12 @@ module.exports = {
     umdNamedDefine: true
   },
   optimization: {
+    minimize: true,
     minimizer: [
-      new UglifyJSPlugin({
-        sourceMap: true,
-        uglifyOptions: {
+      new TerserPlugin({
+        extractComments: false,
+        parallel: true,
+        terserOptions: {
           compress: false,
           mangle: false,
           toplevel: false,

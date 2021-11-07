@@ -281,7 +281,7 @@ Object.freeze(TransferSyntax);
  * @constant {Object}
  */
 const Implementation = {
-  ImplementationClassUid: '1.3.6.1.4.1.41293.8',
+  ImplementationClassUid: '1.2.826.0.1.3680043.10.854',
   ImplementationVersion: 'DCMJS-DIMSE-V0.1',
   MaxPduLength: 262144,
 };

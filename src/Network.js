@@ -40,11 +40,11 @@ const {
 const Dataset = require('./Dataset');
 const log = require('./log');
 
-const { EventEmitter } = require('events');
+const AsyncEventEmitter = require('async-eventemitter');
 const { SmartBuffer } = require('smart-buffer');
 
 //#region Network
-class Network extends EventEmitter {
+class Network extends AsyncEventEmitter {
   /**
    * Creates an instance of Network.
    * @constructor
@@ -570,91 +570,58 @@ class Network extends EventEmitter {
     }
 
     if (dimse.getCommandFieldType() == CommandFieldType.CEchoRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('cEchoRequest', e);
-      if (!e.response) {
-        throw new Error('cEchoRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('cEchoRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.CFindRequest) {
-      const e = { request: dimse, responses: undefined };
-      this.emit('cFindRequest', e);
-      if (!e.responses) {
-        throw new Error('cFindRequest handler should provide response(s)');
-      }
-      const responses = !Array.isArray(e.responses) ? [e.responses] : e.responses;
-      responses.forEach((response) => {
-        this._sendDimse({ context: presentationContext, command: response });
+      this.emit('cFindRequest', dimse, (rsp) => {
+        const responses = !Array.isArray(rsp) ? [rsp] : rsp;
+        responses.forEach((response) => {
+          this._sendDimse({ context: presentationContext, command: response });
+        });
       });
     } else if (dimse.getCommandFieldType() == CommandFieldType.CStoreRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('cStoreRequest', e);
-      if (!e.response) {
-        throw new Error('cStoreRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('cStoreRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.CMoveRequest) {
-      const e = { request: dimse, responses: undefined };
-      this.emit('cMoveRequest', e);
-      if (!e.responses) {
-        throw new Error('cMoveRequest handler should provide response(s)');
-      }
-      const responses = !Array.isArray(e.responses) ? [e.responses] : e.responses;
-      responses.forEach((response) => {
-        this._sendDimse({ context: presentationContext, command: response });
+      this.emit('cMoveRequest', dimse, (rsp) => {
+        const responses = !Array.isArray(rsp) ? [rsp] : rsp;
+        responses.forEach((response) => {
+          this._sendDimse({ context: presentationContext, command: response });
+        });
       });
     } else if (dimse.getCommandFieldType() == CommandFieldType.CGetRequest) {
-      const e = { request: dimse, responses: undefined };
-      this.emit('cGetRequest', e);
-      if (!e.responses) {
-        throw new Error('cGetRequest handler should provide response(s)');
-      }
-      const responses = !Array.isArray(e.responses) ? [e.responses] : e.responses;
-      responses.forEach((response) => {
-        this._sendDimse({ context: presentationContext, command: response });
+      this.emit('cGetRequest', dimse, (rsp) => {
+        const responses = !Array.isArray(rsp) ? [rsp] : rsp;
+        responses.forEach((response) => {
+          this._sendDimse({ context: presentationContext, command: response });
+        });
       });
     } else if (dimse.getCommandFieldType() == CommandFieldType.NCreateRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('nCreateRequest', e);
-      if (!e.response) {
-        throw new Error('nCreateRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('nCreateRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.NActionRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('nActionRequest', e);
-      if (!e.response) {
-        throw new Error('nActionRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('nActionRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.NDeleteRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('nDeleteRequest', e);
-      if (!e.response) {
-        throw new Error('nDeleteRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('nDeleteRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.NEventReportRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('nEventReportRequest', e);
-      if (!e.response) {
-        throw new Error('nEventReportRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('nEventReportRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.NGetRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('nGetRequest', e);
-      if (!e.response) {
-        throw new Error('nGetRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('nGetRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     } else if (dimse.getCommandFieldType() == CommandFieldType.NSetRequest) {
-      const e = { request: dimse, response: undefined };
-      this.emit('nSetRequest', e);
-      if (!e.response) {
-        throw new Error('nSetRequest handler should provide a response');
-      }
-      this._sendDimse({ context: presentationContext, command: e.response });
+      this.emit('nSetRequest', dimse, (rsp) => {
+        this._sendDimse({ context: presentationContext, command: rsp });
+      });
     }
   }
 
@@ -743,7 +710,7 @@ class Network extends EventEmitter {
 //#endregion
 
 //#region PduAccumulator
-class PduAccumulator extends EventEmitter {
+class PduAccumulator extends AsyncEventEmitter {
   /**
    * Creates an instance of PduAccumulator.
    * @constructor

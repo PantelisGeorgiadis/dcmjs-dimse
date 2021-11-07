@@ -1,7 +1,20 @@
 const Network = require('./Network');
 const log = require('./log');
+const {
+  CEchoResponse,
+  CFindResponse,
+  CStoreResponse,
+  CMoveResponse,
+  CGetResponse,
+  NCreateResponse,
+  NActionResponse,
+  NDeleteResponse,
+  NEventReportResponse,
+  NGetResponse,
+  NSetResponse,
+} = require('./Command');
 
-const { EventEmitter } = require('events');
+const AsyncEventEmitter = require('async-eventemitter');
 const { createServer } = require('net');
 
 //#region Scp
@@ -26,38 +39,38 @@ class Scp extends Network {
     this.on('associationReleaseRequested', () => {
       this.associationReleaseRequested();
     });
-    this.on('cEchoRequest', (e) => {
-      e.response = this.cEchoRequest(e.request);
+    this.on('cEchoRequest', (request, callback) => {
+      this.cEchoRequest(request, callback);
     });
-    this.on('cFindRequest', (e) => {
-      e.responses = this.cFindRequest(e.request);
+    this.on('cFindRequest', (request, callback) => {
+      this.cFindRequest(request, callback);
     });
-    this.on('cStoreRequest', (e) => {
-      e.response = this.cStoreRequest(e.request);
+    this.on('cStoreRequest', (request, callback) => {
+      this.cStoreRequest(request, callback);
     });
-    this.on('cMoveRequest', (e) => {
-      e.responses = this.cMoveRequest(e.request);
+    this.on('cMoveRequest', (request, callback) => {
+      this.cMoveRequest(request, callback);
     });
-    this.on('cGetRequest', (e) => {
-      e.responses = this.cGetRequest(e.request);
+    this.on('cGetRequest', (request, callback) => {
+      this.cGetRequest(request, callback);
     });
-    this.on('nCreateRequest', (e) => {
-      e.response = this.nCreateRequest(e.request);
+    this.on('nCreateRequest', (request, callback) => {
+      this.nCreateRequest(request, callback);
     });
-    this.on('nActionRequest', (e) => {
-      e.response = this.nActionRequest(e.request);
+    this.on('nActionRequest', (request, callback) => {
+      this.nActionRequest(request, callback);
     });
-    this.on('nDeleteRequest', (e) => {
-      e.response = this.nDeleteRequest(e.request);
+    this.on('nDeleteRequest', (request, callback) => {
+      this.nDeleteRequest(request, callback);
     });
-    this.on('nEventReportRequest', (e) => {
-      e.response = this.nEventReportRequest(e.request);
+    this.on('nEventReportRequest', (request, callback) => {
+      this.nEventReportRequest(request, callback);
     });
-    this.on('nGetRequest', (e) => {
-      e.response = this.nGetRequest(e.request);
+    this.on('nGetRequest', (request, callback) => {
+      this.nGetRequest(request, callback);
     });
-    this.on('nSetRequest', (e) => {
-      e.response = this.nSetRequest(e.request);
+    this.on('nSetRequest', (request, callback) => {
+      this.nSetRequest(request, callback);
     });
   }
 
@@ -65,159 +78,149 @@ class Scp extends Network {
    * Association request received.
    * @method
    * @param {Association} association - Association.
-   * @throws Error if derived class does not implement the associationRequested method.
    */
   // eslint-disable-next-line no-unused-vars
   associationRequested(association) {
-    throw new Error('associationRequested method must be implemented');
+    log.error('associationRequested method must be implemented');
+    this.sendAssociationReject();
   }
 
   /**
    * Association release request received.
    * @method
    * @param {Association} association - Association.
-   * @throws Error if derived class does not implement the associationReleaseRequested method.
    */
   associationReleaseRequested() {
-    throw new Error('associationReleaseRequested method must be implemented');
+    log.error('associationReleaseRequested method must be implemented');
+    this.sendAssociationReleaseResponse();
   }
 
   /**
    * C-ECHO request received.
    * @method
    * @param {CEchoRequest} request - C-ECHO request.
-   * @returns {CEchoResponse} C-ECHO response.
-   * @throws Error if derived class does not implement the cEchoRequest method.
+   * @param {function(CEchoResponse)} callback - C-ECHO response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  cEchoRequest(request) {
-    throw new Error('cEchoRequest method must be implemented');
+  cEchoRequest(request, callback) {
+    log.error('cEchoRequest method must be implemented');
+    callback(CEchoResponse.fromRequest(request));
   }
 
   /**
    * C-FIND request received.
    * @method
    * @param {CFindRequest} request - C-FIND request.
-   * @returns {CFindResponse|Array<CFindResponse>} C-FIND response(s).
-   * @throws Error if derived class does not implement the cFindRequest method.
+   * @param {function(CFindResponse|Array<CFindResponse>)} callback - C-FIND response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  cFindRequest(request) {
-    throw new Error('cFindRequest method must be implemented');
+  cFindRequest(request, callback) {
+    log.error('cFindRequest method must be implemented');
+    callback(CFindResponse.fromRequest(request));
   }
 
   /**
    * C-STORE request received.
    * @method
    * @param {CStoreRequest} request - C-STORE request.
-   * @returns {CStoreResponse} C-STORE response.
-   * @throws Error if derived class does not implement the cStoreRequest method.
+   * @param {function(CStoreResponse)} callback - C-STORE response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  cStoreRequest(request) {
-    throw new Error('cStoreRequest method must be implemented');
+  cStoreRequest(request, callback) {
+    log.error('cStoreRequest method must be implemented');
+    callback(CStoreResponse.fromRequest(request));
   }
 
   /**
    * C-MOVE request received.
    * @method
    * @param {CMoveRequest} request - C-MOVE request.
-   * @returns {CMoveResponse|Array<CMoveResponse>} C-MOVE response(s).
-   * @throws Error if derived class does not implement the cMoveRequest method.
+   * @param {function(CMoveResponse)} callback - C-MOVE response callback function.
    */
   // eslint-disable-next-line no-unused-vars
-  cMoveRequest(request) {
-    throw new Error('cMoveRequest method must be implemented');
+  cMoveRequest(request, callback) {
+    log.error('cMoveRequest method must be implemented');
+    callback(CMoveResponse.fromRequest(request));
   }
 
   /**
    * C-GET request received.
    * @method
    * @param {CGetRequest} request - C-GET request.
-   * @returns {CGetResponse|Array<CGetResponse>} C-GET response(s).
-   * @throws Error if derived class does not implement the cGetRequest method.
+   * @param {function(CGetResponse|Array<CGetResponse>)} callback - C-GET response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  cGetRequest(request) {
-    throw new Error('cGetRequest method must be implemented');
+  cGetRequest(request, callback) {
+    log.error('cGetRequest method must be implemented');
+    callback(CGetResponse.fromRequest(request));
   }
 
   /**
    * N-CREATE request received.
    * @method
    * @param {NCreateRequest} request - N-CREATE request.
-   * @returns {NCreateResponse} N-CREATE response.
-   * @throws Error if derived class does not implement the nCreateRequest method.
+   * @param {function(NCreateResponse)} callback - N-CREATE response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  nCreateRequest(request) {
-    throw new Error('nCreateRequest method must be implemented');
+  nCreateRequest(request, callback) {
+    log.error('nCreateRequest method must be implemented');
+    callback(NCreateResponse.fromRequest(request));
   }
 
   /**
    * N-ACTION request received.
    * @method
    * @param {NActionRequest} request - N-ACTION request.
-   * @returns {NActionResponse} N-ACTION response.
-   * @throws Error if derived class does not implement the nActionRequest method.
+   * @param {function(NActionResponse)} callback - N-ACTION response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  nActionRequest(request) {
-    throw new Error('nActionRequest method must be implemented');
+  nActionRequest(request, callback) {
+    log.error('nActionRequest method must be implemented');
+    callback(NActionResponse.fromRequest(request));
   }
 
   /**
    * N-DELETE request received.
    * @method
    * @param {NDeleteRequest} request - N-DELETE request.
-   * @returns {NDeleteResponse} N-DELETE response.
-   * @throws Error if derived class does not implement the nDeleteRequest method.
+   * @param {function(NDeleteResponse)} callback - N-DELETE response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  nDeleteRequest(request) {
-    throw new Error('nDeleteRequest method must be implemented');
+  nDeleteRequest(request, callback) {
+    log.error('nDeleteRequest method must be implemented');
+    callback(NDeleteResponse.fromRequest(request));
   }
 
   /**
    * N-EVENT-REPORT request received.
    * @method
    * @param {NEventReportRequest} request - N-EVENT-REPORT request.
-   * @returns {NEventReportResponse} N-EVENT-REPORT response.
-   * @throws Error if derived class does not implement the nEventReportRequest method.
+   * @param {function(NEventReportResponse)} callback - N-EVENT-REPORT response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  nEventReportRequest(request) {
-    throw new Error('nEventReportRequest method must be implemented');
+  nEventReportRequest(request, callback) {
+    log.error('nEventReportRequest method must be implemented');
+    callback(NEventReportResponse.fromRequest(request));
   }
 
   /**
    * N-GET request received.
    * @method
    * @param {NGetRequest} request - N-GET request.
-   * @returns {NGetResponse} N-GET response.
-   * @throws Error if derived class does not implement the nGetRequest method.
+   * @param {function(NGetResponse)} callback - N-GET response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  nGetRequest(request) {
-    throw new Error('nGetRequest method must be implemented');
+  nGetRequest(request, callback) {
+    log.error('nGetRequest method must be implemented');
+    callback(NGetResponse.fromRequest(request));
   }
 
   /**
    * N-SET request received.
    * @method
    * @param {NSetRequest} request - N-SET request.
-   * @returns {NSetResponse} N-SET response.
-   * @throws Error if derived class does not implement the nSetRequest method.
+   * @param {function(NSetResponse)} callback - N-SET response callback function.
    */
-  // eslint-disable-next-line no-unused-vars
-  nSetRequest(request) {
-    throw new Error('nSetRequest method must be implemented');
+  nSetRequest(request, callback) {
+    log.error('nSetRequest method must be implemented');
+    callback(NSetResponse.fromRequest(request));
   }
 }
 //#endregion
 
 //#region Server
-class Server extends EventEmitter {
+class Server extends AsyncEventEmitter {
   /**
    * Creates an instance of Server.
    * @constructor

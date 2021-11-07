@@ -1,8 +1,9 @@
-const { TransferSyntax } = require('./Constants');
+const { TransferSyntax, Implementation, StorageClass } = require('./Constants');
 
 const fs = require('fs');
 const dcmjs = require('dcmjs');
-const { DicomMetaDictionary, DicomMessage, ReadBufferStream, WriteBufferStream } = dcmjs.data;
+const { DicomMetaDictionary, DicomDict, DicomMessage, ReadBufferStream, WriteBufferStream } =
+  dcmjs.data;
 const dcmjsLog = dcmjs.log;
 
 //#region Dataset
@@ -135,12 +136,41 @@ class Dataset {
    */
   static fromFile(path) {
     const fileBuffer = fs.readFileSync(path);
-    const dicomDict = DicomMessage.readFile(fileBuffer.buffer, { ignoreErrors: true });
+    const dicomDict = DicomMessage.readFile(
+      fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength),
+      { ignoreErrors: true }
+    );
     const meta = DicomMetaDictionary.naturalizeDataset(dicomDict.meta);
     const transferSyntaxUid = meta.TransferSyntaxUID;
     const elements = DicomMetaDictionary.naturalizeDataset(dicomDict.dict);
 
     return new Dataset(elements, transferSyntaxUid);
+  }
+
+  /**
+   * Saves a dataset to p10 file.
+   * @method
+   * @param {string} path - P10 file path.
+   */
+  toFile(path) {
+    const elements = {
+      _meta: {
+        FileMetaInformationVersion: new Uint8Array([0, 1]).buffer,
+        MediaStorageSOPClassUID:
+          this.getElement('SOPClassUID') || StorageClass.SecondaryCaptureImageStorage,
+        MediaStorageSOPInstanceUID:
+          this.getElement('SOPInstanceUID') || Dataset.generateDerivedUid(),
+        TransferSyntaxUID: this.getTransferSyntaxUid(),
+        ImplementationClassUID: Implementation.ImplementationClassUid,
+        ImplementationVersionName: Implementation.ImplementationVersion,
+      },
+      ...this.getElements(),
+    };
+    const denaturalizedMetaHeader = DicomMetaDictionary.denaturalizeDataset(elements._meta);
+    const dicomDict = new DicomDict(denaturalizedMetaHeader);
+    dicomDict.dict = DicomMetaDictionary.denaturalizeDataset(elements);
+
+    fs.writeFileSync(path, Buffer.from(dicomDict.write()));
   }
 
   /**

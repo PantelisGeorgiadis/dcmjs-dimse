@@ -1,9 +1,9 @@
 const { CommandFieldType, SopClass, Status } = require('./Constants');
 const Dataset = require('./Dataset');
 
+const AsyncEventEmitter = require('async-eventemitter');
 const dcmjs = require('dcmjs');
 const { DicomMetaDictionary } = dcmjs.data;
-const { EventEmitter } = require('events');
 const { Mixin } = require('ts-mixer');
 
 //#region Command
@@ -171,7 +171,7 @@ class Command {
 //#endregion
 
 //#region Request
-class Request extends Mixin(Command, EventEmitter) {
+class Request extends Mixin(Command, AsyncEventEmitter) {
   /**
    * Creates an instance of Request.
    * @constructor

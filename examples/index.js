@@ -1,4 +1,5 @@
-const dcmjsDimse = require('./../build/dcmjs-dimse.min.js');
+const dcmjsDimse = require('./../src');
+const path = require('path');
 
 const { Dataset, Client, Server, Scp } = dcmjsDimse;
 const { CEchoRequest, CFindRequest, CStoreRequest } = dcmjsDimse.requests;
@@ -13,8 +14,6 @@ const {
   SopClass,
   StorageClass,
 } = dcmjsDimse.constants;
-
-const path = require('path');
 
 function performCEcho(host, port, callingAeTitle, calledAeTitle) {
   const client = new Client();
@@ -94,7 +93,17 @@ class ExampleScp extends Scp {
         context.getAbstractSyntaxUid() === SopClass.ModalityWorklistInformationModelFind ||
         Object.values(StorageClass).includes(context.getAbstractSyntaxUid())
       ) {
-        context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
+        const transferSyntaxes = context.getTransferSyntaxUids();
+        transferSyntaxes.forEach((transferSyntax) => {
+          if (transferSyntax === TransferSyntax.ImplicitVRLittleEndian) {
+            context.setResult(
+              PresentationContextResult.Accept,
+              TransferSyntax.ImplicitVRLittleEndian
+            );
+          } else {
+            context.setResult(PresentationContextResult.RejectTransferSyntaxesNotSupported);
+          }
+        });
       } else {
         context.setResult(PresentationContextResult.RejectAbstractSyntaxNotSupported);
       }
@@ -102,13 +111,13 @@ class ExampleScp extends Scp {
     this.sendAssociationAccept();
   }
 
-  cEchoRequest(request) {
+  cEchoRequest(request, callback) {
     const response = CEchoResponse.fromRequest(request);
     response.setStatus(Status.Success);
-    return response;
+    callback(response);
   }
 
-  cFindRequest(request) {
+  cFindRequest(request, callback) {
     console.log(request.getDataset());
 
     const response1 = CFindResponse.fromRequest(request);
@@ -118,15 +127,15 @@ class ExampleScp extends Scp {
     const response2 = CFindResponse.fromRequest(request);
     response2.setStatus(Status.Success);
 
-    return [response1, response2];
+    callback([response1, response2]);
   }
 
-  cStoreRequest(request) {
+  cStoreRequest(request, callback) {
     console.log(request.getDataset());
 
     const response = CStoreResponse.fromRequest(request);
     response.setStatus(Status.Success);
-    return response;
+    callback(response);
   }
 
   associationReleaseRequested() {

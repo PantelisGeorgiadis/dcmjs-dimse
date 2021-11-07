@@ -69,6 +69,32 @@ class PresentationContext {
   }
 
   /**
+   * Removes transfer syntax UID.
+   * @method
+   * @param {string} transferSyntaxUid - Transfer syntax UID.
+   */
+  removeTransferSyntaxUid(transferSyntaxUid) {
+    if (!this.transferSyntaxes.includes(transferSyntaxUid)) {
+      return;
+    }
+    const index = this.transferSyntaxes.indexOf(transferSyntaxUid);
+    if (index === -1) {
+      return;
+    }
+    this.transferSyntaxes.splice(index, 1);
+  }
+
+  /**
+   * Checks if transfer syntax UID is present.
+   * @method
+   * @param {string} transferSyntaxUid - Transfer syntax UID.
+   * @returns {boolean} Whether transfer syntax UID is present.
+   */
+  hasTransferSyntaxUid(transferSyntaxUid) {
+    return this.transferSyntaxes.includes(transferSyntaxUid);
+  }
+
+  /**
    * Gets the accepted transfer syntax UID.
    * @method
    * @returns {string} Transfer syntax UID.
@@ -273,6 +299,24 @@ class Association {
   }
 
   /**
+   * Adds presentation context to association if not exists.
+   * @method
+   * @param {string} abstractSyntaxUid - Abstract Syntax UID.
+   * @returns {number} Presentation context ID.
+   */
+  addOrGetPresentationContext(abstractSyntaxUid) {
+    const presentationContexts = this.getPresentationContexts();
+    for (let i = 0; i < presentationContexts.length; i++) {
+      const ctx = presentationContexts[i];
+      if (ctx.context.getAbstractSyntaxUid() === abstractSyntaxUid) {
+        return ctx.context.getPresentationContextId();
+      }
+    }
+
+    return this.addPresentationContext(abstractSyntaxUid);
+  }
+
+  /**
    * Adds transfer syntax to presentation context.
    * @method
    * @param {number} pcId - Presentation context ID.
@@ -281,6 +325,26 @@ class Association {
   addTransferSyntaxToPresentationContext(pcId, transferSyntaxUid) {
     const context = this.getPresentationContext(pcId);
     context.addTransferSyntaxUid(transferSyntaxUid);
+  }
+
+  /**
+   * Finds presentation context.
+   * @method
+   * @param {string} abstractSyntaxUid - Abstract Syntax UID.
+   * @param {string} transferSyntaxUid - Transfer Syntax UID.
+   * @returns {number|undefined} Presentation context ID, if found.
+   */
+  findPresentationContextByAbstractSyntaxAndTransferSyntax(abstractSyntaxUid, transferSyntaxUid) {
+    const presentationContexts = this.getPresentationContexts();
+    for (let i = 0; i < presentationContexts.length; i++) {
+      const ctx = presentationContexts[i];
+      if (
+        ctx.context.getAbstractSyntaxUid() === abstractSyntaxUid &&
+        ctx.context.hasTransferSyntaxUid(transferSyntaxUid)
+      ) {
+        return ctx.context.getPresentationContextId();
+      }
+    }
   }
 
   /**
@@ -315,23 +379,11 @@ class Association {
    * @returns {number} Presentation context ID.
    */
   addPresentationContextFromRequest(request) {
-    const sopClassUid = this._getSopClassFromRequest(request);
+    const sopClassUid = this._sopClassFromRequest(request);
     let pcId = undefined;
 
     if (request instanceof CStoreRequest) {
-      let contextExists = false;
-      const presentationContexts = this.getPresentationContexts();
-      presentationContexts.forEach((pc) => {
-        const context = this.getPresentationContext(pc.id);
-        if (sopClassUid === context.getAbstractSyntaxUid()) {
-          contextExists = true;
-        }
-      });
-      if (contextExists) {
-        return pcId;
-      }
-
-      pcId = this.addPresentationContext(sopClassUid);
+      pcId = this.addOrGetPresentationContext(sopClassUid);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
 
@@ -343,16 +395,22 @@ class Association {
         transferSyntaxUid !== TransferSyntax.ImplicitVRLittleEndian &&
         transferSyntaxUid !== TransferSyntax.ExplicitVRLittleEndian
       ) {
-        pcId = this.addPresentationContext(sopClassUid);
-        this.addTransferSyntaxToPresentationContext(pcId, transferSyntaxUid);
+        pcId = this.findPresentationContextByAbstractSyntaxAndTransferSyntax(
+          sopClassUid,
+          transferSyntaxUid
+        );
+        if (pcId === undefined) {
+          pcId = this.addPresentationContext(sopClassUid);
+          this.addTransferSyntaxToPresentationContext(pcId, transferSyntaxUid);
+        }
       }
     } else if (request instanceof CGetRequest) {
-      pcId = this.addPresentationContext(sopClassUid);
+      pcId = this.addOrGetPresentationContext(sopClassUid);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
       Object.keys(StorageClass).forEach((uid) => {
         const storageClassUid = StorageClass[uid];
-        const storagePcId = this.addPresentationContext(storageClassUid);
+        const storagePcId = this.addOrGetPresentationContext(storageClassUid);
         this.addTransferSyntaxToPresentationContext(
           storagePcId,
           TransferSyntax.ImplicitVRLittleEndian
@@ -363,7 +421,7 @@ class Association {
         );
       });
     } else {
-      pcId = this.addPresentationContext(sopClassUid);
+      pcId = this.addOrGetPresentationContext(sopClassUid);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
       this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
     }
@@ -382,7 +440,7 @@ class Association {
     contexts.forEach((pc) => {
       const context = this.getPresentationContext(pc.id);
       if (
-        context.getAbstractSyntaxUid() === this._getSopClassFromRequest(request) &&
+        context.getAbstractSyntaxUid() === this._sopClassFromRequest(request) &&
         context.getResult() === PresentationContextResult.Accept
       ) {
         acceptedContext = context;
@@ -447,7 +505,7 @@ class Association {
    * @param {Request} request - Request.
    * @returns {string} SOP class UID.
    */
-  _getSopClassFromRequest(request) {
+  _sopClassFromRequest(request) {
     switch (request.getCommandFieldType()) {
       case CommandFieldType.NGetRequest:
       case CommandFieldType.NSetRequest:

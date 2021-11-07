@@ -1,10 +1,12 @@
+const Dataset = require('../src/Dataset');
 const { Association } = require('./../src/Association');
-const { Request } = require('../src/Command');
+const { Request, CStoreRequest, CGetRequest } = require('../src/Command');
 const {
   CommandFieldType,
   SopClass,
   TransferSyntax,
   PresentationContextResult,
+  StorageClass,
 } = require('./../src/Constants');
 
 const chai = require('chai');
@@ -87,5 +89,109 @@ describe('Association', () => {
 
     expect(context.getAbstractSyntaxUid()).to.be.eq(SopClass.Verification);
     expect(context.getAcceptedTransferSyntaxUid()).to.be.eq(TransferSyntax.ExplicitVRLittleEndian);
+  });
+
+  it('should correctly add presentation contexts from a C-STORE request', () => {
+    const callingAet = 'CALLINGAET';
+    const calledAet = 'CALLEDAET';
+
+    const association1 = new Association(callingAet, calledAet);
+    const request1 = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.CtImageStorage,
+        SOPInstanceUID: Dataset.generateDerivedUid(),
+      })
+    );
+    const pcId1 = association1.addPresentationContextFromRequest(request1);
+    const request2 = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.CtImageStorage,
+        SOPInstanceUID: Dataset.generateDerivedUid(),
+      })
+    );
+    const pcId2 = association1.addPresentationContextFromRequest(request2);
+    expect(pcId1).to.be.eq(pcId2);
+
+    const association2 = new Association(callingAet, calledAet);
+    const request3 = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.CtImageStorage,
+        SOPInstanceUID: Dataset.generateDerivedUid(),
+      })
+    );
+    const pcId3 = association2.addPresentationContextFromRequest(request3);
+    const request4 = new CStoreRequest(
+      new Dataset(
+        {
+          SOPClassUID: StorageClass.CtImageStorage,
+          SOPInstanceUID: Dataset.generateDerivedUid(),
+        },
+        '1.2.840.10008.1.2.4.90'
+      )
+    );
+    const pcId4 = association2.addPresentationContextFromRequest(request4);
+    const request5 = new CStoreRequest(
+      new Dataset(
+        {
+          SOPClassUID: StorageClass.CtImageStorage,
+          SOPInstanceUID: Dataset.generateDerivedUid(),
+        },
+        '1.2.840.10008.1.2.4.90'
+      )
+    );
+    const pcId5 = association2.addPresentationContextFromRequest(request5);
+    const request6 = new CStoreRequest(
+      new Dataset(
+        {
+          SOPClassUID: StorageClass.CtImageStorage,
+          SOPInstanceUID: Dataset.generateDerivedUid(),
+        },
+        '1.2.840.10008.1.2.4.70'
+      )
+    );
+    const pcId6 = association2.addPresentationContextFromRequest(request6);
+    expect(association2.getPresentationContexts().length).to.be.eq(3);
+    expect(pcId3).not.to.be.eq(pcId4);
+    expect(pcId4).to.be.eq(pcId5);
+    expect(pcId5).not.to.be.eq(pcId6);
+
+    const association3 = new Association(callingAet, calledAet);
+    const request7 = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.CtImageStorage,
+        SOPInstanceUID: Dataset.generateDerivedUid(),
+      })
+    );
+    const pcId7 = association3.addPresentationContextFromRequest(request7);
+    const request8 = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.MrImageStorage,
+        SOPInstanceUID: Dataset.generateDerivedUid(),
+      })
+    );
+    const pcId8 = association3.addPresentationContextFromRequest(request8);
+    expect(pcId7).not.to.be.eq(pcId8);
+    expect(association3.getPresentationContexts().length).to.be.eq(2);
+  });
+
+  it('should correctly add presentation contexts from a C-GET request', () => {
+    const callingAet = 'CALLINGAET';
+    const calledAet = 'CALLEDAET';
+
+    const association = new Association(callingAet, calledAet);
+    const request = CGetRequest.createStudyGetRequest(Dataset.generateDerivedUid());
+    const pcId = association.addPresentationContextFromRequest(request);
+
+    // All StorageClass SOPs plus the StudyRootQueryRetrieveInformationModelGet SOP
+    expect(association.getPresentationContexts().length).to.be.eq(
+      Object.keys(StorageClass).length + 1
+    );
+    const abstractSyntaxUids = association
+      .getPresentationContexts()
+      .map((p) => p.context.getAbstractSyntaxUid());
+    expect(abstractSyntaxUids).to.have.members([
+      SopClass.StudyRootQueryRetrieveInformationModelGet,
+      ...Object.values(StorageClass),
+    ]);
   });
 });

@@ -1,3 +1,4 @@
+const { PresentationContext, Association } = require('./Association');
 const Dataset = require('./Dataset');
 const Client = require('./Client');
 const { Server, Scp } = require('./Server');
@@ -42,6 +43,13 @@ const {
 } = require('./Constants');
 const log = require('./log');
 const version = require('./version');
+
+//#region association
+const association = {
+  PresentationContext,
+  Association,
+};
+//#endregion
 
 //#region requests
 const requests = {
@@ -98,6 +106,7 @@ const DcmjsDimse = {
   Client,
   Server,
   Scp,
+  association,
   requests,
   responses,
   constants,

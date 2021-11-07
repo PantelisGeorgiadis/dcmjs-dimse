@@ -8,6 +8,8 @@ const {
   CFindResponse,
   CStoreRequest,
   CStoreResponse,
+  CGetRequest,
+  CGetResponse,
   NActionRequest,
   NActionResponse,
   NEventReportRequest,
@@ -28,8 +30,16 @@ const chai = require('chai');
 const expect = chai.expect;
 
 const datasets = [
-  new Dataset({ PatientID: '12345', PatientName: 'JOHN^DOE' }),
-  new Dataset({ PatientID: '54321', PatientName: 'JANE^DOE' }),
+  new Dataset({
+    PatientID: '12345',
+    PatientName: 'JOHN^DOE',
+    StudyInstanceUID: Dataset.generateDerivedUid(),
+  }),
+  new Dataset({
+    PatientID: '54321',
+    PatientName: 'JANE^DOE',
+    StudyInstanceUID: Dataset.generateDerivedUid(),
+  }),
 ];
 
 class RejectingScp extends Scp {
@@ -56,6 +66,7 @@ class AcceptingScp extends Scp {
       if (
         context.getAbstractSyntaxUid() === SopClass.Verification ||
         context.getAbstractSyntaxUid() === SopClass.StudyRootQueryRetrieveInformationModelFind ||
+        context.getAbstractSyntaxUid() === SopClass.StudyRootQueryRetrieveInformationModelGet ||
         context.getAbstractSyntaxUid() === SopClass.ModalityWorklistInformationModelFind ||
         context.getAbstractSyntaxUid() === SopClass.Printer ||
         context.getAbstractSyntaxUid() === SopClass.StorageCommitmentPushModel ||
@@ -68,12 +79,12 @@ class AcceptingScp extends Scp {
     });
     this.sendAssociationAccept();
   }
-  cEchoRequest(request) {
+  cEchoRequest(request, callback) {
     const response = CEchoResponse.fromRequest(request);
     response.setStatus(Status.Success);
-    return response;
+    callback(response);
   }
-  cFindRequest(request) {
+  cFindRequest(request, callback) {
     const requestDataset = request.getDataset();
     const foundDataset = datasets.find(
       (d) => d.getElement('PatientID') === requestDataset.getElement('PatientID')
@@ -91,15 +102,30 @@ class AcceptingScp extends Scp {
     response2.setStatus(Status.Success);
     responses.push(response2);
 
-    return responses;
+    callback(responses);
   }
-  cStoreRequest(request) {
+  cStoreRequest(request, callback) {
     datasets.push(request.getDataset());
     const response = CStoreResponse.fromRequest(request);
     response.setStatus(Status.Success);
-    return response;
+    callback(response);
   }
-  nActionRequest(request) {
+  cGetRequest(request, callback) {
+    const requestDataset = request.getDataset();
+    const foundDataset = datasets.find(
+      (d) => d.getElement('StudyInstanceUID') === requestDataset.getElement('StudyInstanceUID')
+    );
+
+    if (foundDataset) {
+      const cStoreRequest = new CStoreRequest(foundDataset);
+      this.sendRequests(cStoreRequest);
+    }
+
+    const response = CGetResponse.fromRequest(request);
+    response.setStatus(Status.Success);
+    callback(response);
+  }
+  nActionRequest(request, callback) {
     const nEventRequest = new NEventReportRequest(
       request.getRequestedSopClassUid(),
       request.getRequestedSopInstanceUid(),
@@ -126,9 +152,9 @@ class AcceptingScp extends Scp {
 
     const response = NActionResponse.fromRequest(request);
     response.setStatus(Status.Success);
-    return response;
+    callback(response);
   }
-  nGetRequest(request) {
+  nGetRequest(request, callback) {
     const response = NGetResponse.fromRequest(request);
     const attributes = request.getAttributeIdentifierList();
     const dataset = new Dataset();
@@ -138,14 +164,14 @@ class AcceptingScp extends Scp {
     });
     response.setDataset(dataset);
     response.setStatus(Status.Success);
-    return response;
+    callback(response);
   }
   associationReleaseRequested() {
     this.sendAssociationReleaseResponse();
   }
 }
 
-describe('Client/Server', () => {
+describe('Network', () => {
   before(() => {
     log.level = 'error';
   });
@@ -242,6 +268,7 @@ describe('Client/Server', () => {
     const storeRequest = new CStoreRequest(
       new Dataset({
         SOPClassUID: StorageClass.MrImageStorage,
+        StudyInstanceUID: Dataset.generateDerivedUid(),
         PatientID: '45678',
         PatientName: 'JOHN^SMITH',
       })
@@ -262,9 +289,46 @@ describe('Client/Server', () => {
     client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
   });
 
-  it('should correctly perform and serve a N-ACTION operation', () => {
+  it('should correctly perform and serve a C-GET operation', () => {
     const server = new Server(AcceptingScp);
     server.listen(2106);
+
+    let ret = undefined;
+    const studyInstanceUid = Dataset.generateDerivedUid();
+
+    const client = new Client();
+    const storeRequest = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.MrImageStorage,
+        StudyInstanceUID: studyInstanceUid,
+        PatientID: '76543',
+        PatientName: 'JANE^DOE',
+      })
+    );
+    client.addRequest(storeRequest);
+    const getRequest = CGetRequest.createStudyGetRequest(studyInstanceUid);
+    client.addRequest(getRequest);
+    client.on('cStoreRequest', (request, callback) => {
+      ret = request.getDataset();
+
+      const response = CStoreResponse.fromRequest(request);
+      response.setStatus(Status.Success);
+      callback(response);
+    });
+    client.on('closed', () => {
+      expect(ret.getElement('PatientID')).to.be.eq(datasets[3].getElement('PatientID'));
+      expect(ret.getElement('PatientName')).to.be.eq(datasets[3].getElement('PatientName'));
+      expect(ret.getElement('StudyInstanceUID')).to.be.eq(
+        datasets[3].getElement('StudyInstanceUID')
+      );
+      server.close();
+    });
+    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should correctly perform and serve a N-ACTION operation', () => {
+    const server = new Server(AcceptingScp);
+    server.listen(2107);
 
     let ret = undefined;
     const sopInstanceUid = Dataset.generateDerivedUid();
@@ -288,10 +352,11 @@ describe('Client/Server', () => {
       })
     );
     client.addRequest(request);
-    client.on('nEventReportRequest', (e) => {
-      ret = e.request.getDataset();
-      e.response = NEventReportResponse.fromRequest(e.request);
-      e.response.setStatus(Status.Success);
+    client.on('nEventReportRequest', (request, callback) => {
+      ret = request.getDataset();
+      const response = NEventReportResponse.fromRequest(request);
+      response.setStatus(Status.Success);
+      callback(response);
     });
     client.on('closed', () => {
       expect(ret.getElement('TransactionUID')).to.be.eq(transactionUid);
@@ -300,12 +365,12 @@ describe('Client/Server', () => {
       expect(failedSOPSequenceItem.FailureReason).to.be.eq(0x0112);
       server.close();
     });
-    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-GET operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2107);
+    server.listen(2108);
 
     let ret = undefined;
 
@@ -328,6 +393,6 @@ describe('Client/Server', () => {
       expect(ret.getElement('Manufacturer')).to.be.eq('Manufacturer');
       server.close();
     });
-    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
   });
 });
