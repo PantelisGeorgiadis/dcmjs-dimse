@@ -1,5 +1,6 @@
 ## All non-dist directories
 .github/
+coverage/
 datasets/
 examples/
 src/
@@ -10,4 +11,5 @@ documentation/
 .eslintrc.json
 .gitignore
 .jsdocrc.json
+.c8rc.json
 webpack.config.js

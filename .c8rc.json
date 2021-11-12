@@ -1,0 +1,10 @@
+{
+  "clean": true,
+  "include": ["src/*.js"],
+  "exclude": ["src/index.js", "src/version.js "],
+  "check-coverage": true,
+  "lines": 80,
+  "functions": 80,
+  "branches": 80,
+  "statements": 80
+}

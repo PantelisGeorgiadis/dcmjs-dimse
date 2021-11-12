@@ -4,7 +4,8 @@ const { Request } = require('./Command');
 const log = require('./log');
 
 const AsyncEventEmitter = require('async-eventemitter');
-const { Socket } = require('net');
+const net = require('net');
+const tls = require('tls');
 
 //#region Client
 class Client extends AsyncEventEmitter {
@@ -76,6 +77,14 @@ class Client extends AsyncEventEmitter {
    * @param {number} [opts.associationLingerTimeout] - Association linger timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.securityOptions] - Security options.
+   * @param {Buffer} [opts.securityOptions.key] - Client private key in PEM format.
+   * @param {Buffer} [opts.securityOptions.cert] - Client public certificate in PEM format.
+   * @param {Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted server certificates in PEM format.
+   * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
+   * certificate from server that connect and attempt to verify it.
+   * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
+   * is not authorized with the list of supplied trusted server certificates.
    * @throws Error if there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
@@ -102,8 +111,22 @@ class Client extends AsyncEventEmitter {
       });
     });
 
-    // Initialize network
-    const socket = new Socket();
+    let options = {};
+    if (opts.securityOptions) {
+      options = {
+        key: opts.securityOptions.key,
+        cert: opts.securityOptions.cert,
+        ca: opts.securityOptions.ca,
+        requestCert: opts.securityOptions.requestCert,
+        rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
+      };
+    }
+
+    // Connect
+    log.info(`Connecting to ${host}:${port} ${opts.securityOptions ? '(TLS)' : ''}`);
+    const netImpl = opts.securityOptions ? tls : net;
+    const socket = netImpl.connect({ host, port, ...options });
+
     const network = new Network(socket, opts);
     network.on('connect', () => {
       this.emit('connected');
@@ -137,10 +160,6 @@ class Client extends AsyncEventEmitter {
     network.on('close', () => {
       this.emit('closed');
     });
-
-    // Connect
-    log.info(`Connecting to ${host}:${port}`);
-    socket.connect({ host, port });
   }
 }
 //#endregion

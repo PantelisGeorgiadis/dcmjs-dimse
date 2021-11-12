@@ -19,19 +19,7 @@ class Dataset {
 
     this.transferSyntaxUid = transferSyntaxUid || TransferSyntax.ImplicitVRLittleEndian;
     if (Buffer.isBuffer(elementsOrBuffer)) {
-      const stream = new ReadBufferStream(
-        elementsOrBuffer.buffer.slice(
-          elementsOrBuffer.byteOffset,
-          elementsOrBuffer.byteOffset + elementsOrBuffer.byteLength
-        )
-      );
-      const denaturalizedDataset = DicomMessage.read(stream, this.transferSyntaxUid, true);
-      const naturalizedDataset = DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
-
-      this.elements = {};
-      Object.keys(naturalizedDataset).forEach((item) => {
-        this.elements[item] = naturalizedDataset[item];
-      });
+      this.elements = this._fromElementsBuffer(elementsOrBuffer, this.transferSyntaxUid);
       return;
     }
 
@@ -132,27 +120,32 @@ class Dataset {
    * @method
    * @static
    * @param {string} path - P10 file path.
-   * @returns {Dataset} Dataset.
+   * @param {function(Error, Dataset)} [callback] - P10 file reading callback function.
+   * If this is not provided, the function runs synchronously.
+   * @returns {Dataset|undefined} Dataset or undefined, if the function runs asynchronously.
    */
-  static fromFile(path) {
-    const fileBuffer = fs.readFileSync(path);
-    const dicomDict = DicomMessage.readFile(
-      fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength),
-      { ignoreErrors: true }
-    );
-    const meta = DicomMetaDictionary.naturalizeDataset(dicomDict.meta);
-    const transferSyntaxUid = meta.TransferSyntaxUID;
-    const elements = DicomMetaDictionary.naturalizeDataset(dicomDict.dict);
-
-    return new Dataset(elements, transferSyntaxUid);
+  static fromFile(path, callback) {
+    if (callback !== undefined && callback instanceof Function) {
+      fs.readFile(path, (error, fileBuffer) => {
+        if (error) {
+          callback(error, undefined);
+          return;
+        }
+        callback(undefined, this._fromP10Buffer(fileBuffer));
+      });
+      return;
+    }
+    return this._fromP10Buffer(fs.readFileSync(path));
   }
 
   /**
    * Saves a dataset to p10 file.
    * @method
    * @param {string} path - P10 file path.
+   * @param {function(Error)} [callback] - P10 file writing callback function.
+   * If this is not provided, the function runs synchronously.
    */
-  toFile(path) {
+  toFile(path, callback) {
     const elements = {
       _meta: {
         FileMetaInformationVersion: new Uint8Array([0, 1]).buffer,
@@ -170,7 +163,11 @@ class Dataset {
     const dicomDict = new DicomDict(denaturalizedMetaHeader);
     dicomDict.dict = DicomMetaDictionary.denaturalizeDataset(elements);
 
-    fs.writeFileSync(path, Buffer.from(dicomDict.write()));
+    if (callback !== undefined && callback instanceof Function) {
+      fs.writeFile(path, Buffer.from(dicomDict.write()), callback);
+    } else {
+      fs.writeFileSync(path, Buffer.from(dicomDict.write()));
+    }
   }
 
   /**
@@ -196,6 +193,44 @@ class Dataset {
 
     return str.join('\n');
   }
+
+  //#region Private Methods
+  /**
+   * Creates a dataset from p10 buffer.
+   * @method
+   * @private
+   * @param {Buffer} buffer - p10 buffer.
+   * @returns {Dataset} Dataset.
+   */
+  static _fromP10Buffer(buffer) {
+    const dicomDict = DicomMessage.readFile(
+      buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+      { ignoreErrors: true }
+    );
+    const meta = DicomMetaDictionary.naturalizeDataset(dicomDict.meta);
+    const transferSyntaxUid = meta.TransferSyntaxUID;
+    const elements = DicomMetaDictionary.naturalizeDataset(dicomDict.dict);
+
+    return new Dataset(elements, transferSyntaxUid);
+  }
+
+  /**
+   * Loads a dataset from elements only buffer.
+   * @method
+   * @private
+   * @param {Buffer} buffer - Elements buffer.
+   * @param {string} transferSyntaxUid - Transfer Syntax UID.
+   * @returns {Object} Dataset elements.
+   */
+  _fromElementsBuffer(buffer, transferSyntaxUid) {
+    const stream = new ReadBufferStream(
+      buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+    );
+    const denaturalizedDataset = DicomMessage.read(stream, transferSyntaxUid, true);
+
+    return DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
+  }
+  //#endregion
 }
 //#endregion
 

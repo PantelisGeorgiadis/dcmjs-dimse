@@ -1,23 +1,25 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",
   "scripts": {
-    "clean": "npm run clean:build && npm run clean:docs",
+    "clean": "npm run clean:build && npm run clean:coverage && npm run clean:docs",
     "clean:build": "shx rm -rf build",
+    "clean:coverage": "shx rm -rf coverage",
     "clean:docs": "shx rm -rf documentation",
+    "coverage": "c8 mocha -c .c8rc.json test/**/*.test.js",
     "doc": "npm run doc:generate && open-cli documentation/index.html",
     "doc:generate": "npm run clean:docs && jsdoc -c .jsdocrc.json",
     "dev:examples": "nodemon examples/index.js",
     "start:examples": "node examples/index.js",
-    "build": "npm run version && npm run lint && npm run test && npm run webpack",
+    "build": "npm run version && npm run lint && npm run test && npm run coverage && npm run webpack",
     "start": "npm run webpack",
     "prepublish": "npm run build",
     "version": "node -p -e \"'module.exports = \\'' + require('./package.json').version + '\\';'\" > src/version.js",
     "webpack": "webpack --progress --config webpack.config.js",
-    "test": "mocha 'test/**/*.test.js'",
+    "test": "mocha test/**/*.test.js",
     "lint": "eslint -c .eslintrc.json --fix src && prettier --tab-width 2 --single-quote true --print-width 100 --use-tabs false --write src/**/*.js test/**/*.js examples/**/*.js"
   },
   "repository": {
@@ -37,24 +39,26 @@
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
     "async-eventemitter": "^0.2.4",
-    "dcmjs": "^0.19.0",
+    "dcmjs": "^0.19.1",
     "smart-buffer": "^4.2.0",
     "ts-mixer": "^6.0.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
+    "c8": "7.10.0",
     "chai": "^4.3.4",
     "docdash": "^1.2.0",
     "eslint": "^7.32.0",
     "jsdoc": "^3.6.7",
     "mocha": "^9.1.3",
-    "mock-fs": "^5.1.1",
-    "nodemon": "^2.0.14",
+    "mock-fs": "^5.1.2",
+    "nodemon": "^2.0.15",
     "open-cli": "^7.0.1",
     "prettier": "^2.4.1",
+    "selfsigned": "^1.10.11",
     "shx": "^0.3.3",
-    "terser-webpack-plugin": "^5.2.4",
-    "webpack": "^5.61.1",
+    "terser-webpack-plugin": "^5.2.5",
+    "webpack": "^5.63.0",
     "webpack-cli": "^4.9.1"
   }
 }

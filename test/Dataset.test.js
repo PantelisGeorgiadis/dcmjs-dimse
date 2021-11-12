@@ -1,5 +1,5 @@
 const Dataset = require('./../src/Dataset');
-const { TransferSyntax, SopClass, StorageClass } = require('./../src/Constants');
+const { TransferSyntax, StorageClass } = require('./../src/Constants');
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -88,7 +88,24 @@ describe('Dataset', () => {
       const val2 = elements4[el1];
       expect(val1).to.be.eq(val2);
     });
+  });
 
-    mockFs.restore();
+  it('should correctly read and write DICOM part10 files asynchronously', () => {
+    mockFs({
+      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+    });
+
+    Dataset.fromFile('fileIn.dcm', (err, dataset1) => {
+      dataset1.toFile('fileOut1.dcm', (err2) => {
+        Dataset.fromFile('fileOut1.dcm', (err3, dataset2) => {
+          const elements1 = dataset1.getElements();
+          const elements2 = dataset2.getElements();
+          expect(Object.keys(elements1).length).to.be.eq(Object.keys(elements2).length);
+          expect(Object.keys(elements1)).to.have.members(Object.keys(elements2));
+
+          mockFs.restore();
+        });
+      });
+    });
   });
 });

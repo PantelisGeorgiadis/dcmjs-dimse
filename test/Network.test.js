@@ -26,6 +26,7 @@ const {
 } = require('./../src/Constants');
 const log = require('./../src/log');
 
+const selfSigned = require('selfsigned');
 const chai = require('chai');
 const expect = chai.expect;
 
@@ -214,9 +215,68 @@ describe('Network', () => {
     client.send('127.0.0.1', 2102, 'CALLINGAET', 'CALLEDAET');
   });
 
+  it('should correctly perform and serve a secure C-ECHO operation (TLS)', () => {
+    let status = Status.ProcessingFailure;
+
+    const serverAttrs = [
+      { name: 'commonName', value: 'DCMJS-DIMSE-SERVER' },
+      { name: 'countryName', value: 'GR' },
+      { name: 'organizationName', value: 'DCMJS-DIMSE' },
+      { name: 'organizationalUnitName', value: 'IT' },
+    ];
+    const serverPems = selfSigned.generate(serverAttrs, {
+      keySize: 2048,
+      days: 5,
+      algorithm: 'sha256',
+    });
+
+    const clientAttrs = [
+      { name: 'commonName', value: 'DCMJS-DIMSE-CLIENT' },
+      { name: 'countryName', value: 'GR' },
+      { name: 'organizationName', value: 'DCMJS-DIMSE' },
+      { name: 'organizationalUnitName', value: 'IT' },
+    ];
+    const clientPems = selfSigned.generate(clientAttrs, {
+      keySize: 2048,
+      days: 5,
+      algorithm: 'sha256',
+    });
+
+    const server = new Server(AcceptingScp);
+    server.listen(2103, {
+      securityOptions: {
+        key: serverPems.private,
+        cert: serverPems.cert,
+        ca: clientPems.cert,
+        rejectUnauthorized: false,
+        requestCert: false,
+      },
+    });
+
+    const client = new Client();
+    const request = new CEchoRequest();
+    request.on('response', (response) => {
+      status = response.getStatus();
+    });
+    client.addRequest(request);
+    client.on('closed', () => {
+      expect(status).to.be.eq(Status.Success);
+      server.close();
+    });
+    client.send('127.0.0.1', 2103, 'CALLINGAET', 'CALLEDAET', {
+      securityOptions: {
+        key: clientPems.private,
+        cert: clientPems.cert,
+        ca: serverPems.cert,
+        rejectUnauthorized: false,
+        requestCert: false,
+      },
+    });
+  });
+
   it('should correctly perform and serve a C-FIND operation (Study)', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2103);
+    server.listen(2104);
 
     let ret = undefined;
 
@@ -233,12 +293,12 @@ describe('Network', () => {
       expect(ret.getElement('PatientName')).to.be.eq(datasets[0].getElement('PatientName'));
       server.close();
     });
-    client.send('127.0.0.1', 2103, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2104, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-FIND operation (Worklist)', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2104);
+    server.listen(2105);
 
     let ret = undefined;
 
@@ -255,12 +315,12 @@ describe('Network', () => {
       expect(ret.getElement('PatientName')).to.be.eq(datasets[1].getElement('PatientName'));
       server.close();
     });
-    client.send('127.0.0.1', 2104, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-STORE operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2105);
+    server.listen(2106);
 
     let ret = undefined;
 
@@ -286,12 +346,12 @@ describe('Network', () => {
       expect(ret.getElement('PatientName')).to.be.eq(datasets[2].getElement('PatientName'));
       server.close();
     });
-    client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-GET operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2106);
+    server.listen(2107);
 
     let ret = undefined;
     const studyInstanceUid = Dataset.generateDerivedUid();
@@ -323,12 +383,12 @@ describe('Network', () => {
       );
       server.close();
     });
-    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-ACTION operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2107);
+    server.listen(2108);
 
     let ret = undefined;
     const sopInstanceUid = Dataset.generateDerivedUid();
@@ -365,12 +425,12 @@ describe('Network', () => {
       expect(failedSOPSequenceItem.FailureReason).to.be.eq(0x0112);
       server.close();
     });
-    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-GET operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2108);
+    server.listen(2109);
 
     let ret = undefined;
 
@@ -393,6 +453,6 @@ describe('Network', () => {
       expect(ret.getElement('Manufacturer')).to.be.eq('Manufacturer');
       server.close();
     });
-    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
   });
 });

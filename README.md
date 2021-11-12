@@ -189,6 +189,8 @@ client.on('nEventReportRequest', (request, callback) => {
 client.on('networkError', (e) => {
   console.log('Network error: ', e);
 });
+// Linger the association to get a synchronous 
+// storage commitment response
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP', {
   associationLingerTimeout: 5000,
 });
@@ -243,7 +245,7 @@ const pc = new PresentationContext(
 );
 client.addAdditionalPresentationContext(pc);
 
-// Film Session
+// Create film session
 const filmSessionSopInstanceUid = Dataset.generateDerivedUid();
 const filmSessionCreateRequest = new NCreateRequest(
   SopClass.BasicFilmSession,
@@ -258,7 +260,7 @@ filmSessionCreateRequest.setDataset(
 );
 client.addRequest(filmSessionCreateRequest);
 
-// Film Box
+// Create film box
 const filmBoxSopInstanceUid = Dataset.generateDerivedUid();
 const imageBoxSopInstanceUid = Dataset.generateDerivedUid();
 const filmBoxCreateRequest = new NCreateRequest(SopClass.BasicFilmBox, filmBoxSopInstanceUid);
@@ -298,7 +300,7 @@ filmBoxCreateRequest.on('response', (response) => {
 });
 client.addRequest(filmBoxCreateRequest);
 
-// Image Box
+// Set image box
 const imageBoxSetRequest = new NSetRequest(SopClass.BasicGrayscaleImageBox, imageBoxSopInstanceUid);
 const width = 256;
 const height = 256;
@@ -336,10 +338,10 @@ client.addRequest(imageBoxSetRequest);
 // Print!
 client.addRequest(new NActionRequest(SopClass.BasicFilmSession, filmSessionSopInstanceUid, 0x0001));
 
-// Delete Film Box
+// Delete film box
 client.addRequest(new NDeleteRequest(SopClass.BasicFilmBox, filmBoxSopInstanceUid));
 
-// Delete Film Session
+// Delete film session
 client.addRequest(new NDeleteRequest(SopClass.BasicFilmSession, filmSessionSopInstanceUid));
 
 // Send requests

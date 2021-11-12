@@ -15,9 +15,11 @@ const {
 } = require('./Command');
 
 const AsyncEventEmitter = require('async-eventemitter');
-const { createServer } = require('net');
+const net = require('net');
+const tls = require('tls');
 
 //#region Scp
+/* c8 ignore start */
 class Scp extends Network {
   /**
    * Creates an instance of Scp.
@@ -29,6 +31,14 @@ class Scp extends Network {
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.securityOptions] - Security options.
+   * @param {Buffer} [opts.securityOptions.key] - Server private key in PEM format.
+   * @param {Buffer} [opts.securityOptions.cert] - Server public certificate in PEM format.
+   * @param {Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted client certificates in PEM format.
+   * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
+   * certificate from clients that connect and attempt to verify it.
+   * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
+   * is not authorized with the list of supplied trusted client certificates.
    */
   constructor(socket, opts) {
     super(socket, opts);
@@ -110,7 +120,7 @@ class Scp extends Network {
    * C-FIND request received.
    * @method
    * @param {CFindRequest} request - C-FIND request.
-   * @param {function(CFindResponse|Array<CFindResponse>)} callback - C-FIND response callback function.
+   * @param {function(Array<CFindResponse>)} callback - C-FIND response callback function.
    */
   cFindRequest(request, callback) {
     log.error('cFindRequest method must be implemented');
@@ -132,7 +142,7 @@ class Scp extends Network {
    * C-MOVE request received.
    * @method
    * @param {CMoveRequest} request - C-MOVE request.
-   * @param {function(CMoveResponse)} callback - C-MOVE response callback function.
+   * @param {function(Array<CMoveResponse>)} callback - C-MOVE response callback function.
    */
   // eslint-disable-next-line no-unused-vars
   cMoveRequest(request, callback) {
@@ -144,7 +154,7 @@ class Scp extends Network {
    * C-GET request received.
    * @method
    * @param {CGetRequest} request - C-GET request.
-   * @param {function(CGetResponse|Array<CGetResponse>)} callback - C-GET response callback function.
+   * @param {function(Array<CGetResponse>)} callback - C-GET response callback function.
    */
   cGetRequest(request, callback) {
     log.error('cGetRequest method must be implemented');
@@ -217,6 +227,7 @@ class Scp extends Network {
     callback(NSetResponse.fromRequest(request));
   }
 }
+/* c8 ignore stop */
 //#endregion
 
 //#region Server
@@ -243,28 +254,52 @@ class Server extends AsyncEventEmitter {
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.securityOptions] - Security options.
+   * @param {Buffer} [opts.securityOptions.key] - Server private key in PEM format.
+   * @param {Buffer} [opts.securityOptions.cert] - Server public certificate in PEM format.
+   * @param {Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted client certificates in PEM format.
+   * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
+   * certificate from clients that connect and attempt to verify it.
+   * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
+   * is not authorized with the list of supplied trusted client certificates.
    */
   listen(port, opts) {
-    // Initialize network
-    this.server = createServer();
-    this.server.listen(port);
+    opts = opts || {};
 
-    this.server.on('listening', () => {
-      log.info(`DICOM server listening on port ${port}`);
-    });
-    this.server.on('connection', (socket) => {
-      log.info(`Client connecting from ${socket.remoteAddress}:${socket.remotePort}`);
+    let options = {};
+    if (opts.securityOptions) {
+      options = {
+        key: opts.securityOptions.key,
+        cert: opts.securityOptions.cert,
+        ca: opts.securityOptions.ca,
+        requestCert: opts.securityOptions.requestCert,
+        rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
+      };
+    }
+
+    // Initialize network
+    const netImpl = opts.securityOptions ? tls : net;
+    this.server = netImpl.createServer(options, (socket) => {
+      log.info(
+        `Client connecting from ${socket.remoteAddress}:${socket.remotePort} (${
+          socket.authorized ? 'Authorized' : 'Unauthorized'
+        })`
+      );
       const client = new this.scp.class(socket, opts);
       client.connected = true;
       this.clients.push(client);
 
       this.clients = this.clients.filter((item) => item.connected);
     });
+    this.server.on('listening', () => {
+      log.info(`DICOM server listening on port ${port} ${opts.securityOptions ? '(TLS)' : ''}`);
+    });
     this.server.on('error', (err) => {
       const error = `Server error: ${err.message}`;
       log.error(error);
       this.emit('networkError', err);
     });
+    this.server.listen(port);
   }
 
   /**
@@ -274,11 +309,11 @@ class Server extends AsyncEventEmitter {
   close() {
     if (this.server && this.server.listening) {
       this.server.close();
-
-      // Close all live sockets
-      this.clients.forEach((client) => client.socket.destroy());
-      this.clients = [];
     }
+
+    // Close all live sockets
+    this.clients.forEach((client) => client.socket.destroy());
+    this.clients = [];
   }
 }
 //#endregion
