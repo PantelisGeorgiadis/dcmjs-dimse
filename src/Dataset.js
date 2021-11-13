@@ -135,6 +135,7 @@ class Dataset {
       });
       return;
     }
+
     return this._fromP10Buffer(fs.readFileSync(path));
   }
 
@@ -226,7 +227,13 @@ class Dataset {
     const stream = new ReadBufferStream(
       buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
     );
-    const denaturalizedDataset = DicomMessage.read(stream, transferSyntaxUid, true);
+    // Use the proper syntax length (based on transfer syntax UID)
+    // since dcmjs doesn't do that internally.
+    let syntaxLengthTypeToDecode =
+      transferSyntaxUid === TransferSyntax.ImplicitVRLittleEndian
+        ? TransferSyntax.ImplicitVRLittleEndian
+        : TransferSyntax.ExplicitVRLittleEndian;
+    const denaturalizedDataset = DicomMessage.read(stream, syntaxLengthTypeToDecode, true);
 
     return DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
   }

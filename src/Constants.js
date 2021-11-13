@@ -271,8 +271,29 @@ Object.freeze(SopClass);
 const TransferSyntax = {
   ImplicitVRLittleEndian: '1.2.840.10008.1.2',
   ExplicitVRLittleEndian: '1.2.840.10008.1.2.1',
+  DeflatedExplicitVRLittleEndian: '1.2.840.10008.1.2.1.99',
+  ExplicitVRBigEndian: '1.2.840.10008.1.2.2',
+  RleLossless: '1.2.840.10008.1.2.5',
+  JpegBaseline: '1.2.840.10008.1.2.4.50',
+  JpegLossless: '1.2.840.10008.1.2.4.70',
+  JpegLsLossless: '1.2.840.10008.1.2.4.80',
+  JpegLsLossy: '1.2.840.10008.1.2.4.81',
+  Jpeg2000Lossless: '1.2.840.10008.1.2.4.90',
+  Jpeg2000Lossy: '1.2.840.10008.1.2.4.91',
 };
 Object.freeze(TransferSyntax);
+//#endregion
+
+//#region TranscodableTransferSyntax
+/**
+ * Transfer syntaxes that can be transcoded.
+ * @constant {Object}
+ */
+const TranscodableTransferSyntax = {
+  ImplicitVRLittleEndian: '1.2.840.10008.1.2',
+  ExplicitVRLittleEndian: '1.2.840.10008.1.2.1',
+};
+Object.freeze(TranscodableTransferSyntax);
 //#endregion
 
 //#region Implementation
@@ -302,6 +323,7 @@ module.exports = {
   StorageClass,
   SopClass,
   TransferSyntax,
+  TranscodableTransferSyntax,
   Implementation,
 };
 //#endregion

@@ -376,16 +376,21 @@ class Association {
    * Adds presentation context from request.
    * @method
    * @param {Request} request - Request.
+   * @param {Array<TransferSyntax>} [transferSyntaxes] - Transfer syntax UIDs to propose.
    * @returns {number} Presentation context ID.
    */
-  addPresentationContextFromRequest(request) {
+  addPresentationContextFromRequest(request, transferSyntaxes) {
+    let syntaxes = transferSyntaxes || TransferSyntax.ImplicitVRLittleEndian;
+    syntaxes = Array.isArray(syntaxes) ? syntaxes : [syntaxes];
+
     const sopClassUid = this._sopClassFromRequest(request);
     let pcId = undefined;
 
     if (request instanceof CStoreRequest) {
       pcId = this.addOrGetPresentationContext(sopClassUid);
-      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
-      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
+      syntaxes.forEach((syntax) => {
+        this.addTransferSyntaxToPresentationContext(pcId, syntax);
+      });
 
       // Add an extra presentation context with any encapsulated transfer syntax
       // to allow bit-stream.
@@ -406,24 +411,21 @@ class Association {
       }
     } else if (request instanceof CGetRequest) {
       pcId = this.addOrGetPresentationContext(sopClassUid);
-      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
-      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
+      syntaxes.forEach((syntax) => {
+        this.addTransferSyntaxToPresentationContext(pcId, syntax);
+      });
       Object.keys(StorageClass).forEach((uid) => {
         const storageClassUid = StorageClass[uid];
         const storagePcId = this.addOrGetPresentationContext(storageClassUid);
-        this.addTransferSyntaxToPresentationContext(
-          storagePcId,
-          TransferSyntax.ImplicitVRLittleEndian
-        );
-        this.addTransferSyntaxToPresentationContext(
-          storagePcId,
-          TransferSyntax.ExplicitVRLittleEndian
-        );
+        syntaxes.forEach((syntax) => {
+          this.addTransferSyntaxToPresentationContext(storagePcId, syntax);
+        });
       });
     } else {
       pcId = this.addOrGetPresentationContext(sopClassUid);
-      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
-      this.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ExplicitVRLittleEndian);
+      syntaxes.forEach((syntax) => {
+        this.addTransferSyntaxToPresentationContext(pcId, syntax);
+      });
     }
 
     return pcId;

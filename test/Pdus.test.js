@@ -26,8 +26,8 @@ describe('PDU', () => {
 
     const assoc1 = new Association(callingAet, calledAet);
     assoc1.setMaxPduLength(maxPdu);
-    const pcId = assoc1.addPresentationContext('1.2.3.4.5.6.7.8.9');
-    assoc1.addTransferSyntaxToPresentationContext(pcId, '9.8.7.6.5.4.3.2.1');
+    const pcId = assoc1.addPresentationContext(SopClass.Verification);
+    assoc1.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
 
     const rq1 = new AAssociateRQ(assoc1);
     const pduRq = rq1.write();

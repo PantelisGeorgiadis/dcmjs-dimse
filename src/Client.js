@@ -1,5 +1,6 @@
-const { Association, PresentationContext } = require('./Association');
 const Network = require('./Network');
+const { Association, PresentationContext } = require('./Association');
+const { TransferSyntax } = require('./Constants');
 const { Request } = require('./Command');
 const log = require('./log');
 
@@ -99,7 +100,10 @@ class Client extends AsyncEventEmitter {
     // Create association object
     const association = new Association(callingAeTitle, calledAeTitle);
     this.requests.forEach((request) => {
-      association.addPresentationContextFromRequest(request);
+      association.addPresentationContextFromRequest(request, [
+        TransferSyntax.ImplicitVRLittleEndian,
+        TransferSyntax.ExplicitVRLittleEndian,
+      ]);
     });
 
     // Add additional presentation contexts

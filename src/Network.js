@@ -10,7 +10,12 @@ const {
   Pdv,
   PDataTF,
 } = require('./Pdu');
-const { CommandFieldType, Status, TransferSyntax, Implementation } = require('./Constants');
+const {
+  CommandFieldType,
+  Status,
+  TranscodableTransferSyntax,
+  Implementation,
+} = require('./Constants');
 const {
   Command,
   Response,
@@ -255,7 +260,7 @@ class Network extends AsyncEventEmitter {
       const presentationContext = this.association.getPresentationContext(
         dimse.context.getPresentationContextId()
       );
-      const supportedTransferSyntaxes = Object.values(TransferSyntax);
+      const supportedTransferSyntaxes = Object.values(TranscodableTransferSyntax);
       const acceptedTransferSyntaxUid = presentationContext.getAcceptedTransferSyntaxUid();
       if (dataset && acceptedTransferSyntaxUid !== dataset.getTransferSyntaxUid()) {
         if (
@@ -265,7 +270,7 @@ class Network extends AsyncEventEmitter {
           dataset.setTransferSyntaxUid(acceptedTransferSyntaxUid);
         } else {
           log.error(
-            `A transfer syntax transcoding from ${dataset.getTransferSyntaxUid()} to ${acceptedTransferSyntaxUid} which is currently not supported. Skipping...`
+            `A transfer syntax transcoding from ${dataset.getTransferSyntaxUid()} to ${acceptedTransferSyntaxUid} is currently not supported. Skipping...`
           );
           dimse.command.raiseDoneEvent();
           return;
@@ -800,6 +805,7 @@ class PduAccumulator extends AsyncEventEmitter {
         }
       }
     }
+
     return undefined;
   }
   //#endregion

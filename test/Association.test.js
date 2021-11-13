@@ -126,7 +126,7 @@ describe('Association', () => {
           SOPClassUID: StorageClass.CtImageStorage,
           SOPInstanceUID: Dataset.generateDerivedUid(),
         },
-        '1.2.840.10008.1.2.4.90'
+        TransferSyntax.Jpeg2000Lossless
       )
     );
     const pcId4 = association2.addPresentationContextFromRequest(request4);
@@ -136,7 +136,7 @@ describe('Association', () => {
           SOPClassUID: StorageClass.CtImageStorage,
           SOPInstanceUID: Dataset.generateDerivedUid(),
         },
-        '1.2.840.10008.1.2.4.90'
+        TransferSyntax.Jpeg2000Lossless
       )
     );
     const pcId5 = association2.addPresentationContextFromRequest(request5);
@@ -146,7 +146,7 @@ describe('Association', () => {
           SOPClassUID: StorageClass.CtImageStorage,
           SOPInstanceUID: Dataset.generateDerivedUid(),
         },
-        '1.2.840.10008.1.2.4.70'
+        TransferSyntax.JpegLossless
       )
     );
     const pcId6 = association2.addPresentationContextFromRequest(request6);

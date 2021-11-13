@@ -331,6 +331,7 @@ class RawPdu {
     while (end > start && chars.indexOf(str[end - 1]) >= 0) {
       --end;
     }
+
     return start > 0 || end < str.length ? str.substring(start, end) : str;
   }
   //#endregion

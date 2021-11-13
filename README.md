@@ -61,27 +61,6 @@ client.on('networkError', (e) => {
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
-#### C-Find SCU (Worklist)
-```js
-const dcmjsDimse = require('dcmjs-dimse');
-const { Client } = dcmjsDimse;
-const { CFindRequest } = dcmjsDimse.requests;
-const { Status } = dcmjsDimse.constants;
-
-const client = new Client();
-const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
-request.on('response', (response) => {
-  if (response.getStatus() === Status.Pending && response.hasDataset()) {
-    console.log(response.getDataset());
-  }
-});
-client.addRequest(request);
-client.on('networkError', (e) => {
-  console.log('Network error: ', e);
-});
-client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
-```
-
 #### C-Store SCU
 ```js
 const dcmjsDimse = require('dcmjs-dimse');
@@ -150,201 +129,6 @@ client.addRequest(request);
 client.on('networkError', (e) => {
   console.log('Network error: ', e);
 });
-client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
-```
-
-#### N-Action SCU (e.g. Storage Commitment)
-```js
-const dcmjsDimse = require('dcmjs-dimse');
-const { Client, Dataset } = dcmjsDimse;
-const { NActionRequest } = dcmjsDimse.requests;
-const { NEventReportResponse } = dcmjsDimse.responses;
-const { SopClass, Status, StorageClass } = dcmjsDimse.constants;
-
-const client = new Client();
-const request = new NActionRequest(
-  SopClass.StorageCommitmentPushModel,
-  Dataset.generateDerivedUid(),
-  0x0001
-);
-request.setDataset(
-  new Dataset({
-    TransactionUID: Dataset.generateDerivedUid(),
-    ReferencedSOPSequence: [
-      {
-        ReferencedSOPClassUID: StorageClass.MrImageStorage,
-        ReferencedSOPInstanceUID: Dataset.generateDerivedUid(),
-      },
-    ],
-  })
-);
-client.addRequest(request);
-client.on('nEventReportRequest', (request, callback) => {
-  console.log(request.getDataset());
-
-  const response = NEventReportResponse.fromRequest(request);
-  response.setStatus(Status.Success);
-  callback(response);
-});
-client.on('networkError', (e) => {
-  console.log('Network error: ', e);
-});
-// Linger the association to get a synchronous 
-// storage commitment response
-client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP', {
-  associationLingerTimeout: 5000,
-});
-```
-
-#### N-Get SCU (e.g. Printer)
-```js
-const dcmjsDimse = require('dcmjs-dimse');
-const { Client } = dcmjsDimse;
-const { NGetRequest } = dcmjsDimse.requests;
-const { SopClass, Status } = dcmjsDimse.constants;
-
-const client = new Client();
-const request = new NGetRequest(SopClass.Printer, '1.2.840.10008.5.1.1.17', [
-  'PrinterStatus',
-  'PrinterStatusInfo',
-  'PrinterName',
-  'Manufacturer',
-  'ManufacturersModelName',
-  'DeviceSerialNumber',
-  'SoftwareVersions',
-  'DeviceSerialNumber',
-  'DateOfLastCalibration',
-  'TimeOfLastCalibration',
-]);
-request.on('response', (response) => {
-  if (response.getStatus() === Status.Success) {
-    console.log(response.getDataset());
-  }
-});
-client.addRequest(request);
-client.on('networkError', (e) => {
-  console.log('Network error: ', e);
-});
-client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
-```
-
-#### N-Create, N-Action, N-Set, N-Delete SCU (e.g. Print)
-```js
-const dcmjsDimse = require('dcmjs-dimse');
-const { Dataset, Client } = dcmjsDimse;
-const { PresentationContext } = dcmjsDimse.association;
-const { NCreateRequest, NSetRequest, NActionRequest, NDeleteRequest } = dcmjsDimse.requests;
-const { Status, TransferSyntax, SopClass } = dcmjsDimse.constants;
-
-const client = new Client();
-
-const pc = new PresentationContext(
-  0,
-  SopClass.BasicGrayscalePrintManagementMeta,
-  TransferSyntax.ImplicitVRLittleEndian
-);
-client.addAdditionalPresentationContext(pc);
-
-// Create film session
-const filmSessionSopInstanceUid = Dataset.generateDerivedUid();
-const filmSessionCreateRequest = new NCreateRequest(
-  SopClass.BasicFilmSession,
-  filmSessionSopInstanceUid
-);
-filmSessionCreateRequest.setDataset(
-  new Dataset({
-    FilmSessionLabel: '',
-    MediumType: 'PAPER',
-    NumberOfCopies: 1,
-  })
-);
-client.addRequest(filmSessionCreateRequest);
-
-// Create film box
-const filmBoxSopInstanceUid = Dataset.generateDerivedUid();
-const imageBoxSopInstanceUid = Dataset.generateDerivedUid();
-const filmBoxCreateRequest = new NCreateRequest(SopClass.BasicFilmBox, filmBoxSopInstanceUid);
-filmBoxCreateRequest.setDataset(
-  new Dataset({
-    ImageDisplayFormat: 'STANDARD\\1,1',
-    FilmOrientation: 'PORTRAIT',
-    FilmSizeID: 'A4',
-    MagnificationType: '',
-    BorderDensity: '',
-    EmptyImageDensity: '',
-    ReferencedImageBoxSequence: [
-      {
-        ReferencedSOPClassUID: SopClass.BasicGrayscaleImageBox,
-        ReferencedSOPInstanceUID: imageBoxSopInstanceUid,
-      },
-    ],
-  })
-);
-
-const imageBoxSetRequests = [];
-filmBoxCreateRequest.on('response', (response) => {
-  if (response.getStatus() === Status.Success) {
-    const dataset = response.getDataset();
-    const referencedImageBoxSequenceItem = dataset.getElement('ReferencedImageBoxSequence');
-
-    const imageBoxSetRequest = imageBoxSetRequests[0];
-    const imageBoxSetRequestDataset = imageBoxSetRequest.getDataset();
-    imageBoxSetRequestDataset.setElement(
-      'SOPInstanceUID',
-      referencedImageBoxSequenceItem.ReferencedSOPInstanceUID
-    );
-    imageBoxSetRequest.setRequestedSopInstanceUid(
-      referencedImageBoxSequenceItem.ReferencedSOPInstanceUID
-    );
-  }
-});
-client.addRequest(filmBoxCreateRequest);
-
-// Set image box
-const imageBoxSetRequest = new NSetRequest(SopClass.BasicGrayscaleImageBox, imageBoxSopInstanceUid);
-const width = 256;
-const height = 256;
-const pixels = new Uint8Array(width * height);
-for (let i = 0; i < height; i++) {
-  for (let j = 0; j < width; j++) {
-    pixels[j * width + i] = Math.floor(Math.random() * Math.pow(2, 8) - 1);
-  }
-}
-imageBoxSetRequest.setDataset(
-  new Dataset({
-    SOPClassUID: SopClass.BasicGrayscaleImageBox,
-    ImageBoxPosition: 1,
-    BasicGrayscaleImageSequence: [
-      {
-        _vrMap: {
-          PixelData: 'OB',
-        },
-        Columns: width,
-        Rows: height,
-        BitsAllocated: 8,
-        BitsStored: 8,
-        HighBit: 7,
-        PixelRepresentation: 0,
-        SamplesPerPixel: 1,
-        PhotometricInterpretation: 'MONOCHROME2',
-        PixelData: pixels.buffer,
-      },
-    ],
-  })
-);
-imageBoxSetRequests.push(imageBoxSetRequest);
-client.addRequest(imageBoxSetRequest);
-
-// Print!
-client.addRequest(new NActionRequest(SopClass.BasicFilmSession, filmSessionSopInstanceUid, 0x0001));
-
-// Delete film box
-client.addRequest(new NDeleteRequest(SopClass.BasicFilmBox, filmBoxSopInstanceUid));
-
-// Delete film session
-client.addRequest(new NDeleteRequest(SopClass.BasicFilmSession, filmSessionSopInstanceUid));
-
-// Send requests
 client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 ```
 
@@ -458,6 +242,7 @@ server.listen(port);
 // When done
 server.close();
 ```
+Please check the respecting [Wiki][dcmjs-dimse-wiki-examples-url] section for more examples.
 
 ### License
 dcmjs-dimse is released under the MIT License.
@@ -475,3 +260,5 @@ dcmjs-dimse is released under the MIT License.
 [fo-dicom-url]: https://github.com/fo-dicom/fo-dicom
 [mdcm-url]: https://github.com/fo-dicom/mdcm
 [dicom-dimse-url]: https://github.com/OHIF/dicom-dimse
+
+[dcmjs-dimse-wiki-examples-url]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/wiki/Examples
