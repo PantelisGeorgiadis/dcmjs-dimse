@@ -29,7 +29,7 @@ class Client extends AsyncEventEmitter {
   addRequest(request) {
     // Check if request is actually a request!
     if (!(request instanceof Request)) {
-      throw new Error(`${request.toString()} is not a request.`);
+      throw new Error(`${request.toString()} is not a request`);
     }
     // Prevent duplicates
     if (this.requests.includes(request)) {
@@ -55,7 +55,7 @@ class Client extends AsyncEventEmitter {
   addAdditionalPresentationContext(context) {
     // Check if request is actually a context!
     if (!(context instanceof PresentationContext)) {
-      throw new Error(`${context.toString()} is not a presentation context.`);
+      throw new Error(`${context.toString()} is not a presentation context`);
     }
     // Prevent duplicates
     if (this.additionalPresentationContexts.includes(context)) {
@@ -94,7 +94,7 @@ class Client extends AsyncEventEmitter {
 
     // Check for requests
     if (this.requests.length === 0) {
-      throw new Error('There are no requests to perform.');
+      throw new Error('There are no requests to perform');
     }
 
     // Create association object

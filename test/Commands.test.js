@@ -26,7 +26,13 @@ const {
   NSetResponse,
 } = require('./../src/Command');
 const Dataset = require('../src/Dataset');
-const { CommandFieldType, SopClass, Status, TransferSyntax } = require('./../src/Constants');
+const {
+  CommandFieldType,
+  Priority,
+  SopClass,
+  Status,
+  TransferSyntax,
+} = require('./../src/Constants');
 
 const chai = require('chai');
 
@@ -99,6 +105,7 @@ describe('Command', () => {
       SopClass.StudyRootQueryRetrieveInformationModelFind
     );
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CFindRequest);
+    expect(request.getPriority()).to.be.eq(Priority.Medium);
     expect(request.hasDataset()).to.be.true;
     expect(dataset.getElement('PatientName')).to.be.eq('JOHN^DOE');
     expect(dataset.getElement('PatientID')).to.be.eq('12345678');
@@ -139,11 +146,12 @@ describe('Command', () => {
       TransferSyntax.ImplicitVRLittleEndian
     );
 
-    const request = new CStoreRequest(dataset);
+    const request = new CStoreRequest(dataset, Priority.High);
 
     expect(request.getAffectedSopClassUid()).to.be.eq(sopClassUid);
     expect(request.getAffectedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CStoreRequest);
+    expect(request.getPriority()).to.be.eq(Priority.High);
     expect(request.hasDataset()).to.be.true;
   });
 
@@ -158,7 +166,7 @@ describe('Command', () => {
 
   it('should correctly create a C-MOVE request', () => {
     const uid = Dataset.generateDerivedUid();
-    const request = CMoveRequest.createStudyMoveRequest('DESTAET', uid);
+    const request = CMoveRequest.createStudyMoveRequest('DESTAET', uid, Priority.Low);
     const dataset = request.getDataset();
     const commandDataset = request.getCommandDataset();
 
@@ -166,6 +174,7 @@ describe('Command', () => {
       SopClass.StudyRootQueryRetrieveInformationModelMove
     );
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CMoveRequest);
+    expect(request.getPriority()).to.be.eq(Priority.Low);
     expect(request.hasDataset()).to.be.true;
     expect(dataset.getElement('StudyInstanceUID')).to.be.eq(uid);
     expect(dataset.getElement('QueryRetrieveLevel')).to.be.eq('STUDY');
@@ -192,6 +201,7 @@ describe('Command', () => {
       SopClass.StudyRootQueryRetrieveInformationModelGet
     );
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CGetRequest);
+    expect(request.getPriority()).to.be.eq(Priority.Medium);
     expect(request.hasDataset()).to.be.true;
     expect(dataset.getElement('StudyInstanceUID')).to.be.eq(uid);
     expect(dataset.getElement('QueryRetrieveLevel')).to.be.eq('STUDY');

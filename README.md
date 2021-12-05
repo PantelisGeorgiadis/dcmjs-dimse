@@ -168,6 +168,9 @@ class DcmjsDimseScp extends Scp {
       return;
     }
 
+    // Optionally set the preferred max PDU length
+    this.association.setMaxPduLength(65536);
+
     const contexts = association.getPresentationContexts();
     contexts.forEach((c) => {
       const context = association.getPresentationContext(c.id);

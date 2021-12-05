@@ -121,6 +121,19 @@ const RejectReason = {
 Object.freeze(RejectReason);
 //#endregion
 
+//#region Priority
+/**
+ * Priority.
+ * @constant {Object}
+ */
+const Priority = {
+  Low: 0x0002,
+  Medium: 0x0000,
+  High: 0x0001,
+};
+Object.freeze(Priority);
+//#endregion
+
 //#region Status
 /**
  * Statuses.
@@ -318,6 +331,7 @@ module.exports = {
   RejectResult,
   RejectSource,
   RejectReason,
+  Priority,
   Status,
   Uid,
   StorageClass,

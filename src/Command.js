@@ -1,4 +1,4 @@
-const { CommandFieldType, SopClass, Status } = require('./Constants');
+const { CommandFieldType, Priority, SopClass, Status } = require('./Constants');
 const Dataset = require('./Dataset');
 
 const AsyncEventEmitter = require('async-eventemitter');
@@ -639,13 +639,35 @@ class CFindRequest extends Request {
   /**
    * Creates an instance of CFindRequest.
    * @constructor
+   * @param {Priority} [priority] - Request priority.
    */
-  constructor() {
+  constructor(priority) {
     super(
       CommandFieldType.CFindRequest,
       SopClass.StudyRootQueryRetrieveInformationModelFind,
       false
     );
+    this.setPriority(priority || Priority.Medium);
+  }
+
+  /**
+   * Gets request priority.
+   * @method
+   * @return {Priority} Request priority.
+   */
+  getPriority() {
+    const command = this.getCommandDataset();
+    return command.getElement('Priority');
+  }
+
+  /**
+   * Sets request priority.
+   * @method
+   * @param {Priority} priority - Request request priority.
+   */
+  setPriority(priority) {
+    const command = this.getCommandDataset();
+    command.setElement('Priority', priority);
   }
 
   /**
@@ -653,9 +675,10 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
+   * @param {Priority} [priority] - Request priority.
    * @return {CFindRequest} Study find request.
    */
-  static createStudyFindRequest(elements) {
+  static createStudyFindRequest(elements, priority) {
     const baseElements = {
       PatientID: '',
       PatientName: '',
@@ -675,7 +698,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'STUDY';
 
-    const findRequest = new CFindRequest();
+    const findRequest = new CFindRequest(priority);
     findRequest.setDataset(new Dataset(mergedElements));
 
     return findRequest;
@@ -686,9 +709,10 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
+   * @param {Priority} [priority] - Request priority.
    * @return {CFindRequest} Series find request.
    */
-  static createSeriesFindRequest(elements) {
+  static createSeriesFindRequest(elements, priority) {
     const baseElements = {
       StudyInstanceUID: '',
       SeriesInstanceUID: '',
@@ -702,7 +726,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'SERIES';
 
-    const findRequest = new CFindRequest();
+    const findRequest = new CFindRequest(priority);
     findRequest.setDataset(new Dataset(mergedElements));
 
     return findRequest;
@@ -713,9 +737,10 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
+   * @param {Priority} [priority] - Request priority.
    * @return {CFindRequest} Image find request.
    */
-  static createImageFindRequest(elements) {
+  static createImageFindRequest(elements, priority) {
     const baseElements = {
       StudyInstanceUID: '',
       SeriesInstanceUID: '',
@@ -726,7 +751,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = 'IMAGE';
 
-    const findRequest = new CFindRequest();
+    const findRequest = new CFindRequest(priority);
     findRequest.setDataset(new Dataset(mergedElements));
 
     return findRequest;
@@ -737,9 +762,10 @@ class CFindRequest extends Request {
    * @method
    * @static
    * @param {Object} elements - Find request dataset elements.
+   * @param {Priority} [priority] - Request priority.
    * @return {CFindRequest} Worklist find request.
    */
-  static createWorklistFindRequest(elements) {
+  static createWorklistFindRequest(elements, priority) {
     const baseElements = {
       PatientID: '',
       PatientName: '',
@@ -795,7 +821,7 @@ class CFindRequest extends Request {
     const mergedElements = { ...baseElements, ...elements };
     mergedElements.QueryRetrieveLevel = '';
 
-    const findRequest = new CFindRequest();
+    const findRequest = new CFindRequest(priority);
     findRequest.setAffectedSopClassUid(SopClass.ModalityWorklistInformationModelFind);
     findRequest.setDataset(new Dataset(mergedElements));
 
@@ -848,9 +874,12 @@ class CStoreRequest extends Request {
    * Creates an instance of CStoreRequest.
    * @constructor
    * @param {Object|String} datasetOrFile - Dataset or part10 file path.
+   * @param {Priority} [priority] - Request priority.
    */
-  constructor(datasetOrFile) {
+  constructor(datasetOrFile, priority) {
     super(CommandFieldType.CStoreRequest, '', false);
+    this.setPriority(priority || Priority.Medium);
+
     if (datasetOrFile instanceof Dataset) {
       this.setAffectedSopClassUid(datasetOrFile.getElement('SOPClassUID'));
       this.setAffectedSopInstanceUid(datasetOrFile.getElement('SOPInstanceUID'));
@@ -863,6 +892,26 @@ class CStoreRequest extends Request {
       this.setAffectedSopInstanceUid(dataset.getElement('SOPInstanceUID'));
       this.setDataset(dataset);
     }
+  }
+
+  /**
+   * Gets request priority.
+   * @method
+   * @return {Priority} Request priority.
+   */
+  getPriority() {
+    const command = this.getCommandDataset();
+    return command.getElement('Priority');
+  }
+
+  /**
+   * Sets request priority.
+   * @method
+   * @param {Priority} priority - Request request priority.
+   */
+  setPriority(priority) {
+    const command = this.getCommandDataset();
+    command.setElement('Priority', priority);
   }
 }
 //#endregion
@@ -906,13 +955,35 @@ class CMoveRequest extends Request {
   /**
    * Creates an instance of CMoveRequest.
    * @constructor
+   * @param {Priority} [priority] - Request priority.
    */
-  constructor() {
+  constructor(priority) {
     super(
       CommandFieldType.CMoveRequest,
       SopClass.StudyRootQueryRetrieveInformationModelMove,
       false
     );
+    this.setPriority(priority || Priority.Medium);
+  }
+
+  /**
+   * Gets request priority.
+   * @method
+   * @return {Priority} Request priority.
+   */
+  getPriority() {
+    const command = this.getCommandDataset();
+    return command.getElement('Priority');
+  }
+
+  /**
+   * Sets request priority.
+   * @method
+   * @param {Priority} priority - Request request priority.
+   */
+  setPriority(priority) {
+    const command = this.getCommandDataset();
+    command.setElement('Priority', priority);
   }
 
   /**
@@ -921,15 +992,16 @@ class CMoveRequest extends Request {
    * @static
    * @param {string} destinationAet - Move destination AET.
    * @param {string} studyInstanceUid - Study instance UID of the study to move.
+   * @param {Priority} [priority] - Request priority.
    * @return {CMoveRequest} Study move request.
    */
-  static createStudyMoveRequest(destinationAet, studyInstanceUid) {
+  static createStudyMoveRequest(destinationAet, studyInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       QueryRetrieveLevel: 'STUDY',
     };
 
-    const moveRequest = new CMoveRequest();
+    const moveRequest = new CMoveRequest(priority);
     moveRequest.setDataset(new Dataset(elements));
 
     const command = moveRequest.getCommandDataset();
@@ -945,16 +1017,17 @@ class CMoveRequest extends Request {
    * @param {string} destinationAet - Move destination AET.
    * @param {string} studyInstanceUid - Study instance UID of the study to move.
    * @param {string} seriesInstanceUid - Series instance UID of the series to move.
+   * @param {Priority} [priority] - Request priority.
    * @return {CMoveRequest} Series move request.
    */
-  static createSeriesMoveRequest(destinationAet, studyInstanceUid, seriesInstanceUid) {
+  static createSeriesMoveRequest(destinationAet, studyInstanceUid, seriesInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
       QueryRetrieveLevel: 'SERIES',
     };
 
-    const moveRequest = new CMoveRequest();
+    const moveRequest = new CMoveRequest(priority);
     moveRequest.setDataset(new Dataset(elements));
 
     const command = moveRequest.getCommandDataset();
@@ -971,13 +1044,15 @@ class CMoveRequest extends Request {
    * @param {string} studyInstanceUid - Study instance UID of the study to move.
    * @param {string} seriesInstanceUid - Series instance UID of the series to move.
    * @param {string} sopInstanceUid - SOP instance UID of the series to move.
+   * @param {Priority} [priority] - Request priority.
    * @return {CMoveRequest} Image move request.
    */
   static createImageMoveRequest(
     destinationAet,
     studyInstanceUid,
     seriesInstanceUid,
-    sopInstanceUid
+    sopInstanceUid,
+    priority
   ) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
@@ -986,7 +1061,7 @@ class CMoveRequest extends Request {
       QueryRetrieveLevel: 'IMAGE',
     };
 
-    const moveRequest = new CMoveRequest();
+    const moveRequest = new CMoveRequest(priority);
     moveRequest.setDataset(new Dataset(elements));
 
     const command = moveRequest.getCommandDataset();
@@ -1080,9 +1155,31 @@ class CGetRequest extends Request {
   /**
    * Creates an instance of CGetRequest.
    * @constructor
+   * @param {Priority} [priority] - Request priority.
    */
-  constructor() {
+  constructor(priority) {
     super(CommandFieldType.CGetRequest, SopClass.StudyRootQueryRetrieveInformationModelGet, false);
+    this.setPriority(priority || Priority.Medium);
+  }
+
+  /**
+   * Gets request priority.
+   * @method
+   * @return {Priority} Request priority.
+   */
+  getPriority() {
+    const command = this.getCommandDataset();
+    return command.getElement('Priority');
+  }
+
+  /**
+   * Sets request priority.
+   * @method
+   * @param {Priority} priority - Request request priority.
+   */
+  setPriority(priority) {
+    const command = this.getCommandDataset();
+    command.setElement('Priority', priority);
   }
 
   /**
@@ -1090,15 +1187,16 @@ class CGetRequest extends Request {
    * @method
    * @static
    * @param {string} studyInstanceUid - Study instance UID of the study to get.
+   * @param {Priority} [priority] - Request priority.
    * @return {CGetRequest} Study get request.
    */
-  static createStudyGetRequest(studyInstanceUid) {
+  static createStudyGetRequest(studyInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       QueryRetrieveLevel: 'STUDY',
     };
 
-    const getRequest = new CGetRequest();
+    const getRequest = new CGetRequest(priority);
     getRequest.setDataset(new Dataset(elements));
 
     return getRequest;
@@ -1110,16 +1208,17 @@ class CGetRequest extends Request {
    * @static
    * @param {string} studyInstanceUid - Study instance UID of the study to get.
    * @param {string} seriesInstanceUid - Series instance UID of the series to get.
+   * @param {Priority} [priority] - Request priority.
    * @return {CGetRequest} Series get request.
    */
-  static createSeriesGetRequest(studyInstanceUid, seriesInstanceUid) {
+  static createSeriesGetRequest(studyInstanceUid, seriesInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
       QueryRetrieveLevel: 'SERIES',
     };
 
-    const getRequest = new CGetRequest();
+    const getRequest = new CGetRequest(priority);
     getRequest.setDataset(new Dataset(elements));
 
     return getRequest;
@@ -1132,9 +1231,10 @@ class CGetRequest extends Request {
    * @param {string} studyInstanceUid - Study instance UID of the study to get.
    * @param {string} seriesInstanceUid - Series instance UID of the series to get.
    * @param {string} sopInstanceUid - SOP instance UID of the series to get.
+   * @param {Priority} [priority] - Request priority.
    * @return {CGetRequest} Image get request.
    */
-  static createImageGetRequest(studyInstanceUid, seriesInstanceUid, sopInstanceUid) {
+  static createImageGetRequest(studyInstanceUid, seriesInstanceUid, sopInstanceUid, priority) {
     const elements = {
       StudyInstanceUID: studyInstanceUid,
       SeriesInstanceUID: seriesInstanceUid,
@@ -1142,7 +1242,7 @@ class CGetRequest extends Request {
       QueryRetrieveLevel: 'IMAGE',
     };
 
-    const getRequest = new CGetRequest();
+    const getRequest = new CGetRequest(priority);
     getRequest.setDataset(new Dataset(elements));
 
     return getRequest;
