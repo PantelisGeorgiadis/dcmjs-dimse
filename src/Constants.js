@@ -297,16 +297,16 @@ const TransferSyntax = {
 Object.freeze(TransferSyntax);
 //#endregion
 
-//#region TranscodableTransferSyntax
+//#region TranscodableTransferSyntaxes
 /**
  * Transfer syntaxes that can be transcoded.
- * @constant {Object}
+ * @constant {Array<TransferSyntax>}
  */
-const TranscodableTransferSyntax = {
-  ImplicitVRLittleEndian: '1.2.840.10008.1.2',
-  ExplicitVRLittleEndian: '1.2.840.10008.1.2.1',
-};
-Object.freeze(TranscodableTransferSyntax);
+const TranscodableTransferSyntaxes = [
+  TransferSyntax.ImplicitVRLittleEndian,
+  TransferSyntax.ExplicitVRLittleEndian,
+];
+Object.freeze(TranscodableTransferSyntaxes);
 //#endregion
 
 //#region Implementation
@@ -337,7 +337,7 @@ module.exports = {
   StorageClass,
   SopClass,
   TransferSyntax,
-  TranscodableTransferSyntax,
+  TranscodableTransferSyntaxes,
   Implementation,
 };
 //#endregion

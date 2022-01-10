@@ -13,7 +13,7 @@ const {
 const {
   CommandFieldType,
   Status,
-  TranscodableTransferSyntax,
+  TranscodableTransferSyntaxes,
   Implementation,
 } = require('./Constants');
 const {
@@ -260,12 +260,11 @@ class Network extends AsyncEventEmitter {
       const presentationContext = this.association.getPresentationContext(
         dimse.context.getPresentationContextId()
       );
-      const supportedTransferSyntaxes = Object.values(TranscodableTransferSyntax);
       const acceptedTransferSyntaxUid = presentationContext.getAcceptedTransferSyntaxUid();
       if (dataset && acceptedTransferSyntaxUid !== dataset.getTransferSyntaxUid()) {
         if (
-          supportedTransferSyntaxes.includes(acceptedTransferSyntaxUid) &&
-          supportedTransferSyntaxes.includes(dataset.getTransferSyntaxUid())
+          TranscodableTransferSyntaxes.includes(acceptedTransferSyntaxUid) &&
+          TranscodableTransferSyntaxes.includes(dataset.getTransferSyntaxUid())
         ) {
           dataset.setTransferSyntaxUid(acceptedTransferSyntaxUid);
         } else {
@@ -379,7 +378,11 @@ class Network extends AsyncEventEmitter {
               this.logId
             } <- Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
           );
-          this.emit('associationRejected', pdu.getResult(), pdu.getSource(), pdu.getReason());
+          this.emit('associationRejected', {
+            result: pdu.getResult(),
+            source: pdu.getSource(),
+            reason: pdu.getReason(),
+          });
           break;
         }
         case 0x04: {

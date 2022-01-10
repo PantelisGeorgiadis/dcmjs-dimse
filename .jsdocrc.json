@@ -34,7 +34,7 @@
     "sort": true,
     "meta": {
       "title": "dcmjs-dimse",
-      "description": "DICOM DIMSE implementation for NodeJS using dcmjs",
+      "description": "DICOM DIMSE implementation for Node.js using dcmjs",
       "keyword": "DICOM, DIMSE, dcmjs"
     },
     "search": true,

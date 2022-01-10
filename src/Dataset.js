@@ -145,8 +145,10 @@ class Dataset {
    * @param {string} path - P10 file path.
    * @param {function(Error)} [callback] - P10 file writing callback function.
    * If this is not provided, the function runs synchronously.
+   * @param {Object} [nameMap] - Additional DICOM tags to recognize when denaturalizing the
+   * dataset. Can be used to support writing private fields/tags.
    */
-  toFile(path, callback) {
+  toFile(path, callback, nameMap) {
     const elements = {
       _meta: {
         FileMetaInformationVersion: new Uint8Array([0, 1]).buffer,
@@ -162,7 +164,13 @@ class Dataset {
     };
     const denaturalizedMetaHeader = DicomMetaDictionary.denaturalizeDataset(elements._meta);
     const dicomDict = new DicomDict(denaturalizedMetaHeader);
-    dicomDict.dict = DicomMetaDictionary.denaturalizeDataset(elements);
+
+    dicomDict.dict = nameMap
+      ? DicomMetaDictionary.denaturalizeDataset(elements, {
+          ...DicomMetaDictionary.nameMap,
+          ...nameMap,
+        })
+      : DicomMetaDictionary.denaturalizeDataset(elements);
 
     if (callback !== undefined && callback instanceof Function) {
       fs.writeFile(path, Buffer.from(dicomDict.write()), callback);

@@ -1,5 +1,6 @@
 const Client = require('./../src/Client');
 const Dataset = require('./../src/Dataset');
+const { PresentationContext } = require('./../src/Association');
 const { Server, Scp } = require('./../src/Server');
 const {
   CEchoRequest,
@@ -186,7 +187,14 @@ describe('Network', () => {
     const client = new Client();
     const request = new CEchoRequest();
     client.addRequest(request);
-    client.on('associationRejected', (result, source, reason) => {
+    client.addAdditionalPresentationContext(
+      new PresentationContext(
+        0,
+        SopClass.ModalityWorklistInformationModelFind,
+        TransferSyntax.ImplicitVRLittleEndian
+      )
+    );
+    client.on('associationRejected', (reject) => {
       rejected = true;
     });
     client.on('closed', () => {

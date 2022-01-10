@@ -144,8 +144,8 @@ class Client extends AsyncEventEmitter {
       this.emit('associationReleased');
       socket.end();
     });
-    network.on('associationRejected', (result, source, reason) => {
-      this.emit('associationRejected', result, source, reason);
+    network.on('associationRejected', (reject) => {
+      this.emit('associationRejected', reject);
       socket.end();
     });
     network.on('done', () => {
