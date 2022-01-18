@@ -90,6 +90,41 @@ describe('Dataset', () => {
     });
   });
 
+  it('should keep private tags which are parsed in via a nameMap', () => {
+    mockFs({
+      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+    });
+
+    const elements1 = {
+      SOPClassUID: StorageClass.SecondaryCaptureImageStorage,
+      SOPInstanceUID: Dataset.generateDerivedUid(),
+      PatientName: 'JOHN^DOE',
+      PatientID: '123456',
+      AccessionNumber: '654321',
+      StudyDescription: 'STUDY_DESCRIPTION',
+      SeriesDescription: 'SERIES_DESCRIPTION',
+      "00091001": "Private tag that should stay",
+      "00091002": "Private tag that should NOT stay",
+    };
+    const dataset1 = new Dataset(elements1);
+    dataset1.toFile('fileOut.dcm', undefined, { 
+      "00091001": {
+        tag: "(0009,1001)",
+        vr: "LT",
+        name: "00091001",
+        vm: "1",
+        version: "PrivateTag"
+      }
+    });
+    const dataset2 = Dataset.fromFile('fileOut.dcm');
+    const elements2 = dataset2.getElements();
+    delete elements2._vrMap;
+
+    expect(new TextDecoder("utf-8").decode(elements2["00091001"][0])).to.equal("Private tag that should stay");
+    expect(elements2["00091002"]).to.be.undefined;
+    expect(Object.keys(elements1).length - 1).to.be.eq(Object.keys(elements2).length);
+  });
+
   it('should correctly read and write DICOM part10 files asynchronously', () => {
     mockFs({
       'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
