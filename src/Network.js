@@ -10,12 +10,7 @@ const {
   Pdv,
   PDataTF,
 } = require('./Pdu');
-const {
-  CommandFieldType,
-  Status,
-  TranscodableTransferSyntaxes,
-  Implementation,
-} = require('./Constants');
+const { CommandFieldType, Status, TranscodableTransferSyntaxes } = require('./Constants');
 const {
   Command,
   Response,
@@ -43,6 +38,7 @@ const {
   NSetResponse,
 } = require('./Command');
 const Dataset = require('./Dataset');
+const Implementation = require('./Implementation');
 const log = require('./log');
 
 const AsyncEventEmitter = require('async-eventemitter');
@@ -106,10 +102,10 @@ class Network extends AsyncEventEmitter {
    * @method
    */
   sendAssociationAccept() {
-    this.association.setImplementationClassUid(Implementation.ImplementationClassUid);
-    this.association.setImplementationVersion(Implementation.ImplementationVersion);
+    this.association.setImplementationClassUid(Implementation.getImplementationClassUid());
+    this.association.setImplementationVersion(Implementation.getImplementationVersion());
     this.association.setMaxPduLength(
-      Math.min(this.association.getMaxPduLength(), Implementation.MaxPduLength)
+      Math.min(this.association.getMaxPduLength(), Implementation.getMaxPduLength())
     );
 
     const rq = new AAssociateAC(this.association);

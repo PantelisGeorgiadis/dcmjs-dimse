@@ -281,9 +281,9 @@ class Server extends AsyncEventEmitter {
     const netImpl = opts.securityOptions ? tls : net;
     this.server = netImpl.createServer(options, (socket) => {
       log.info(
-        `Client connecting from ${socket.remoteAddress}:${socket.remotePort} (${
-          socket.authorized ? 'Authorized' : 'Unauthorized'
-        })`
+        `Client connecting from ${socket.remoteAddress}:${socket.remotePort} ${
+          opts.securityOptions ? (socket.authorized ? '(Authorized)' : '(Unauthorized)') : ''
+        }`
       );
       const client = new this.scp.class(socket, opts);
       client.connected = true;

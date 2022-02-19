@@ -309,17 +309,17 @@ const TranscodableTransferSyntaxes = [
 Object.freeze(TranscodableTransferSyntaxes);
 //#endregion
 
-//#region Implementation
+//#region DefaultImplementation
 /**
- * Implementation information.
+ * Default implementation information.
  * @constant {Object}
  */
-const Implementation = {
+const DefaultImplementation = {
   ImplementationClassUid: '1.2.826.0.1.3680043.10.854',
   ImplementationVersion: 'DCMJS-DIMSE-V0.1',
   MaxPduLength: 262144,
 };
-Object.freeze(Implementation);
+Object.freeze(DefaultImplementation);
 //#endregion
 
 //#region Exports
@@ -338,6 +338,6 @@ module.exports = {
   SopClass,
   TransferSyntax,
   TranscodableTransferSyntaxes,
-  Implementation,
+  DefaultImplementation,
 };
 //#endregion

@@ -1,4 +1,5 @@
-const { TransferSyntax, Implementation, StorageClass } = require('./Constants');
+const { TransferSyntax, StorageClass } = require('./Constants');
+const Implementation = require('./Implementation');
 
 const fs = require('fs');
 const dcmjs = require('dcmjs');
@@ -157,8 +158,8 @@ class Dataset {
         MediaStorageSOPInstanceUID:
           this.getElement('SOPInstanceUID') || Dataset.generateDerivedUid(),
         TransferSyntaxUID: this.getTransferSyntaxUid(),
-        ImplementationClassUID: Implementation.ImplementationClassUid,
-        ImplementationVersionName: Implementation.ImplementationVersion,
+        ImplementationClassUID: Implementation.getImplementationClassUid(),
+        ImplementationVersionName: Implementation.getImplementationVersion(),
       },
       ...this.getElements(),
     };

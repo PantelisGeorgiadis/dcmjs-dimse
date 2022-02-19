@@ -1,5 +1,6 @@
 const { PresentationContext, Association } = require('./Association');
 const Dataset = require('./Dataset');
+const Implementation = require('./Implementation');
 const Client = require('./Client');
 const { Server, Scp } = require('./Server');
 const {
@@ -40,7 +41,6 @@ const {
   StorageClass,
   SopClass,
   TransferSyntax,
-  Implementation,
 } = require('./Constants');
 const log = require('./log');
 const version = require('./version');
@@ -99,12 +99,12 @@ const constants = {
   StorageClass,
   SopClass,
   TransferSyntax,
-  Implementation,
 };
 //#endregion
 
 const DcmjsDimse = {
   Dataset,
+  Implementation,
   Client,
   Server,
   Scp,

@@ -1,13 +1,13 @@
 const { CStoreRequest, CGetRequest } = require('./Command');
 const {
   CommandFieldType,
-  Implementation,
   PresentationContextResult,
   Uid,
   SopClass,
   StorageClass,
   TransferSyntax,
 } = require('./Constants');
+const Implementation = require('./Implementation');
 
 //#region PresentationContext
 class PresentationContext {
@@ -169,10 +169,10 @@ class Association {
   constructor(callingAeTitle, calledAeTitle) {
     this.callingAeTitle = callingAeTitle;
     this.calledAeTitle = calledAeTitle;
-    this.maxPduLength = Implementation.MaxPduLength;
+    this.maxPduLength = Implementation.getMaxPduLength();
     this.applicationContextName = Uid.ApplicationContextName;
-    this.implementationClassUid = Implementation.ImplementationClassUid;
-    this.implementationVersion = Implementation.ImplementationVersion;
+    this.implementationClassUid = Implementation.getImplementationClassUid();
+    this.implementationVersion = Implementation.getImplementationVersion();
     this.presentationContexts = [];
   }
 

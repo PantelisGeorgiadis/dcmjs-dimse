@@ -8,12 +8,8 @@ const {
   PDataTF,
   AAbort,
 } = require('../src/Pdu');
-const {
-  Implementation,
-  PresentationContextResult,
-  SopClass,
-  TransferSyntax,
-} = require('./../src/Constants');
+const { PresentationContextResult, SopClass, TransferSyntax } = require('./../src/Constants');
+const Implementation = require('./../src/Implementation');
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -44,8 +40,8 @@ describe('PDU', () => {
 
     expect(assoc1.getCallingAeTitle()).to.be.eq(assoc2.getCallingAeTitle());
     expect(assoc1.getCalledAeTitle()).to.be.eq(assoc2.getCalledAeTitle());
-    expect(assoc1.getImplementationVersion()).to.be.eq(Implementation.ImplementationVersion);
-    expect(assoc1.getImplementationClassUid()).to.be.eq(Implementation.ImplementationClassUid);
+    expect(assoc1.getImplementationVersion()).to.be.eq(Implementation.getImplementationVersion());
+    expect(assoc1.getImplementationClassUid()).to.be.eq(Implementation.getImplementationClassUid());
     expect(assoc1.getMaxPduLength()).to.be.eq(maxPdu);
     expect(pc1.getAbstractSyntaxUid()).to.be.eq(pc2.getAbstractSyntaxUid());
     expect(pc1.getAcceptedTransferSyntaxUid()).to.be.eq(pc2.getAcceptedTransferSyntaxUid());
