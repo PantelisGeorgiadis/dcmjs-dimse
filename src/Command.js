@@ -1660,7 +1660,7 @@ class NGetRequest extends Request {
     const command = this.getCommandDataset();
     const attributes = command.getElement('AttributeIdentifierList');
     const attributeItems = [];
-    if (attributes != undefined && Array.isArray(attributes) && attributes.length > 0) {
+    if (attributes !== undefined && Array.isArray(attributes) && attributes.length > 0) {
       attributes.forEach((attribute) => {
         const group = attribute >> 16;
         const element = attribute & 0xffff;

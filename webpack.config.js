@@ -1,5 +1,5 @@
 const path = require('path');
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
 const { BannerPlugin } = require('webpack');
 const pkg = require('./package.json');
 
@@ -28,7 +28,7 @@ module.exports = {
   mode: 'production',
   context,
   entry: {
-    dcmjsDimse: './index.js'
+    dcmjsDimse: './index.js',
   },
   target: 'node',
   output: {
@@ -36,7 +36,7 @@ module.exports = {
     library: pkg.name,
     libraryTarget: 'umd',
     path: outputPath,
-    umdNamedDefine: true
+    umdNamedDefine: true,
   },
   optimization: {
     minimize: true,
@@ -45,20 +45,16 @@ module.exports = {
         extractComments: false,
         parallel: true,
         terserOptions: {
-          compress: false,
-          mangle: false,
-          toplevel: false,
-          keep_classnames: true,
-          keep_fnames: true
-        }
-      })
-    ]
+          sourceMap: true,
+        },
+      }),
+    ],
   },
   plugins: [
     new BannerPlugin({
       banner: getBanner(),
       entryOnly: true,
-      raw: true
-    })
-  ]
+      raw: true,
+    }),
+  ],
 };

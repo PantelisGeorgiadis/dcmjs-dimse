@@ -573,56 +573,56 @@ class Network extends AsyncEventEmitter {
       return;
     }
 
-    if (dimse.getCommandFieldType() == CommandFieldType.CEchoRequest) {
+    if (dimse.getCommandFieldType() === CommandFieldType.CEchoRequest) {
       this.emit('cEchoRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.CFindRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.CFindRequest) {
       this.emit('cFindRequest', dimse, (rsp) => {
         const responses = !Array.isArray(rsp) ? [rsp] : rsp;
         responses.forEach((response) => {
           this._sendDimse({ context: presentationContext, command: response });
         });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.CStoreRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.CStoreRequest) {
       this.emit('cStoreRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.CMoveRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.CMoveRequest) {
       this.emit('cMoveRequest', dimse, (rsp) => {
         const responses = !Array.isArray(rsp) ? [rsp] : rsp;
         responses.forEach((response) => {
           this._sendDimse({ context: presentationContext, command: response });
         });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.CGetRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.CGetRequest) {
       this.emit('cGetRequest', dimse, (rsp) => {
         const responses = !Array.isArray(rsp) ? [rsp] : rsp;
         responses.forEach((response) => {
           this._sendDimse({ context: presentationContext, command: response });
         });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.NCreateRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.NCreateRequest) {
       this.emit('nCreateRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.NActionRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.NActionRequest) {
       this.emit('nActionRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.NDeleteRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.NDeleteRequest) {
       this.emit('nDeleteRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.NEventReportRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.NEventReportRequest) {
       this.emit('nEventReportRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.NGetRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.NGetRequest) {
       this.emit('nGetRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
-    } else if (dimse.getCommandFieldType() == CommandFieldType.NSetRequest) {
+    } else if (dimse.getCommandFieldType() === CommandFieldType.NSetRequest) {
       this.emit('nSetRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
