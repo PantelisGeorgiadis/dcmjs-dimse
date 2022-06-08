@@ -148,8 +148,10 @@ class Dataset {
    * If this is not provided, the function runs synchronously.
    * @param {Object} [nameMap] - Additional DICOM tags to recognize when denaturalizing the
    * dataset. Can be used to support writing private fields/tags.
+   * @param {object} [writeOptions] - The write options to pass through to
+   * `DicomDict.write()`. Optional.
    */
-  toFile(path, callback, nameMap) {
+  toFile(path, callback, nameMap, writeOptions) {
     const elements = {
       _meta: {
         FileMetaInformationVersion: new Uint8Array([0, 1]).buffer,
@@ -173,10 +175,10 @@ class Dataset {
         })
       : DicomMetaDictionary.denaturalizeDataset(elements);
 
-    if (callback !== undefined && callback instanceof Function) {
-      fs.writeFile(path, Buffer.from(dicomDict.write()), callback);
+    if (callback instanceof Function) {
+      fs.writeFile(path, Buffer.from(dicomDict.write(writeOptions)), callback);
     } else {
-      fs.writeFileSync(path, Buffer.from(dicomDict.write()));
+      fs.writeFileSync(path, Buffer.from(dicomDict.write(writeOptions)));
     }
   }
 
