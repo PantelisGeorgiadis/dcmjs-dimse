@@ -91,6 +91,31 @@ describe('Association', () => {
     expect(context.getAcceptedTransferSyntaxUid()).to.be.eq(TransferSyntax.ExplicitVRLittleEndian);
   });
 
+  it('should correctly choose the presentation context that exactly matches the transfer syntax when possible', () => {
+    const callingAet = 'CALLINGAET';
+    const calledAet = 'CALLEDAET';
+
+    const association = new Association(callingAet, calledAet);
+    const request = CGetRequest.createStudyGetRequest("1.2");
+
+    // Create association with two presentation contexts for the same abstract syntax but with different
+    // transfer syntaxes
+    const pcId1 = association.addPresentationContext(SopClass.StudyRootQueryRetrieveInformationModelGet);
+    let context = association.getPresentationContext(pcId1);
+    context.setResult(PresentationContextResult.Accept, TransferSyntax.ExplicitVRLittleEndian);
+    const pcId2 = association.addPresentationContext(SopClass.StudyRootQueryRetrieveInformationModelGet);
+    context = association.getPresentationContext(pcId2);
+    context.setResult(PresentationContextResult.Accept, TransferSyntax.JpegBaseline);
+
+    // Check that a request using ExplicitVRLittleEndian matches the first presentation context
+    request.getDataset().setTransferSyntaxUid(TransferSyntax.ExplicitVRLittleEndian);
+    expect(association.getAcceptedPresentationContextFromRequest(request).pcId).to.be.eq(pcId1);
+
+    // Check that a request using JpegBaseline matches the second presentation context
+    request.getDataset().setTransferSyntaxUid(TransferSyntax.JpegBaseline);
+    expect(association.getAcceptedPresentationContextFromRequest(request).pcId).to.be.eq(pcId2);
+  });
+
   it('should correctly add presentation contexts from a C-STORE request', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
