@@ -439,15 +439,33 @@ class Association {
   getAcceptedPresentationContextFromRequest(request) {
     let acceptedContext = undefined;
     const contexts = this.getPresentationContexts();
-    contexts.forEach((pc) => {
-      const context = this.getPresentationContext(pc.id);
-      if (
-        context.getAbstractSyntaxUid() === this._sopClassFromRequest(request) &&
-        context.getResult() === PresentationContextResult.Accept
-      ) {
-        acceptedContext = context;
-      }
-    });
+
+    // Look for a presentation context which is an exact match for this request's transfer syntax
+    if (request.getDataset()) {
+      contexts.forEach((pc) => {
+        const context = this.getPresentationContext(pc.id);
+        if (
+          context.getAbstractSyntaxUid() === this._sopClassFromRequest(request) &&
+          context.getAcceptedTransferSyntaxUid() === request.getDataset().getTransferSyntaxUid() &&
+          context.getResult() === PresentationContextResult.Accept
+        ) {
+          acceptedContext = context;
+        }
+      });
+    }
+
+    // If there was no exact transfer syntax match then look for a match based just on the abstract syntax
+    if (acceptedContext === undefined) {
+      contexts.forEach((pc) => {
+        const context = this.getPresentationContext(pc.id);
+        if (
+          context.getAbstractSyntaxUid() === this._sopClassFromRequest(request) &&
+          context.getResult() === PresentationContextResult.Accept
+        ) {
+          acceptedContext = context;
+        }
+      });
+    }
 
     return acceptedContext;
   }
