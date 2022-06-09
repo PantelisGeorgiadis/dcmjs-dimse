@@ -546,6 +546,7 @@ class Association {
   }
   //#endregion
 }
+//#endregion
 
 //#region Exports
 module.exports = { PresentationContext, Association };

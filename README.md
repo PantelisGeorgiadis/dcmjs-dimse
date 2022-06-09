@@ -141,7 +141,7 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 #### SCP
 ```js
 const dcmjsDimse = require('dcmjs-dimse');
-const { Server, Scp } = dcmjsDimse;
+const { Dataset, Server, Scp } = dcmjsDimse;
 const { CEchoResponse, CFindResponse, CStoreResponse } = dcmjsDimse.responses;
 const {
   Status,

@@ -96,14 +96,18 @@ describe('Association', () => {
     const calledAet = 'CALLEDAET';
 
     const association = new Association(callingAet, calledAet);
-    const request = CGetRequest.createStudyGetRequest("1.2");
+    const request = CGetRequest.createStudyGetRequest('1.2');
 
     // Create association with two presentation contexts for the same abstract syntax but with different
     // transfer syntaxes
-    const pcId1 = association.addPresentationContext(SopClass.StudyRootQueryRetrieveInformationModelGet);
+    const pcId1 = association.addPresentationContext(
+      SopClass.StudyRootQueryRetrieveInformationModelGet
+    );
     let context = association.getPresentationContext(pcId1);
     context.setResult(PresentationContextResult.Accept, TransferSyntax.ExplicitVRLittleEndian);
-    const pcId2 = association.addPresentationContext(SopClass.StudyRootQueryRetrieveInformationModelGet);
+    const pcId2 = association.addPresentationContext(
+      SopClass.StudyRootQueryRetrieveInformationModelGet
+    );
     context = association.getPresentationContext(pcId2);
     context.setResult(PresentationContextResult.Accept, TransferSyntax.JpegBaseline);
 

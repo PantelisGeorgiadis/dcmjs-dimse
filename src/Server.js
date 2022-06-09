@@ -39,6 +39,10 @@ class Scp extends Network {
    * certificate from clients that connect and attempt to verify it.
    * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
    * is not authorized with the list of supplied trusted client certificates.
+   * @param {string} [opts.securityOptions.minVersion] - The minimum TLS version to allow. One of
+   * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
+   * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
+   * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    */
   constructor(socket, opts) {
     super(socket, opts);

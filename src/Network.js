@@ -809,6 +809,7 @@ class PduAccumulator extends AsyncEventEmitter {
   }
   //#endregion
 }
+//#endregion
 
 //#region Exports
 module.exports = Network;
