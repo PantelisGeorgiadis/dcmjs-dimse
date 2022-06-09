@@ -85,6 +85,10 @@ class Client extends AsyncEventEmitter {
    * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
    * certificate from server that connect and attempt to verify it.
    * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
+   * @param {string} [opts.securityOptions.minVersion] - The minimum TLS version to allow. One of
+   * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
+   * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
+   * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * is not authorized with the list of supplied trusted server certificates.
    * @throws Error if there are zero requests to perform.
    */
@@ -123,6 +127,8 @@ class Client extends AsyncEventEmitter {
         ca: opts.securityOptions.ca,
         requestCert: opts.securityOptions.requestCert,
         rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
+        minVersion: opts.securityOptions.minVersion,
+        maxVersion: opts.securityOptions.maxVersion,
       };
     }
 
