@@ -26,6 +26,7 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
+  CCancelRequest,
 } = require('./Command');
 const {
   CommandFieldType,
@@ -65,6 +66,7 @@ const requests = {
   NEventReportRequest,
   NGetRequest,
   NSetRequest,
+  CCancelRequest,
 };
 //#endregion
 

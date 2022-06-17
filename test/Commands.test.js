@@ -24,6 +24,7 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
+  CCancelRequest,
 } = require('./../src/Command');
 const Dataset = require('../src/Dataset');
 const {
@@ -91,6 +92,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CEchoResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      CEchoResponse.fromRequest(new CFindRequest());
+    }).to.throw();
+    expect(() => {
+      CEchoResponse.fromRequest(new CEchoRequest());
+    }).to.not.throw();
   });
 
   it('should correctly create a C-FIND request', () => {
@@ -122,6 +130,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CFindResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      CFindResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      CFindResponse.fromRequest(new CFindRequest());
+    }).to.not.throw();
   });
 
   it('should correctly create a C-STORE request', () => {
@@ -162,6 +177,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CStoreResponse);
     expect(response.getStatus()).to.be.eq(Status.Success);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      CStoreResponse.fromRequest(new CFindRequest());
+    }).to.throw();
+    expect(() => {
+      CStoreResponse.fromRequest(new CStoreRequest(new Dataset({ PatientID: 12345 })));
+    }).to.not.throw();
   });
 
   it('should correctly create a C-MOVE request', () => {
@@ -190,6 +212,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CMoveResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      CMoveResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      CMoveResponse.fromRequest(new CMoveRequest());
+    }).to.not.throw();
   });
 
   it('should correctly create a C-GET request', () => {
@@ -216,6 +245,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CGetResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      CGetResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      CGetResponse.fromRequest(new CGetRequest());
+    }).to.not.throw();
   });
 
   it('should correctly create a N-CREATE request', () => {
@@ -239,6 +275,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.NCreateResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      NCreateResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      NCreateResponse.fromRequest(new NCreateRequest(sopClassUid, sopInstanceUid));
+    }).to.not.throw();
   });
 
   it('should correctly create a N-ACTION request', () => {
@@ -269,6 +312,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.NActionResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      NActionResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      NActionResponse.fromRequest(new NActionRequest(sopClassUid, sopInstanceUid, 0x0002));
+    }).to.not.throw();
   });
 
   it('should correctly create a N-DELETE request', () => {
@@ -292,6 +342,13 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.NDeleteResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      NDeleteResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      NDeleteResponse.fromRequest(new NDeleteRequest(sopClassUid, sopInstanceUid));
+    }).to.not.throw();
   });
 
   it('should correctly create a N-EVENT-REPORT request', () => {
@@ -322,6 +379,15 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.NEventReportResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      NEventReportResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      NEventReportResponse.fromRequest(
+        new NEventReportRequest(sopClassUid, sopInstanceUid, 0x0002)
+      );
+    }).to.not.throw();
   });
 
   it('should correctly create a N-GET request', () => {
@@ -362,6 +428,15 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.NGetResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      NGetResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      NGetResponse.fromRequest(
+        new NGetRequest(sopClassUid, sopInstanceUid, ['PatientID', 'PatientName'])
+      );
+    }).to.not.throw();
   });
 
   it('should correctly create a N-SET request', () => {
@@ -385,5 +460,29 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.NSetResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+
+    expect(() => {
+      NSetResponse.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      NSetResponse.fromRequest(new NSetRequest(sopClassUid, sopInstanceUid));
+    }).to.not.throw();
+  });
+
+  it('should correctly create a C-CANCEL request', () => {
+    const sopClassUid = Dataset.generateDerivedUid();
+    const request = new CCancelRequest(sopClassUid, 2);
+
+    expect(request.getAffectedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CCancelRequest);
+    expect(request.getMessageIdBeingRespondedTo()).to.be.eq(2);
+    expect(request.hasDataset()).to.be.false;
+
+    expect(() => {
+      CCancelRequest.fromRequest(new CEchoRequest());
+    }).to.throw();
+    expect(() => {
+      CCancelRequest.fromRequest(new CFindRequest());
+    }).to.not.throw();
   });
 });
