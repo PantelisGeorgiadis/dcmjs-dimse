@@ -36,6 +36,7 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
+  CCancelRequest,
 } = require('./Command');
 const Dataset = require('./Dataset');
 const Implementation = require('./Implementation');
@@ -178,6 +179,31 @@ class Network extends AsyncEventEmitter {
     const rqs = Array.isArray(requests) ? requests : [requests];
     this.requests.push(...rqs);
     this._sendNextRequests();
+  }
+
+  /**
+   * Sends cancel request.
+   * @method
+   * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
+   * @throws Error if request is not an instance of CFindRequest, CMoveRequest or CGetRequest.
+   */
+  sendCancel(request) {
+    if (!this.association) {
+      log.error(
+        `There is no association in which to cancel request ${request.toString()}. Skipping...`
+      );
+      return;
+    }
+    const cancelRequest = CCancelRequest.fromRequest(request);
+    const context = this.association.getAcceptedPresentationContextFromRequest(cancelRequest);
+    if (!context) {
+      log.error(
+        `Could not find an accepted presentation context to cancel request ${request.toString()}. Skipping...`
+      );
+      return;
+    }
+    const dimse = { context, command: cancelRequest };
+    this._sendDimse(dimse);
   }
 
   //#region Private Methods
@@ -511,6 +537,9 @@ class Network extends AsyncEventEmitter {
               case CommandFieldType.NSetResponse:
                 this.dimse = Object.assign(new NSetResponse(), command);
                 break;
+              case CommandFieldType.CCancelRequest:
+                this.dimse = Object.assign(new CCancelRequest(), command);
+                break;
               default:
                 this.dimse = command;
                 break;
@@ -622,6 +651,8 @@ class Network extends AsyncEventEmitter {
       this.emit('nSetRequest', dimse, (rsp) => {
         this._sendDimse({ context: presentationContext, command: rsp });
       });
+    } else if (dimse.getCommandFieldType() === CommandFieldType.CCancelRequest) {
+      this.emit('cCancelRequest', dimse);
     }
   }
 

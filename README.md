@@ -18,7 +18,7 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 	npm run build
 
 ### Features
-- Implements C-ECHO, C-FIND, C-STORE, C-MOVE, C-GET, N-CREATE, N-ACTION, N-DELETE, N-EVENT-REPORT, N-GET and N-SET services as SCU and SCP.
+- Implements C-ECHO, C-FIND, C-STORE, C-MOVE, C-GET, C-CANCEL, N-CREATE, N-ACTION, N-DELETE, N-EVENT-REPORT, N-GET and N-SET services as SCU and SCP.
 - Supports secure DICOM TLS connections.
 - Allows custom DICOM implementations (Implementation Class UID and Implementation Version).
 - Provides asynchronous event handlers for incoming SCP requests.

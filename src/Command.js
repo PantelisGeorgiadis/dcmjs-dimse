@@ -1833,6 +1833,61 @@ class NSetResponse extends Response {
 }
 //#endregion
 
+//#region CCancelRequest
+class CCancelRequest extends Request {
+  /**
+   * Creates an instance of CCancelRequest.
+   * @constructor
+   * @param {string} affectedSopClassUid - Affected SOP class UID.
+   * @param {number} messageId - Message ID to cancel.
+   */
+  constructor(affectedSopClassUid, messageId) {
+    super(CommandFieldType.CCancelRequest, affectedSopClassUid, false);
+    this.setMessageIdBeingRespondedTo(messageId);
+  }
+
+  /**
+   * Gets message ID to cancel.
+   * @method
+   * @return {number} Message ID to cancel.
+   */
+  getMessageIdBeingRespondedTo() {
+    const command = this.getCommandDataset();
+    return command.getElement('MessageIDBeingRespondedTo');
+  }
+
+  /**
+   * Sets message ID to cancel.
+   * @method
+   * @param {number} messageId - Message ID to cancel.
+   */
+  setMessageIdBeingRespondedTo(messageId) {
+    const command = this.getCommandDataset();
+    command.setElement('MessageIDBeingRespondedTo', messageId);
+  }
+
+  /**
+   * Creates a C-CANCEL request from a C-FIND, C-MOVE or C-GET request.
+   * @method
+   * @static
+   * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
+   * @returns {CCancelRequest} C-CANCEL request.
+   * @throws Error if request is not an instance of CFindRequest, CMoveRequest or CGetRequest.
+   */
+  static fromRequest(request) {
+    if (
+      !(request instanceof CFindRequest) &&
+      !(request instanceof CMoveRequest) &&
+      !(request instanceof CGetRequest)
+    ) {
+      throw new Error('Request should be an instance of CFindRequest, CMoveRequest or CGetRequest');
+    }
+
+    return new CCancelRequest(request.getAffectedSopClassUid(), request.getMessageId());
+  }
+}
+//#endregion
+
 //#region Exports
 module.exports = {
   Command,
@@ -1860,5 +1915,6 @@ module.exports = {
   NGetResponse,
   NSetRequest,
   NSetResponse,
+  CCancelRequest,
 };
 //#endregion
