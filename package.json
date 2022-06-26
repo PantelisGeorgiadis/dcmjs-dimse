@@ -39,7 +39,7 @@
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
     "async-eventemitter": "^0.2.4",
-    "dcmjs": "^0.22.1",
+    "dcmjs": "^0.24.1",
     "smart-buffer": "^4.2.0",
     "ts-mixer": "^6.0.1",
     "winston": "^3.7.2"
