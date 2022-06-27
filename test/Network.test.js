@@ -173,6 +173,56 @@ class AcceptingScp extends Scp {
   }
 }
 
+class CancelingScp extends Scp {
+  constructor(socket, opts) {
+    super(socket, opts);
+    this.association = undefined;
+
+    this.cancelation = {
+      _canceled: false,
+      _listener: (val) => {},
+      setCancelation(val) {
+        this._canceled = val;
+        this._listener(val);
+      },
+      getCancelation() {
+        return this._canceled;
+      },
+      cancelationListener: function (listener) {
+        this._listener = listener;
+      },
+    };
+  }
+  associationRequested(association) {
+    this.association = association;
+    const contexts = association.getPresentationContexts();
+    contexts.forEach((c) => {
+      const context = association.getPresentationContext(c.id);
+      if (context.getAbstractSyntaxUid() === SopClass.StudyRootQueryRetrieveInformationModelFind) {
+        context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
+      } else {
+        context.setResult(PresentationContextResult.RejectAbstractSyntaxNotSupported);
+      }
+    });
+    this.sendAssociationAccept();
+  }
+  cFindRequest(request, callback) {
+    this.cancelation.cancelationListener((val) => {
+      if (val === true) {
+        const response = CFindResponse.fromRequest(request);
+        response.setStatus(Status.Cancel);
+        callback([response]);
+      }
+    });
+  }
+  cCancelRequest(request) {
+    this.cancelation.setCancelation(true);
+  }
+  associationReleaseRequested() {
+    this.sendAssociationReleaseResponse();
+  }
+}
+
 describe('Network', () => {
   before(() => {
     log.level = 'error';
@@ -462,5 +512,32 @@ describe('Network', () => {
       server.close();
     });
     client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should correctly perform and serve a C-CANCEL operation', () => {
+    const server = new Server(CancelingScp);
+    server.listen(2110);
+
+    let canceled = false;
+
+    const client = new Client();
+    const request = CFindRequest.createStudyFindRequest({ PatientID: '12345' });
+    request.on('response', (response) => {
+      if (response.getStatus() === Status.Cancel) {
+        canceled = true;
+      }
+    });
+    client.addRequest(request);
+    client.on('associationAccepted', (association) => {
+      // Cancel after 500ms from association acceptance,
+      // assuming that the SCP would have received the
+      // C-FIND operation by that time
+      setTimeout(() => client.cancel(request), 500);
+    });
+    client.on('closed', () => {
+      expect(canceled).to.be.true;
+      server.close();
+    });
+    client.send('127.0.0.1', 2110, 'CALLINGAET', 'CALLEDAET');
   });
 });

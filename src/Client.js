@@ -18,6 +18,7 @@ class Client extends AsyncEventEmitter {
     super();
     this.requests = [];
     this.additionalPresentationContexts = [];
+    this.network = undefined;
   }
 
   /**
@@ -149,10 +150,12 @@ class Client extends AsyncEventEmitter {
     network.on('associationReleaseResponse', () => {
       this.emit('associationReleased');
       socket.end();
+      this.network = undefined;
     });
     network.on('associationRejected', (reject) => {
       this.emit('associationRejected', reject);
       socket.end();
+      this.network = undefined;
     });
     network.on('done', () => {
       setTimeout(() => network.sendAssociationReleaseRequest(), this.associationLingerTimeout);
@@ -165,11 +168,27 @@ class Client extends AsyncEventEmitter {
     });
     network.on('networkError', (err) => {
       socket.end();
+      this.network = undefined;
       this.emit('networkError', err);
     });
     network.on('close', () => {
       this.emit('closed');
     });
+    this.network = network;
+  }
+
+  /**
+   * Cancels a C-FIND, C-MOVE or C-GET request.
+   * @method
+   * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
+   * @throws Error if request is not an instance of CFindRequest, CMoveRequest or CGetRequest
+   * or the network has not been initialized.
+   */
+  cancel(request) {
+    if (!this.network) {
+      throw new Error('Network has not been initialized');
+    }
+    this.network.sendCancel(request);
   }
 }
 //#endregion
