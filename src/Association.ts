@@ -1,16 +1,21 @@
-const { CStoreRequest, CGetRequest } = require('./Command');
-const {
+import { CStoreRequest, CGetRequest, Request } from './Command';
+import {
   CommandFieldType,
   PresentationContextResult,
   Uid,
   SopClass,
   StorageClass,
   TransferSyntax,
-} = require('./Constants');
-const Implementation = require('./Implementation');
+} from './Constants';
+import Implementation from './Implementation';
 
 //#region PresentationContext
 class PresentationContext {
+  pcId: number;
+  abstractSyntaxUid: string;
+  transferSyntaxes: string[];
+  result: number;
+
   /**
    * Creates an instance of PresentationContext.
    * @constructor
@@ -19,7 +24,12 @@ class PresentationContext {
    * @param {string} [transferSyntaxUid] - Transfer syntax UID.
    * @param {number} [result] - Presentation context result.
    */
-  constructor(pcId, abstractSyntaxUid, transferSyntaxUid, result) {
+  constructor(
+    pcId: number,
+    abstractSyntaxUid: string,
+    transferSyntaxUid?: string,
+    result?: number
+  ) {
     this.pcId = pcId;
     this.abstractSyntaxUid = abstractSyntaxUid;
     this.transferSyntaxes = [];
@@ -34,7 +44,7 @@ class PresentationContext {
    * @method
    * @returns {number} Presentation context ID.
    */
-  getPresentationContextId() {
+  getPresentationContextId(): number {
     return this.pcId;
   }
 
@@ -43,7 +53,7 @@ class PresentationContext {
    * @method
    * @returns {string} Abstract syntax UID.
    */
-  getAbstractSyntaxUid() {
+  getAbstractSyntaxUid(): string {
     return this.abstractSyntaxUid;
   }
 
@@ -52,7 +62,7 @@ class PresentationContext {
    * @method
    * @returns {Array<string>} Transfer syntax UIDs.
    */
-  getTransferSyntaxUids() {
+  getTransferSyntaxUids(): Array<string> {
     return this.transferSyntaxes;
   }
 
@@ -61,7 +71,7 @@ class PresentationContext {
    * @method
    * @param {string} transferSyntaxUid - Transfer syntax UID.
    */
-  addTransferSyntaxUid(transferSyntaxUid) {
+  addTransferSyntaxUid(transferSyntaxUid: string) {
     if (this.transferSyntaxes.includes(transferSyntaxUid)) {
       return;
     }
@@ -73,7 +83,7 @@ class PresentationContext {
    * @method
    * @param {string} transferSyntaxUid - Transfer syntax UID.
    */
-  removeTransferSyntaxUid(transferSyntaxUid) {
+  removeTransferSyntaxUid(transferSyntaxUid: string) {
     if (!this.transferSyntaxes.includes(transferSyntaxUid)) {
       return;
     }
@@ -90,7 +100,7 @@ class PresentationContext {
    * @param {string} transferSyntaxUid - Transfer syntax UID.
    * @returns {boolean} Whether transfer syntax UID is present.
    */
-  hasTransferSyntaxUid(transferSyntaxUid) {
+  hasTransferSyntaxUid(transferSyntaxUid: string): boolean {
     return this.transferSyntaxes.includes(transferSyntaxUid);
   }
 
@@ -99,7 +109,7 @@ class PresentationContext {
    * @method
    * @returns {string} Transfer syntax UID.
    */
-  getAcceptedTransferSyntaxUid() {
+  getAcceptedTransferSyntaxUid(): string {
     return this.transferSyntaxes.length > 0 ? this.transferSyntaxes[0] : undefined;
   }
 
@@ -108,7 +118,7 @@ class PresentationContext {
    * @method
    * @returns {number} Result.
    */
-  getResult() {
+  getResult(): number {
     return this.result;
   }
 
@@ -116,9 +126,9 @@ class PresentationContext {
    * Sets the presentation context result.
    * @method
    * @param {number} result - Result.
-   * @param {string} acceptedTransferSyntax - Accepted transfer syntax UID.
+   * @param {string} [acceptedTransferSyntaxUid] - Accepted transfer syntax UID.
    */
-  setResult(result, acceptedTransferSyntaxUid) {
+  setResult(result: number, acceptedTransferSyntaxUid?: string) {
     this.result = result;
     const transferSyntaxes = [...this.transferSyntaxes];
     this.transferSyntaxes.length = 0;
@@ -137,7 +147,7 @@ class PresentationContext {
    * @method
    * @returns {string} Presentation context result description.
    */
-  getResultDescription() {
+  getResultDescription(): string {
     switch (this.result) {
       case PresentationContextResult.Accept:
         return 'Accept';
@@ -160,13 +170,21 @@ class PresentationContext {
 
 //#region Association
 class Association {
+  presentationContexts: Array<{ id: number; context: PresentationContext }>;
+  callingAeTitle: string;
+  calledAeTitle: string;
+  maxPduLength: number;
+  implementationClassUid: string;
+  applicationContextName: string;
+  implementationVersion: string;
+
   /**
    * Creates an instance of Association.
    * @constructor
-   * @param {string} callingAeTitle - Local AE title.
-   * @param {string} calledAeTitle - Remote AE title.
+   * @param {string} [callingAeTitle] - Local AE title.
+   * @param {string} [calledAeTitle] - Remote AE title.
    */
-  constructor(callingAeTitle, calledAeTitle) {
+  constructor(callingAeTitle?: string, calledAeTitle?: string) {
     this.callingAeTitle = callingAeTitle;
     this.calledAeTitle = calledAeTitle;
     this.maxPduLength = Implementation.getMaxPduLength();
@@ -181,7 +199,7 @@ class Association {
    * @method
    * @returns {string} Calling AE title.
    */
-  getCallingAeTitle() {
+  getCallingAeTitle(): string {
     return this.callingAeTitle;
   }
 
@@ -190,7 +208,7 @@ class Association {
    * @method
    * @param {string} aet - Calling AE title.
    */
-  setCallingAeTitle(aet) {
+  setCallingAeTitle(aet: string) {
     this.callingAeTitle = aet;
   }
 
@@ -199,7 +217,7 @@ class Association {
    * @method
    * @returns {string} Called AE title.
    */
-  getCalledAeTitle() {
+  getCalledAeTitle(): string {
     return this.calledAeTitle;
   }
 
@@ -208,7 +226,7 @@ class Association {
    * @method
    * @param {string} aet - Called AE title.
    */
-  setCalledAeTitle(aet) {
+  setCalledAeTitle(aet: string) {
     this.calledAeTitle = aet;
   }
 
@@ -217,7 +235,7 @@ class Association {
    * @method
    * @returns {number} Maximum PDU length.
    */
-  getMaxPduLength() {
+  getMaxPduLength(): number {
     return this.maxPduLength;
   }
 
@@ -226,7 +244,7 @@ class Association {
    * @method
    * @param {number} maxPduLength - Maximum PDU length.
    */
-  setMaxPduLength(maxPduLength) {
+  setMaxPduLength(maxPduLength: number) {
     this.maxPduLength = maxPduLength;
   }
 
@@ -235,7 +253,7 @@ class Association {
    * @method
    * @returns {string} Application context name.
    */
-  getApplicationContextName() {
+  getApplicationContextName(): string {
     return this.applicationContextName;
   }
 
@@ -244,7 +262,7 @@ class Association {
    * @method
    * @returns {string} Implementation class UID.
    */
-  getImplementationClassUid() {
+  getImplementationClassUid(): string {
     return this.implementationClassUid;
   }
 
@@ -253,7 +271,7 @@ class Association {
    * @method
    * @param {string} uid - Implementation class UID.
    */
-  setImplementationClassUid(uid) {
+  setImplementationClassUid(uid: string) {
     this.implementationClassUid = uid;
   }
 
@@ -262,7 +280,7 @@ class Association {
    * @method
    * @returns {string} Implementation version.
    */
-  getImplementationVersion() {
+  getImplementationVersion(): string {
     return this.implementationVersion;
   }
 
@@ -271,7 +289,7 @@ class Association {
    * @method
    * @param {string} version - Implementation version.
    */
-  setImplementationVersion(version) {
+  setImplementationVersion(version: string) {
     this.implementationVersion = version;
   }
 
@@ -282,7 +300,7 @@ class Association {
    * @param {number} [presentationContextId] - Presentation context ID.
    * @returns {number} Presentation context ID.
    */
-  addPresentationContext(abstractSyntaxUid, presentationContextId) {
+  addPresentationContext(abstractSyntaxUid: string, presentationContextId?: number): number {
     let pcId = presentationContextId || 1;
     this.presentationContexts.forEach((pc) => {
       const id = pc.id;
@@ -304,7 +322,7 @@ class Association {
    * @param {string} abstractSyntaxUid - Abstract Syntax UID.
    * @returns {number} Presentation context ID.
    */
-  addOrGetPresentationContext(abstractSyntaxUid) {
+  addOrGetPresentationContext(abstractSyntaxUid: string): number {
     const presentationContexts = this.getPresentationContexts();
     for (let i = 0; i < presentationContexts.length; i++) {
       const ctx = presentationContexts[i];
@@ -322,7 +340,7 @@ class Association {
    * @param {number} pcId - Presentation context ID.
    * @param {string} transferSyntaxUid - Transfer Syntax UID.
    */
-  addTransferSyntaxToPresentationContext(pcId, transferSyntaxUid) {
+  addTransferSyntaxToPresentationContext(pcId: number, transferSyntaxUid: string) {
     const context = this.getPresentationContext(pcId);
     context.addTransferSyntaxUid(transferSyntaxUid);
   }
@@ -334,7 +352,10 @@ class Association {
    * @param {string} transferSyntaxUid - Transfer Syntax UID.
    * @returns {number|undefined} Presentation context ID, if found.
    */
-  findPresentationContextByAbstractSyntaxAndTransferSyntax(abstractSyntaxUid, transferSyntaxUid) {
+  findPresentationContextByAbstractSyntaxAndTransferSyntax(
+    abstractSyntaxUid: string,
+    transferSyntaxUid: string
+  ): number | undefined {
     const presentationContexts = this.getPresentationContexts();
     for (let i = 0; i < presentationContexts.length; i++) {
       const ctx = presentationContexts[i];
@@ -354,7 +375,7 @@ class Association {
    * @returns {PresentationContext} Presentation context.
    * @throws Error if presentation context ID is not found within the presentation contexts collection.
    */
-  getPresentationContext(pcId) {
+  getPresentationContext(pcId: number): PresentationContext {
     const presentationContext = this.presentationContexts.find((p) => p.id === pcId);
     if (!presentationContext) {
       throw new Error(`Invalid presentation context ID: ${pcId}`);
@@ -368,7 +389,7 @@ class Association {
    * @method
    * @returns {Array<{id: number, context: PresentationContext}>} Presentation contexts.
    */
-  getPresentationContexts() {
+  getPresentationContexts(): Array<{ id: number; context: PresentationContext }> {
     return this.presentationContexts;
   }
 
@@ -379,8 +400,11 @@ class Association {
    * @param {Array<TransferSyntax>} [transferSyntaxes] - Transfer syntax UIDs to propose.
    * @returns {number} Presentation context ID.
    */
-  addPresentationContextFromRequest(request, transferSyntaxes) {
-    let syntaxes = transferSyntaxes || TransferSyntax.ImplicitVRLittleEndian;
+  addPresentationContextFromRequest(
+    request: Request,
+    transferSyntaxes?: Array<TransferSyntax>
+  ): number {
+    let syntaxes = transferSyntaxes || [TransferSyntax.ImplicitVRLittleEndian];
     syntaxes = Array.isArray(syntaxes) ? syntaxes : [syntaxes];
 
     const sopClassUid = this._sopClassFromRequest(request);
@@ -436,7 +460,7 @@ class Association {
    * @method
    * @return {PresentationContext} Presentation context.
    */
-  getAcceptedPresentationContextFromRequest(request) {
+  getAcceptedPresentationContextFromRequest(request): PresentationContext {
     let acceptedContext = undefined;
     const contexts = this.getPresentationContexts();
 
@@ -475,7 +499,7 @@ class Association {
    * @method
    * @return {string} Association description.
    */
-  toString() {
+  toString(): string {
     const str = [];
     str.push(`Application Context:     ${this.applicationContextName}`);
     str.push(`Implementation Class:    ${this.implementationClassUid}`);
@@ -513,7 +537,7 @@ class Association {
    * @param {string} uid - UID value.
    * @returns {string} UID name.
    */
-  _uidNameFromValue(uids, uid) {
+  _uidNameFromValue(uids: object | Array<any>, uid: string): string {
     const mergedUids = Array.isArray(uids) ? Object.assign({}, ...uids) : uids;
     return Object.keys(mergedUids).find((key) => mergedUids[key] === uid);
   }
@@ -525,7 +549,7 @@ class Association {
    * @param {Request} request - Request.
    * @returns {string} SOP class UID.
    */
-  _sopClassFromRequest(request) {
+  _sopClassFromRequest(request: Request): string {
     switch (request.getCommandFieldType()) {
       case CommandFieldType.NGetRequest:
       case CommandFieldType.NSetRequest:
@@ -549,5 +573,5 @@ class Association {
 //#endregion
 
 //#region Exports
-module.exports = { PresentationContext, Association };
+export { PresentationContext, Association };
 //#endregion

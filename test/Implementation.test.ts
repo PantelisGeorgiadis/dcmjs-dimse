@@ -1,9 +1,10 @@
-const Implementation = require('./../src/Implementation');
-const Dataset = require('./../src/Dataset');
-const { DefaultImplementation } = require('./../src/Constants');
+import Implementation from '../src/Implementation';
+import Dataset from '../src/Dataset';
+import { DefaultImplementation } from '../src/Constants';
 
-const chai = require('chai');
-const expect = chai.expect;
+import { expect as _expect } from 'chai';
+import { describe, it } from 'mocha';
+const expect = _expect;
 
 describe('Implementation', () => {
   it('should correctly get the default implementation', () => {

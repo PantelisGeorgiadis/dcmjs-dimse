@@ -1,10 +1,11 @@
-const Dataset = require('./../src/Dataset');
-const { TransferSyntax, StorageClass } = require('./../src/Constants');
+import Dataset from '../src/Dataset';
+import { TransferSyntax, StorageClass } from '../src/Constants';
 
-const chai = require('chai');
-const expect = chai.expect;
-const path = require('path');
-const mockFs = require('mock-fs');
+import { expect as _expect } from 'chai';
+const expect = _expect;
+import { resolve } from 'path';
+import mockFs, { load, restore } from 'mock-fs';
+import { describe, it } from 'mocha';
 
 describe('Dataset', () => {
   it('should correctly convert elements to a DICOM dataset and back', () => {
@@ -56,7 +57,7 @@ describe('Dataset', () => {
 
   it('should correctly read and write DICOM part10 files', () => {
     mockFs({
-      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileIn.dcm': load(resolve(__dirname, '../datasets/pdf.dcm')),
     });
 
     const dataset1 = Dataset.fromFile('fileIn.dcm');
@@ -92,7 +93,7 @@ describe('Dataset', () => {
 
   it('should keep private tags which are parsed in via a nameMap', () => {
     mockFs({
-      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileIn.dcm': load(resolve(__dirname, '../datasets/pdf.dcm')),
     });
 
     const elements1 = {
@@ -129,18 +130,18 @@ describe('Dataset', () => {
 
   it('should correctly read and write DICOM part10 files asynchronously', () => {
     mockFs({
-      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileIn.dcm': load(resolve(__dirname, '../datasets/pdf.dcm')),
     });
 
     Dataset.fromFile('fileIn.dcm', (err, dataset1) => {
-      dataset1.toFile('fileOut1.dcm', (err2) => {
+      dataset1.toFile('fileOut1.dcm', () => {
         Dataset.fromFile('fileOut1.dcm', (err3, dataset2) => {
           const elements1 = dataset1.getElements();
           const elements2 = dataset2.getElements();
           expect(Object.keys(elements1).length).to.be.eq(Object.keys(elements2).length);
           expect(Object.keys(elements1)).to.have.members(Object.keys(elements2));
 
-          mockFs.restore();
+          restore();
         });
       });
     });

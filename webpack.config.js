@@ -1,12 +1,13 @@
-const path = require('path');
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { join, parse } = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const { BannerPlugin } = require('webpack');
-const pkg = require('./package.json');
+const { main, name, version, author, homepage } = require('./package.json');
 
 const rootPath = process.cwd();
-const context = path.join(rootPath, 'src');
-const outputPath = path.join(rootPath, 'build');
-const filename = path.parse(pkg.main).base;
+const context = join(rootPath, 'src');
+const outputPath = join(rootPath, 'build');
+const filename = parse(main).base;
 
 const getCurrentDate = () => {
   const today = new Date();
@@ -18,9 +19,9 @@ const getCurrentDate = () => {
 
 const getBanner = () => {
   return (
-    `/*! ${pkg.name} - ${pkg.version} - ` +
+    `/*! ${name} - ${version} - ` +
     `${getCurrentDate()} ` +
-    `| (c) 2021-2022 ${pkg.author} | ${pkg.homepage} */`
+    `| (c) 2021-2022 ${author} | ${homepage} */`
   );
 };
 
@@ -28,12 +29,12 @@ module.exports = {
   mode: 'production',
   context,
   entry: {
-    dcmjsDimse: './index.js',
+    dcmjsDimse: './index.ts',
   },
   target: 'node',
   output: {
     filename,
-    library: pkg.name,
+    library: name,
     libraryTarget: 'umd',
     path: outputPath,
     umdNamedDefine: true,
@@ -57,4 +58,22 @@ module.exports = {
       raw: true,
     }),
   ],
+
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.js$/,
+        enforce: "pre",
+        loader: "source-map-loader"
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
 };
