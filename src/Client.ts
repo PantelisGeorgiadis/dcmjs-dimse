@@ -1,15 +1,25 @@
-const Network = require('./Network');
-const { Association, PresentationContext } = require('./Association');
-const { TransferSyntax } = require('./Constants');
-const { Request } = require('./Command');
-const log = require('./log');
+import Network from './Network';
+import { Association, PresentationContext } from './Association';
+import { TransferSyntax } from './Constants';
+import { Request } from './Command';
+import log from './log';
 
-const AsyncEventEmitter = require('async-eventemitter');
-const net = require('net');
-const tls = require('tls');
+import AsyncEventEmitter, { AsyncListener, EventMap } from 'async-eventemitter';
+import { connect as netConnect } from 'net';
+import { connect as tlsConnect } from 'tls';
 
 //#region Client
-class Client extends AsyncEventEmitter {
+interface ClientEventMap extends EventMap {
+  connected: undefined;
+  closed: AsyncListener<any, any> | any;
+  associationReleased: undefined;
+}
+
+class Client extends AsyncEventEmitter<ClientEventMap> {
+  requests: Request[];
+  additionalPresentationContexts: PresentationContext[];
+  associationLingerTimeout: number;
+
   /**
    * Creates an instance of Client.
    * @constructor
@@ -26,10 +36,10 @@ class Client extends AsyncEventEmitter {
    * @param {Request} request - DICOM request.
    * @throws Error if request is not an instance of the Request class.
    */
-  addRequest(request) {
+  addRequest(request: Request) {
     // Check if request is actually a request!
     if (!(request instanceof Request)) {
-      throw new Error(`${request.toString()} is not a request`);
+      throw new Error(`${request} is not a request`);
     }
     // Prevent duplicates
     if (this.requests.includes(request)) {
@@ -52,10 +62,10 @@ class Client extends AsyncEventEmitter {
    * @param {PresentationContext} context - Presentation context.
    * @throws Error if request is not an instance of the Request class.
    */
-  addAdditionalPresentationContext(context) {
+  addAdditionalPresentationContext(context: PresentationContext) {
     // Check if request is actually a context!
     if (!(context instanceof PresentationContext)) {
-      throw new Error(`${context.toString()} is not a presentation context`);
+      throw new Error(`${context} is not a presentation context`);
     }
     // Prevent duplicates
     if (this.additionalPresentationContexts.includes(context)) {
@@ -92,7 +102,7 @@ class Client extends AsyncEventEmitter {
    * is not authorized with the list of supplied trusted server certificates.
    * @throws Error if there are zero requests to perform.
    */
-  send(host, port, callingAeTitle, calledAeTitle, opts) {
+  send(host: string, port: number, callingAeTitle: string, calledAeTitle: string, opts?: any) {
     opts = opts || {};
     this.associationLingerTimeout = opts.associationLingerTimeout || 0;
 
@@ -134,16 +144,17 @@ class Client extends AsyncEventEmitter {
 
     // Connect
     log.info(`Connecting to ${host}:${port} ${opts.securityOptions ? '(TLS)' : ''}`);
-    const netImpl = opts.securityOptions ? tls : net;
-    const socket = netImpl.connect({ host, port, ...options });
-
+    const socket = opts.securityOptions
+      ? tlsConnect({ host, port, ...options })
+      : netConnect({ host, port, ...options });
     const network = new Network(socket, opts);
+
     network.on('connect', () => {
       this.emit('connected');
       network.sendAssociationRequest(association);
     });
     network.on('associationAccepted', (association) => {
-      this.emit('associationAccepted', association);
+      this.emit('associationAccepted', association, this._cb);
       network.sendRequests(this.requests);
     });
     network.on('associationReleaseResponse', () => {
@@ -151,7 +162,7 @@ class Client extends AsyncEventEmitter {
       socket.end();
     });
     network.on('associationRejected', (reject) => {
-      this.emit('associationRejected', reject);
+      this.emit('associationRejected', reject, this._cb);
       socket.end();
     });
     network.on('done', () => {
@@ -165,15 +176,19 @@ class Client extends AsyncEventEmitter {
     });
     network.on('networkError', (err) => {
       socket.end();
-      this.emit('networkError', err);
+      this.emit('networkError', err, this._cb);
     });
     network.on('close', () => {
       this.emit('closed');
     });
   }
+
+  _cb() {
+    return;
+  }
 }
 //#endregion
 
 //#region Exports
-module.exports = Client;
+export default Client;
 //#endregion

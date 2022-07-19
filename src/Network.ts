@@ -1,5 +1,5 @@
-const { Association } = require('./Association');
-const {
+import { Association, PresentationContext } from './Association';
+import {
   RawPdu,
   AAssociateRQ,
   AAssociateAC,
@@ -9,9 +9,17 @@ const {
   AAbort,
   Pdv,
   PDataTF,
-} = require('./Pdu');
-const { CommandFieldType, Status, TranscodableTransferSyntaxes } = require('./Constants');
-const {
+} from './Pdu';
+import {
+  CommandFieldType,
+  RejectReason,
+  RejectResult,
+  RejectSource,
+  Status,
+  TranscodableTransferSyntaxes,
+  TransferSyntax,
+} from './Constants';
+import {
   Command,
   Response,
   CEchoRequest,
@@ -36,16 +44,66 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
-} = require('./Command');
-const Dataset = require('./Dataset');
-const Implementation = require('./Implementation');
-const log = require('./log');
+  Request,
+} from './Command';
+import Dataset from './Dataset';
+import Implementation from './Implementation';
+import log from './log';
+import { Socket } from 'net';
+import { TLSSocket } from 'tls';
 
-const AsyncEventEmitter = require('async-eventemitter');
-const { SmartBuffer } = require('smart-buffer');
+import AsyncEventEmitter, { AsyncListener, EventEmitter, EventMap } from 'async-eventemitter';
+import { SmartBuffer } from 'smart-buffer';
+
+type NetworkOptions = {
+  connectTimeout?: number;
+  associationTimeout?: number;
+  pduTimeout?: number;
+  logCommandDatasets?: boolean;
+  logDatasets?: boolean;
+};
+
+interface NetworkEventMap extends AsyncEventEmitter.EventMap {
+  networkError: AsyncListener<any, any>;
+  done: AsyncListener<undefined, any> | any;
+  abort: AsyncListener<undefined, any> | any;
+  connect: AsyncListener<undefined, any> | any;
+  close: AsyncListener<undefined, any> | any;
+  associationRequested: AsyncListener<Association, undefined>;
+  associationAccepted: AsyncListener<Association, undefined>;
+  associationRejected: AsyncListener<
+    {
+      result: RejectResult;
+      source: RejectSource;
+      reason: RejectReason;
+    },
+    undefined
+  >;
+  associationReleaseRequested: AsyncListener<undefined, any> | any;
+  associationReleaseResponse?: AsyncListener<undefined, any> | any;
+}
 
 //#region Network
-class Network extends AsyncEventEmitter {
+class Network extends AsyncEventEmitter<NetworkEventMap> {
+  messageId: number;
+  socket: Socket | TLSSocket;
+  requests: Request[];
+  pending: Request[];
+  dimseBuffer?: SmartBuffer;
+  connectTimeout: number;
+  associationTimeout: number;
+  pduTimeout: number;
+  logCommandDatasets: boolean;
+  logDatasets: boolean;
+  logId: string;
+  connected: boolean;
+
+  connectedTime: any;
+  lastPduTime: any;
+  timeoutIntervalId: any;
+  association: Association;
+  dimse: (Request & Command) | (Response & Command) | Command;
+
   /**
    * Creates an instance of Network.
    * @constructor
@@ -57,7 +115,7 @@ class Network extends AsyncEventEmitter {
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    */
-  constructor(socket, opts) {
+  constructor(socket: Socket | TLSSocket, opts: NetworkOptions) {
     super();
     this.messageId = 0;
     this.socket = socket;
@@ -87,7 +145,7 @@ class Network extends AsyncEventEmitter {
    * @method
    * @param {Association} association - Association.
    */
-  sendAssociationRequest(association) {
+  sendAssociationRequest(association: Association) {
     this.association = association;
     const rq = new AAssociateRQ(this.association);
     const rqPdu = rq.write();
@@ -122,7 +180,7 @@ class Network extends AsyncEventEmitter {
    * @param {number} [source] - Rejection source.
    * @param {number} [reason] - Rejection reason.
    */
-  sendAssociationReject(result, source, reason) {
+  sendAssociationReject(result?: number, source?: number, reason?: number) {
     const rq = new AAssociateRJ(result, source, reason);
     const rqPdu = rq.write();
 
@@ -164,7 +222,7 @@ class Network extends AsyncEventEmitter {
    * @param {number} [source] - Rejection source.
    * @param {number} [reason] - Rejection reason.
    */
-  sendAbort(source, reason) {
+  sendAbort(source?: number, reason?: number) {
     const rq = new AAbort(source, reason);
     const rqPdu = rq.write();
 
@@ -177,13 +235,22 @@ class Network extends AsyncEventEmitter {
    * @method
    * @param {Array<Request>|Request} requests - Requests to perform.
    */
-  sendRequests(requests) {
+  sendRequests(requests: Array<Request> | Request) {
     const rqs = Array.isArray(requests) ? requests : [requests];
     this.requests.push(...rqs);
     this._sendNextRequests();
   }
 
   //#region Private Methods
+  /**
+   * Dummy callback method for
+   * the emitted events
+   * @returns void
+   */
+  _cb() {
+    return;
+  }
+
   /**
    * Advances the message ID.
    * @method
@@ -199,13 +266,13 @@ class Network extends AsyncEventEmitter {
    * @private
    * @param {Buffer} pdu - PDU.
    */
-  _sendPdu(pdu) {
+  _sendPdu(pdu: RawPdu) {
     try {
       const buffer = pdu.writePdu();
       this.socket.write(buffer);
     } catch (err) {
       log.error(`${this.logId} -> Error sending PDU [type: ${pdu.getType()}]: ${err.message}`);
-      this.emit('networkError', err);
+      this.emit('networkError', err, this._cb);
     }
   }
 
@@ -250,7 +317,7 @@ class Network extends AsyncEventEmitter {
    * @param {Command} dimse.command - Command.
    * @param {PresentationContext} dimse.context - Presentation context.
    */
-  _sendDimse(dimse) {
+  _sendDimse(dimse: { command: Request; context: PresentationContext }) {
     try {
       const dataset = dimse.command.getDataset();
       const presentationContext = this.association.getPresentationContext(
@@ -259,8 +326,8 @@ class Network extends AsyncEventEmitter {
       const acceptedTransferSyntaxUid = presentationContext.getAcceptedTransferSyntaxUid();
       if (dataset && acceptedTransferSyntaxUid !== dataset.getTransferSyntaxUid()) {
         if (
-          TranscodableTransferSyntaxes.includes(acceptedTransferSyntaxUid) &&
-          TranscodableTransferSyntaxes.includes(dataset.getTransferSyntaxUid())
+          TranscodableTransferSyntaxes.includes(acceptedTransferSyntaxUid as TransferSyntax) &&
+          TranscodableTransferSyntaxes.includes(dataset.getTransferSyntaxUid() as TransferSyntax)
         ) {
           dataset.setTransferSyntaxUid(acceptedTransferSyntaxUid);
         } else {
@@ -278,7 +345,7 @@ class Network extends AsyncEventEmitter {
       );
     } catch (err) {
       log.error(`${this.logId} -> Error sending DIMSE: ${err.message}`);
-      this.emit('networkError', err);
+      this.emit('networkError', err, this._cb);
     }
   }
 
@@ -286,11 +353,11 @@ class Network extends AsyncEventEmitter {
    * Sends PDataTF over the network.
    * @method
    * @private
-   * @param {Command} command - The requesting command.
+   * @param {Request} command - The requesting command.
    * @param {number} pcId - Presentation context ID.
    * @param {number} maxPduLength - Maximum PDU length.
    */
-  _sendPDataTF(command, pcId, maxPduLength) {
+  _sendPDataTF(command: Request, pcId: number, maxPduLength: number) {
     const max = 4 * 1024 * 1024;
     maxPduLength = maxPduLength === 0 ? max : Math.min(maxPduLength, max);
 
@@ -342,7 +409,7 @@ class Network extends AsyncEventEmitter {
    * @private
    * @param {Buffer} data - Accumulated PDU data.
    */
-  _processPdu(data) {
+  _processPdu(data: Buffer) {
     const raw = new RawPdu(data);
 
     try {
@@ -355,7 +422,7 @@ class Network extends AsyncEventEmitter {
           pdu.read(raw);
           this.logId = this.association.getCallingAeTitle();
           log.info(`${this.logId} <- Association request:\n${this.association.toString()}`);
-          this.emit('associationRequested', this.association);
+          this.emit('associationRequested', this.association, this._cb);
           break;
         }
         case 0x02: {
@@ -363,7 +430,7 @@ class Network extends AsyncEventEmitter {
           pdu.read(raw);
           this.logId = this.association.getCalledAeTitle();
           log.info(`${this.logId} <- Association accept:\n${this.association.toString()}`);
-          this.emit('associationAccepted', this.association);
+          this.emit('associationAccepted', this.association, this._cb);
           break;
         }
         case 0x03: {
@@ -374,11 +441,15 @@ class Network extends AsyncEventEmitter {
               this.logId
             } <- Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
           );
-          this.emit('associationRejected', {
-            result: pdu.getResult(),
-            source: pdu.getSource(),
-            reason: pdu.getReason(),
-          });
+          this.emit(
+            'associationRejected',
+            {
+              result: pdu.getResult(),
+              source: pdu.getSource(),
+              reason: pdu.getReason(),
+            },
+            this._cb
+          );
           break;
         }
         case 0x04: {
@@ -421,7 +492,7 @@ class Network extends AsyncEventEmitter {
       }
     } catch (err) {
       log.error(`${this.logId} -> Error reading PDU [type: ${raw.getType()}]: ${err.message}`);
-      this.emit('networkError', err);
+      this.emit('networkError', err, this._cb);
     }
   }
 
@@ -431,7 +502,7 @@ class Network extends AsyncEventEmitter {
    * @private
    * @param {PDataTF} pdu - PDU.
    */
-  _processPDataTf(pdu) {
+  _processPDataTf(pdu: PDataTF) {
     try {
       const pdvs = pdu.getPdvs();
       pdvs.forEach((pdv) => {
@@ -536,7 +607,7 @@ class Network extends AsyncEventEmitter {
           } else {
             const dataset = new Dataset(
               this.dimseBuffer.toBuffer(),
-              presentationContext.getAcceptedTransferSyntaxUid()
+              presentationContext.getAcceptedTransferSyntaxUid() as TransferSyntax
             );
             this.dimse.setDataset(dataset);
             this._performDimse(presentationContext, this.dimse);
@@ -547,7 +618,7 @@ class Network extends AsyncEventEmitter {
       });
     } catch (err) {
       log.error(`${this.logId} -> Error reading DIMSE: ${err.message}`);
-      this.emit('networkError', err);
+      this.emit('networkError', err, this._cb);
     }
   }
 
@@ -558,7 +629,7 @@ class Network extends AsyncEventEmitter {
    * @param {PresentationContext} presentationContext - Accepted presentation context.
    * @param {Request|Response} dimse - DIMSE.
    */
-  _performDimse(presentationContext, dimse) {
+  _performDimse(presentationContext: PresentationContext, dimse: Command | Request | Response) {
     if (dimse instanceof Response) {
       const response = Object.assign(Object.create(Object.getPrototypeOf(dimse)), dimse);
       const request = this.pending.find(
@@ -653,13 +724,13 @@ class Network extends AsyncEventEmitter {
       this._reset();
       const error = `${this.logId} -> Connection error: ${err.message}`;
       log.error(error);
-      this.emit('networkError', new Error(error));
+      this.emit('networkError', new Error(error), this._cb);
     });
     this.socket.on('timeout', () => {
       this._reset();
       const error = `${this.logId} -> Connection timeout`;
       log.error(error);
-      this.emit('networkError', new Error(error));
+      this.emit('networkError', new Error(error), this._cb);
     });
     this.socket.on('close', () => {
       this._reset();
@@ -690,7 +761,7 @@ class Network extends AsyncEventEmitter {
         this.sendAbort();
         this._reset();
         log.error(error);
-        this.emit('networkError', new Error(`Connection timeout: ${error}`));
+        this.emit('networkError', new Error(`Connection timeout: ${error}`), this._cb);
       }
     }, 1000);
   }
@@ -714,7 +785,16 @@ class Network extends AsyncEventEmitter {
 //#endregion
 
 //#region PduAccumulator
-class PduAccumulator extends AsyncEventEmitter {
+
+interface PduAccumulatorEventMap extends EventMap {
+  pdu: AsyncListener<Buffer, undefined>;
+}
+
+class PduAccumulator extends AsyncEventEmitter<PduAccumulatorEventMap> {
+  receiving: any;
+  minimumReceived: any;
+  receivedLength: number;
+
   /**
    * Creates an instance of PduAccumulator.
    * @constructor
@@ -728,7 +808,7 @@ class PduAccumulator extends AsyncEventEmitter {
    * @method
    * @param {Buffer} data - The received data.
    */
-  accumulate(data) {
+  accumulate(data: any) {
     do {
       data = this._process(data);
     } while (data !== undefined);
@@ -742,7 +822,7 @@ class PduAccumulator extends AsyncEventEmitter {
    * @param {Buffer} data - The received data from the network.
    * @returns {Number|undefined} The remaining bytes for a full PDU or undefined.
    */
-  _process(data) {
+  _process(data: Buffer): number | undefined {
     if (this.receiving === undefined) {
       if (this.minimumReceived) {
         data = Buffer.concat(
@@ -760,7 +840,7 @@ class PduAccumulator extends AsyncEventEmitter {
       buffer.readUInt8();
       buffer.readUInt8();
       const pduLength = buffer.readUInt32BE();
-      let dataNeeded = data.length - 6;
+      const dataNeeded = data.length - 6;
 
       if (pduLength > dataNeeded) {
         this.receiving = data;
@@ -776,7 +856,7 @@ class PduAccumulator extends AsyncEventEmitter {
 
         this.receiving = undefined;
         this.receivedLength = undefined;
-        this.emit('pdu', pduData);
+        this.emit('pdu', pduData, this._cb);
 
         if (remaining) {
           return remaining;
@@ -797,7 +877,7 @@ class PduAccumulator extends AsyncEventEmitter {
 
         this.receiving = undefined;
         this.receivedLength = undefined;
-        this.emit('pdu', newPduData);
+        this.emit('pdu', newPduData, this._cb);
 
         if (remaining) {
           return remaining;
@@ -807,10 +887,14 @@ class PduAccumulator extends AsyncEventEmitter {
 
     return undefined;
   }
+
+  _cb() {
+    return;
+  }
   //#endregion
 }
 //#endregion
 
 //#region Exports
-module.exports = Network;
+export default Network;
 //#endregion

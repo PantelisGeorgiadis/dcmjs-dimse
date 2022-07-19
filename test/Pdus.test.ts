@@ -1,18 +1,11 @@
-const { Association } = require('./../src/Association');
-const {
-  RawPdu,
-  AAssociateRQ,
-  AAssociateAC,
-  AAssociateRJ,
-  Pdv,
-  PDataTF,
-  AAbort,
-} = require('../src/Pdu');
-const { PresentationContextResult, SopClass, TransferSyntax } = require('./../src/Constants');
-const Implementation = require('./../src/Implementation');
+import { Association } from '../src/Association';
+import { RawPdu, AAssociateRQ, AAssociateAC, AAssociateRJ, Pdv, PDataTF, AAbort } from '../src/Pdu';
+import { PresentationContextResult, SopClass, TransferSyntax } from '../src/Constants';
+import Implementation from '../src/Implementation';
 
-const chai = require('chai');
-const expect = chai.expect;
+import { expect as _expect } from 'chai';
+import { describe, it } from 'mocha';
+const expect = _expect;
 
 describe('PDU', () => {
   it('should correctly write and read an A-ASSOCIATE-RQ PDU', () => {

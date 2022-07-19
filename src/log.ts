@@ -1,4 +1,4 @@
-const { createLogger, format, transports } = require('winston');
+import { createLogger, format, transports } from 'winston';
 const { combine, timestamp, printf } = format;
 
 const log = createLogger({
@@ -12,5 +12,5 @@ const log = createLogger({
 });
 
 //#region Exports
-module.exports = log;
+export default log;
 //#endregion

@@ -3,3 +3,4 @@ build
 documentation
 coverage
 .DS_Store
+dist

@@ -50,14 +50,13 @@ Object.freeze(PresentationContextResult);
 //#region AbortSource
 /**
  * Abort sources.
- * @constant {Object}
+ * @enum
  */
-const AbortSource = {
-  ServiceUser: 0,
-  Reserved: 1,
-  ServiceProvider: 2,
-};
-Object.freeze(AbortSource);
+enum AbortSource {
+  ServiceUser = 0,
+  Reserved = 1,
+  ServiceProvider = 2,
+}
 //#endregion
 
 //#region AbortReason
@@ -65,12 +64,11 @@ Object.freeze(AbortSource);
  * Abort reasons.
  * @constant {Object}
  */
-const AbortReason = {
-  Unknown: 0,
-  ServiceUser: 1,
-  ServiceProvider: 2,
-};
-Object.freeze(AbortReason);
+enum AbortReason {
+  Unknown = 0,
+  ServiceUser = 1,
+  ServiceProvider = 2,
+}
 //#endregion
 
 //#region RejectResult
@@ -78,15 +76,14 @@ Object.freeze(AbortReason);
  * Reject results.
  * @constant {Object}
  */
-const RejectResult = {
-  NotSpecified: 0,
-  UnrecognizedPdu: 1,
-  UnexpectedPdu: 2,
-  UnrecognizedPduParameter: 4,
-  UnexpectedPduParameter: 5,
-  InvalidPduParameter: 6,
-};
-Object.freeze(RejectResult);
+enum RejectResult {
+  NotSpecified = 0,
+  UnrecognizedPdu = 1,
+  UnexpectedPdu = 2,
+  UnrecognizedPduParameter = 4,
+  UnexpectedPduParameter = 5,
+  InvalidPduParameter = 6,
+}
 //#endregion
 
 //#region RejectSource
@@ -94,12 +91,11 @@ Object.freeze(RejectResult);
  * Reject sources.
  * @constant {Object}
  */
-const RejectSource = {
-  ServiceUser: 1,
-  ServiceProviderAcse: 2,
-  ServiceProviderPresentation: 3,
-};
-Object.freeze(RejectSource);
+enum RejectSource {
+  ServiceUser = 1,
+  ServiceProviderAcse = 2,
+  ServiceProviderPresentation = 3,
+}
 //#endregion
 
 //#region RejectReason
@@ -107,31 +103,29 @@ Object.freeze(RejectSource);
  * Reject reasons.
  * @constant {Object}
  */
-const RejectReason = {
+enum RejectReason {
   // Service user
-  NoReasonGiven: 1,
-  ApplicationContextNotSupported: 2,
-  CallingAeNotRecognized: 3,
-  CalledAeNotRecognized: 7,
+  NoReasonGiven = 1,
+  ApplicationContextNotSupported = 2,
+  CallingAeNotRecognized = 3,
+  CalledAeNotRecognized = 7,
   // Service provider
-  ProtocolVersionNotSupported: 1,
-  TemporaryCongestion: 1,
-  LocalLimitExceeded: 2,
-};
-Object.freeze(RejectReason);
+  ProtocolVersionNotSupported = 1,
+  TemporaryCongestion = 1,
+  LocalLimitExceeded = 2,
+}
 //#endregion
 
 //#region Priority
 /**
  * Priority.
- * @constant {Object}
+ * @enum
  */
-const Priority = {
-  Low: 0x0002,
-  Medium: 0x0000,
-  High: 0x0001,
-};
-Object.freeze(Priority);
+enum Priority {
+  Low = 0x0002,
+  Medium = 0x0000,
+  High = 0x0001,
+}
 //#endregion
 
 //#region Status
@@ -279,22 +273,22 @@ Object.freeze(SopClass);
 //#region TransferSyntax
 /**
  * Transfer syntaxes.
- * @constant {Object}
+ * @enum
  */
-const TransferSyntax = {
-  ImplicitVRLittleEndian: '1.2.840.10008.1.2',
-  ExplicitVRLittleEndian: '1.2.840.10008.1.2.1',
-  DeflatedExplicitVRLittleEndian: '1.2.840.10008.1.2.1.99',
-  ExplicitVRBigEndian: '1.2.840.10008.1.2.2',
-  RleLossless: '1.2.840.10008.1.2.5',
-  JpegBaseline: '1.2.840.10008.1.2.4.50',
-  JpegLossless: '1.2.840.10008.1.2.4.70',
-  JpegLsLossless: '1.2.840.10008.1.2.4.80',
-  JpegLsLossy: '1.2.840.10008.1.2.4.81',
-  Jpeg2000Lossless: '1.2.840.10008.1.2.4.90',
-  Jpeg2000Lossy: '1.2.840.10008.1.2.4.91',
-};
-Object.freeze(TransferSyntax);
+enum TransferSyntax {
+  ImplicitVRLittleEndian = '1.2.840.10008.1.2',
+  ExplicitVRLittleEndian = '1.2.840.10008.1.2.1',
+  DeflatedExplicitVRLittleEndian = '1.2.840.10008.1.2.1.99',
+  ExplicitVRBigEndian = '1.2.840.10008.1.2.2',
+  RleLossless = '1.2.840.10008.1.2.5',
+  JpegBaseline = '1.2.840.10008.1.2.4.50',
+  JpegLossless = '1.2.840.10008.1.2.4.70',
+  JpegLsLossless = '1.2.840.10008.1.2.4.80',
+  JpegLsLossy = '1.2.840.10008.1.2.4.81',
+  Jpeg2000Lossless = '1.2.840.10008.1.2.4.90',
+  Jpeg2000Lossy = '1.2.840.10008.1.2.4.91',
+}
+
 //#endregion
 
 //#region TranscodableTransferSyntaxes
@@ -323,7 +317,7 @@ Object.freeze(DefaultImplementation);
 //#endregion
 
 //#region Exports
-module.exports = {
+export {
   CommandFieldType,
   PresentationContextResult,
   AbortSource,

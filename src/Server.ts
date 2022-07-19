@@ -1,6 +1,6 @@
-const Network = require('./Network');
-const log = require('./log');
-const {
+import Network from './Network';
+import log from './log';
+import {
   CEchoResponse,
   CFindResponse,
   CStoreResponse,
@@ -12,11 +12,23 @@ const {
   NEventReportResponse,
   NGetResponse,
   NSetResponse,
-} = require('./Command');
+  NGetRequest,
+  NSetRequest,
+  CStoreRequest,
+  CFindRequest,
+  CEchoRequest,
+  CMoveRequest,
+  CGetRequest,
+  NCreateRequest,
+  NActionRequest,
+  NDeleteRequest,
+  NEventReportRequest,
+} from './Command';
 
-const AsyncEventEmitter = require('async-eventemitter');
-const net = require('net');
-const tls = require('tls');
+import AsyncEventEmitter, { EventMap } from 'async-eventemitter';
+import net from 'net';
+import tls from 'tls';
+import { Association } from './Association';
 
 //#region Scp
 /* c8 ignore start */
@@ -94,7 +106,7 @@ class Scp extends Network {
    * @param {Association} association - Association.
    */
   // eslint-disable-next-line no-unused-vars
-  associationRequested(association) {
+  associationRequested(association: Association) {
     log.error('associationRequested method must be implemented');
     this.sendAssociationReject();
   }
@@ -115,7 +127,7 @@ class Scp extends Network {
    * @param {CEchoRequest} request - C-ECHO request.
    * @param {function(CEchoResponse)} callback - C-ECHO response callback function.
    */
-  cEchoRequest(request, callback) {
+  cEchoRequest(request: CEchoRequest, callback: (arg0: CEchoResponse) => any) {
     log.error('cEchoRequest method must be implemented');
     callback(CEchoResponse.fromRequest(request));
   }
@@ -124,9 +136,9 @@ class Scp extends Network {
    * C-FIND request received.
    * @method
    * @param {CFindRequest} request - C-FIND request.
-   * @param {function(Array<CFindResponse>)} callback - C-FIND response callback function.
+   * @param {function(CFindResponse)} callback - C-FIND response callback function.
    */
-  cFindRequest(request, callback) {
+  cFindRequest(request: CFindRequest, callback: (arg0: CFindResponse) => any) {
     log.error('cFindRequest method must be implemented');
     callback(CFindResponse.fromRequest(request));
   }
@@ -137,7 +149,7 @@ class Scp extends Network {
    * @param {CStoreRequest} request - C-STORE request.
    * @param {function(CStoreResponse)} callback - C-STORE response callback function.
    */
-  cStoreRequest(request, callback) {
+  cStoreRequest(request: CStoreRequest, callback: (arg0: CStoreResponse) => any) {
     log.error('cStoreRequest method must be implemented');
     callback(CStoreResponse.fromRequest(request));
   }
@@ -146,10 +158,10 @@ class Scp extends Network {
    * C-MOVE request received.
    * @method
    * @param {CMoveRequest} request - C-MOVE request.
-   * @param {function(Array<CMoveResponse>)} callback - C-MOVE response callback function.
+   * @param {function(CMoveResponse)} callback - C-MOVE response callback function.
    */
   // eslint-disable-next-line no-unused-vars
-  cMoveRequest(request, callback) {
+  cMoveRequest(request: CMoveRequest, callback: (arg0: CMoveResponse) => any) {
     log.error('cMoveRequest method must be implemented');
     callback(CMoveResponse.fromRequest(request));
   }
@@ -158,9 +170,9 @@ class Scp extends Network {
    * C-GET request received.
    * @method
    * @param {CGetRequest} request - C-GET request.
-   * @param {function(Array<CGetResponse>)} callback - C-GET response callback function.
+   * @param {function(CGetResponse)} callback - C-GET response callback function.
    */
-  cGetRequest(request, callback) {
+  cGetRequest(request: CGetRequest, callback: (arg0: CGetResponse) => any) {
     log.error('cGetRequest method must be implemented');
     callback(CGetResponse.fromRequest(request));
   }
@@ -171,7 +183,7 @@ class Scp extends Network {
    * @param {NCreateRequest} request - N-CREATE request.
    * @param {function(NCreateResponse)} callback - N-CREATE response callback function.
    */
-  nCreateRequest(request, callback) {
+  nCreateRequest(request: NCreateRequest, callback: (arg0: NCreateResponse) => any) {
     log.error('nCreateRequest method must be implemented');
     callback(NCreateResponse.fromRequest(request));
   }
@@ -182,7 +194,7 @@ class Scp extends Network {
    * @param {NActionRequest} request - N-ACTION request.
    * @param {function(NActionResponse)} callback - N-ACTION response callback function.
    */
-  nActionRequest(request, callback) {
+  nActionRequest(request: NActionRequest, callback: (arg0: NActionResponse) => any) {
     log.error('nActionRequest method must be implemented');
     callback(NActionResponse.fromRequest(request));
   }
@@ -193,7 +205,7 @@ class Scp extends Network {
    * @param {NDeleteRequest} request - N-DELETE request.
    * @param {function(NDeleteResponse)} callback - N-DELETE response callback function.
    */
-  nDeleteRequest(request, callback) {
+  nDeleteRequest(request: NDeleteRequest, callback: (arg0: NDeleteResponse) => any) {
     log.error('nDeleteRequest method must be implemented');
     callback(NDeleteResponse.fromRequest(request));
   }
@@ -204,7 +216,7 @@ class Scp extends Network {
    * @param {NEventReportRequest} request - N-EVENT-REPORT request.
    * @param {function(NEventReportResponse)} callback - N-EVENT-REPORT response callback function.
    */
-  nEventReportRequest(request, callback) {
+  nEventReportRequest(request: NEventReportRequest, callback: (arg0: NEventReportResponse) => any) {
     log.error('nEventReportRequest method must be implemented');
     callback(NEventReportResponse.fromRequest(request));
   }
@@ -215,7 +227,7 @@ class Scp extends Network {
    * @param {NGetRequest} request - N-GET request.
    * @param {function(NGetResponse)} callback - N-GET response callback function.
    */
-  nGetRequest(request, callback) {
+  nGetRequest(request: NGetRequest, callback: (arg0: NGetResponse) => any) {
     log.error('nGetRequest method must be implemented');
     callback(NGetResponse.fromRequest(request));
   }
@@ -226,7 +238,7 @@ class Scp extends Network {
    * @param {NSetRequest} request - N-SET request.
    * @param {function(NSetResponse)} callback - N-SET response callback function.
    */
-  nSetRequest(request, callback) {
+  nSetRequest(request: NSetRequest, callback: (arg0: NSetResponse) => any) {
     log.error('nSetRequest method must be implemented');
     callback(NSetResponse.fromRequest(request));
   }
@@ -235,13 +247,17 @@ class Scp extends Network {
 //#endregion
 
 //#region Server
-class Server extends AsyncEventEmitter {
+class Server extends AsyncEventEmitter<EventMap> {
+  scp: { class: typeof Scp };
+  server: net.Server | tls.Server;
+  clients: any[];
+
   /**
    * Creates an instance of Server.
    * @constructor
    * @param {Scp} scpClass - The SCP class to receive network events.
    */
-  constructor(scpClass) {
+  constructor(scpClass: typeof Scp) {
     super();
     this.scp = { class: scpClass };
     this.server = undefined;
@@ -271,7 +287,7 @@ class Server extends AsyncEventEmitter {
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    */
-  listen(port, opts) {
+  listen(port: number, opts?: any) {
     opts = opts || {};
 
     let options = {};
@@ -288,11 +304,14 @@ class Server extends AsyncEventEmitter {
     }
 
     // Initialize network
-    const netImpl = opts.securityOptions ? tls : net;
-    this.server = netImpl.createServer(options, (socket) => {
+    const serverCallback = (socket: net.Socket | tls.TLSSocket) => {
       log.info(
         `Client connecting from ${socket.remoteAddress}:${socket.remotePort} ${
-          opts.securityOptions ? (socket.authorized ? '(Authorized)' : '(Unauthorized)') : ''
+          opts.securityOptions && socket instanceof tls.TLSSocket
+            ? socket.authorized
+              ? '(Authorized)'
+              : '(Unauthorized)'
+            : ''
         }`
       );
       const client = new this.scp.class(socket, opts);
@@ -300,14 +319,19 @@ class Server extends AsyncEventEmitter {
       this.clients.push(client);
 
       this.clients = this.clients.filter((item) => item.connected);
-    });
+    };
+
+    this.server = opts.securityOptions
+      ? tls.createServer(options, serverCallback)
+      : net.createServer(options, serverCallback);
+
     this.server.on('listening', () => {
       log.info(`DICOM server listening on port ${port} ${opts.securityOptions ? '(TLS)' : ''}`);
     });
     this.server.on('error', (err) => {
       const error = `Server error: ${err.message}`;
       log.error(error);
-      this.emit('networkError', err);
+      this.emit('networkError', err, this._cb);
     });
     this.server.listen(port);
   }
@@ -325,9 +349,13 @@ class Server extends AsyncEventEmitter {
     this.clients.forEach((client) => client.socket.destroy());
     this.clients = [];
   }
+
+  _cb() {
+    return;
+  }
 }
 //#endregion
 
 //#region Exports
-module.exports = { Server, Scp };
+export { Server, Scp };
 //#endregion

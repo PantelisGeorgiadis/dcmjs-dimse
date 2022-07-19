@@ -1,21 +1,28 @@
-const { TransferSyntax, StorageClass } = require('./Constants');
-const Implementation = require('./Implementation');
+import { TransferSyntax, StorageClass } from './Constants';
+import Implementation from './Implementation';
 
-const fs = require('fs');
-const dcmjs = require('dcmjs');
+import { readFile, readFileSync, writeFile, writeFileSync } from 'fs';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import dcmjs from 'dcmjs';
 const { DicomMetaDictionary, DicomDict, DicomMessage, ReadBufferStream, WriteBufferStream } =
   dcmjs.data;
 const dcmjsLog = dcmjs.log;
 
+// TODO: Adjust type when Element Enum exists
+type DatasetElements = { [key: string]: string | number | object | Array<any> };
+
 //#region Dataset
 class Dataset {
+  transferSyntaxUid: TransferSyntax;
+  elements: DatasetElements;
   /**
    * Creates an instance of Dataset.
    * @constructor
    * @param {Object|Buffer} [elementsOrBuffer] - Dataset elements as object or encoded as a DICOM dataset buffer.
    * @param {string} [transferSyntaxUid] - Dataset transfer syntax
    */
-  constructor(elementsOrBuffer, transferSyntaxUid) {
+  constructor(elementsOrBuffer?: DatasetElements | Buffer, transferSyntaxUid?: TransferSyntax) {
     dcmjsLog.level = 'error';
 
     this.transferSyntaxUid = transferSyntaxUid || TransferSyntax.ImplicitVRLittleEndian;
@@ -33,7 +40,7 @@ class Dataset {
    * @param {string} tag - Element tag.
    * @returns {string} Element value.
    */
-  getElement(tag) {
+  getElement(tag: string): any {
     return this.elements[tag];
   }
 
@@ -43,7 +50,7 @@ class Dataset {
    * @param {string} tag - Element tag.
    * @param {string} value - Element value.
    */
-  setElement(tag, value) {
+  setElement(tag: string, value: string | number | any[]) {
     this.elements[tag] = value;
   }
 
@@ -52,7 +59,7 @@ class Dataset {
    * @method
    * @returns {Object} Elements.
    */
-  getElements() {
+  getElements(): DatasetElements {
     return this.elements;
   }
 
@@ -61,7 +68,7 @@ class Dataset {
    * @method
    * @returns {string} Transfer syntax UID.
    */
-  getTransferSyntaxUid() {
+  getTransferSyntaxUid(): string {
     return this.transferSyntaxUid;
   }
 
@@ -70,8 +77,8 @@ class Dataset {
    * @method
    * @param {string} transferSyntaxUid - Transfer Syntax UID.
    */
-  setTransferSyntaxUid(transferSyntaxUid) {
-    this.transferSyntaxUid = transferSyntaxUid;
+  setTransferSyntaxUid(transferSyntaxUid: string) {
+    this.transferSyntaxUid = transferSyntaxUid as TransferSyntax;
   }
 
   /**
@@ -79,7 +86,7 @@ class Dataset {
    * @method
    * @returns {Buffer} DICOM dataset.
    */
-  getDenaturalizedDataset() {
+  getDenaturalizedDataset(): Buffer {
     const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
     const stream = new WriteBufferStream();
     DicomMessage.write(denaturalizedDataset, stream, this.transferSyntaxUid, {});
@@ -92,7 +99,7 @@ class Dataset {
    * @method
    * @returns {Buffer} DICOM dataset.
    */
-  getDenaturalizedCommandDataset() {
+  getDenaturalizedCommandDataset(): Buffer {
     const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
 
     const datasetStream = new WriteBufferStream();
@@ -125,9 +132,12 @@ class Dataset {
    * If this is not provided, the function runs synchronously.
    * @returns {Dataset|undefined} Dataset or undefined, if the function runs asynchronously.
    */
-  static fromFile(path, callback) {
+  static fromFile(
+    path: string,
+    callback?: (arg0: Error, arg1: Dataset) => any
+  ): Dataset | undefined {
     if (callback !== undefined && callback instanceof Function) {
-      fs.readFile(path, (error, fileBuffer) => {
+      readFile(path, (error, fileBuffer) => {
         if (error) {
           callback(error, undefined);
           return;
@@ -137,7 +147,7 @@ class Dataset {
       return;
     }
 
-    return this._fromP10Buffer(fs.readFileSync(path));
+    return this._fromP10Buffer(readFileSync(path));
   }
 
   /**
@@ -151,7 +161,7 @@ class Dataset {
    * @param {object} [writeOptions] - The write options to pass through to
    * `DicomDict.write()`. Optional.
    */
-  toFile(path, callback, nameMap, writeOptions) {
+  toFile(path: string, callback?: (arg0: Error) => any, nameMap?: object, writeOptions?: object) {
     const elements = {
       _meta: {
         FileMetaInformationVersion: new Uint8Array([0, 1]).buffer,
@@ -176,9 +186,9 @@ class Dataset {
       : DicomMetaDictionary.denaturalizeDataset(elements);
 
     if (callback instanceof Function) {
-      fs.writeFile(path, Buffer.from(dicomDict.write(writeOptions)), callback);
+      writeFile(path, Buffer.from(dicomDict.write(writeOptions)), callback);
     } else {
-      fs.writeFileSync(path, Buffer.from(dicomDict.write(writeOptions)));
+      writeFileSync(path, Buffer.from(dicomDict.write(writeOptions)));
     }
   }
 
@@ -188,7 +198,7 @@ class Dataset {
    * @static
    * @returns {string} UUID-derived UID.
    */
-  static generateDerivedUid() {
+  static generateDerivedUid(): string {
     return DicomMetaDictionary.uid();
   }
 
@@ -197,7 +207,7 @@ class Dataset {
    * @method
    * @returns {string} Dataset description.
    */
-  toString() {
+  toString(): string {
     const str = [];
     str.push('Dataset:');
     str.push('===============================================');
@@ -214,7 +224,7 @@ class Dataset {
    * @param {Buffer} buffer - p10 buffer.
    * @returns {Dataset} Dataset.
    */
-  static _fromP10Buffer(buffer) {
+  static _fromP10Buffer(buffer: Buffer): Dataset {
     const dicomDict = DicomMessage.readFile(
       buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
       { ignoreErrors: true }
@@ -234,13 +244,13 @@ class Dataset {
    * @param {string} transferSyntaxUid - Transfer Syntax UID.
    * @returns {Object} Dataset elements.
    */
-  _fromElementsBuffer(buffer, transferSyntaxUid) {
+  _fromElementsBuffer(buffer: Buffer, transferSyntaxUid: string): DatasetElements {
     const stream = new ReadBufferStream(
       buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
     );
     // Use the proper syntax length (based on transfer syntax UID)
     // since dcmjs doesn't do that internally.
-    let syntaxLengthTypeToDecode =
+    const syntaxLengthTypeToDecode =
       transferSyntaxUid === TransferSyntax.ImplicitVRLittleEndian
         ? TransferSyntax.ImplicitVRLittleEndian
         : TransferSyntax.ExplicitVRLittleEndian;
@@ -253,5 +263,6 @@ class Dataset {
 //#endregion
 
 //#region Exports
-module.exports = Dataset;
+export default Dataset;
+export { Dataset, DatasetElements };
 //#endregion

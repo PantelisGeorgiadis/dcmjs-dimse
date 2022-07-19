@@ -1,8 +1,8 @@
-const Client = require('./../src/Client');
-const Dataset = require('./../src/Dataset');
-const { PresentationContext } = require('./../src/Association');
-const { Server, Scp } = require('./../src/Server');
-const {
+import Client from '../src/Client';
+import Dataset from '../src/Dataset';
+import { PresentationContext } from '../src/Association';
+import { Server, Scp } from '../src/Server';
+import {
   CEchoRequest,
   CEchoResponse,
   CFindRequest,
@@ -17,19 +17,20 @@ const {
   NEventReportResponse,
   NGetRequest,
   NGetResponse,
-} = require('../src/Command');
-const {
+} from '../src/Command';
+import {
   SopClass,
   TransferSyntax,
   PresentationContextResult,
   Status,
   StorageClass,
-} = require('./../src/Constants');
-const log = require('./../src/log');
+} from '../src/Constants';
+import log from '../src/log';
 
-const selfSigned = require('selfsigned');
-const chai = require('chai');
-const expect = chai.expect;
+import { generate } from 'selfsigned';
+import { expect as _expect } from 'chai';
+import { describe, it } from 'mocha';
+const expect = _expect;
 
 const datasets = [
   new Dataset({
@@ -232,7 +233,7 @@ describe('Network', () => {
       { name: 'organizationName', value: 'DCMJS-DIMSE' },
       { name: 'organizationalUnitName', value: 'IT' },
     ];
-    const serverPems = selfSigned.generate(serverAttrs, {
+    const serverPems = generate(serverAttrs, {
       keySize: 2048,
       days: 5,
       algorithm: 'sha256',
@@ -244,7 +245,7 @@ describe('Network', () => {
       { name: 'organizationName', value: 'DCMJS-DIMSE' },
       { name: 'organizationalUnitName', value: 'IT' },
     ];
-    const clientPems = selfSigned.generate(clientAttrs, {
+    const clientPems = generate(clientAttrs, {
       keySize: 2048,
       days: 5,
       algorithm: 'sha256',

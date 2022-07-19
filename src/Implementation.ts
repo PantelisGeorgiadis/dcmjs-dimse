@@ -1,14 +1,18 @@
-const { DefaultImplementation } = require('./Constants');
+import { DefaultImplementation } from './Constants';
 
 //#region Implementation
 class Implementation {
+  static implementationClassUid: string;
+  static implementationVersion: string;
+  static maxPduLength: number;
+
   /**
    * Gets implementation class UID.
    * @method
    * @static
    * @returns {string} Implementation class UID.
    */
-  static getImplementationClassUid() {
+  static getImplementationClassUid(): string {
     return this.implementationClassUid || DefaultImplementation.ImplementationClassUid;
   }
 
@@ -18,7 +22,7 @@ class Implementation {
    * @static
    * @param {string} uid - Implementation class UID.
    */
-  static setImplementationClassUid(uid) {
+  static setImplementationClassUid(uid: string) {
     this.implementationClassUid = uid;
   }
 
@@ -28,7 +32,7 @@ class Implementation {
    * @static
    * @returns {string} Implementation version.
    */
-  static getImplementationVersion() {
+  static getImplementationVersion(): string {
     return this.implementationVersion || DefaultImplementation.ImplementationVersion;
   }
 
@@ -38,7 +42,7 @@ class Implementation {
    * @static
    * @param {string} version - Implementation version.
    */
-  static setImplementationVersion(version) {
+  static setImplementationVersion(version: string) {
     this.implementationVersion = version;
   }
 
@@ -48,7 +52,7 @@ class Implementation {
    * @static
    * @returns {number} Max PDU length.
    */
-  static getMaxPduLength() {
+  static getMaxPduLength(): number {
     return this.maxPduLength || DefaultImplementation.MaxPduLength;
   }
 
@@ -58,12 +62,12 @@ class Implementation {
    * @static
    * @param {number} maxLength - Max PDU length.
    */
-  static setMaxPduLength(maxLength) {
+  static setMaxPduLength(maxLength: number) {
     this.maxPduLength = maxLength;
   }
 }
 //#endregion
 
 //#region Exports
-module.exports = Implementation;
+export default Implementation;
 //#endregion

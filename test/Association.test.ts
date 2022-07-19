@@ -1,16 +1,17 @@
-const Dataset = require('../src/Dataset');
-const { Association } = require('./../src/Association');
-const { Request, CStoreRequest, CGetRequest } = require('../src/Command');
-const {
+import Dataset from '../src/Dataset';
+import { Association } from '../src/Association';
+import { Request, CStoreRequest, CGetRequest } from '../src/Command';
+import {
   CommandFieldType,
   SopClass,
   TransferSyntax,
   PresentationContextResult,
   StorageClass,
-} = require('./../src/Constants');
+} from '../src/Constants';
 
-const chai = require('chai');
-const expect = chai.expect;
+import { expect as _expect } from 'chai';
+import { describe, it } from 'mocha';
+const expect = _expect;
 
 describe('Association', () => {
   it('should correctly construct an association', () => {
@@ -69,7 +70,7 @@ describe('Association', () => {
     const calledAet = 'CALLEDAET';
 
     const association = new Association(callingAet, calledAet);
-    const request = new Request(1, SopClass.Verification, 1, false);
+    const request = new Request(1, SopClass.Verification, false);
     const pcId = association.addPresentationContextFromRequest(request);
     const context = association.getPresentationContext(pcId);
 
@@ -83,7 +84,7 @@ describe('Association', () => {
 
     const association = new Association(callingAet, calledAet);
     const request = new Request(CommandFieldType.CEchoRequest, SopClass.Verification, false);
-    let pcId = association.addPresentationContextFromRequest(request);
+    const pcId = association.addPresentationContextFromRequest(request);
     const context = association.getPresentationContext(pcId);
     context.setResult(PresentationContextResult.Accept, TransferSyntax.ExplicitVRLittleEndian);
 

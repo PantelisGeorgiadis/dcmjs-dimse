@@ -1,22 +1,28 @@
-const {
+import {
   RejectResult,
   RejectSource,
   RejectReason,
   AbortSource,
   AbortReason,
   TransferSyntax,
-} = require('./Constants');
+} from './Constants';
 
-const { SmartBuffer } = require('smart-buffer');
+import { SmartBuffer } from 'smart-buffer';
+import { Association } from './Association';
 
 //#region RawPdu
 class RawPdu {
+  m16: number[];
+  m32: number[];
+  buffer: SmartBuffer;
+  type: number;
+
   /**
    * Creates an instance of Pdu for reading or writing PDUs.
    * @constructor
    * @param {Number|Buffer} typeOrBuffer - Type of PDU or PDU Buffer.
    */
-  constructor(typeOrBuffer) {
+  constructor(typeOrBuffer: number | Buffer) {
     this.m16 = [];
     this.m32 = [];
 
@@ -37,7 +43,7 @@ class RawPdu {
    * @method
    * @returns {number} PDU type.
    */
-  getType() {
+  getType(): number {
     return this.type;
   }
 
@@ -46,7 +52,7 @@ class RawPdu {
    * @method
    * @returns {number} PDU length.
    */
-  getLength() {
+  getLength(): number {
     return this.buffer.length;
   }
 
@@ -55,7 +61,7 @@ class RawPdu {
    * @method
    * @returns {string} PDU description.
    */
-  toString() {
+  toString(): string {
     return `PDU [type=${this.getType()}, length=${this.getLength()}]`;
   }
 
@@ -84,7 +90,7 @@ class RawPdu {
    * @method
    * @returns {Buffer} PDU buffer with type and length.
    */
-  writePdu() {
+  writePdu(): Buffer {
     const outBuffer = SmartBuffer.fromOptions({
       encoding: 'ascii',
     });
@@ -108,7 +114,7 @@ class RawPdu {
    * @param {string} name - Field name to read.
    * @throws Error if bytes to read are exceeding buffer length.
    */
-  checkOffset(bytes, name) {
+  checkOffset(bytes: number, name: string) {
     const offset = this.buffer.readOffset;
     const length = this.buffer.length;
     if (offset + bytes > length) {
@@ -125,7 +131,7 @@ class RawPdu {
    * @param {string} name - Field name to read.
    * @returns {number} Read byte.
    */
-  readByte(name) {
+  readByte(name: string): number {
     this.checkOffset(1, name);
     return this.buffer.readUInt8();
   }
@@ -137,7 +143,7 @@ class RawPdu {
    * @param {number} count - Number of bytes to read.
    * @returns {Buffer} Read bytes in a buffer.
    */
-  readBytes(name, count) {
+  readBytes(name: string, count: number): Buffer {
     this.checkOffset(count, name);
     return this.buffer.readBuffer(count);
   }
@@ -148,7 +154,7 @@ class RawPdu {
    * @param {string} name - Field name to read.
    * @returns {number} Read unsigned short.
    */
-  readUInt16(name) {
+  readUInt16(name: string): number {
     this.checkOffset(2, name);
     return this.buffer.readUInt16BE();
   }
@@ -159,7 +165,7 @@ class RawPdu {
    * @param {string} name - Field name to read.
    * @returns {number} Read unsigned int.
    */
-  readUInt32(name) {
+  readUInt32(name: string): number {
     this.checkOffset(4, name);
     return this.buffer.readUInt32BE();
   }
@@ -171,8 +177,9 @@ class RawPdu {
    * @param {number} count - Number of bytes to read.
    * @returns {string} Read string.
    */
-  readString(name, count) {
+  readString(name: string, count: number): string {
     const bytes = this.readBytes(name, count);
+    // eslint-disable-next-line prefer-spread
     return this._trim(String.fromCharCode.apply(String, bytes), [' ', '\0']);
   }
 
@@ -182,7 +189,7 @@ class RawPdu {
    * @param {string} name - Field name to skip.
    * @param {number} count - Number of bytes to skip.
    */
-  skipBytes(name, count) {
+  skipBytes(name: string, count: number) {
     this.checkOffset(count, name);
     this.buffer.readOffset += count;
   }
@@ -195,7 +202,7 @@ class RawPdu {
    * @param {string} name - Field name to write.
    * @param {number} value - Byte value.
    */
-  writeByte(name, value) {
+  writeByte(name: string, value: number) {
     this.buffer.writeUInt8(value);
   }
 
@@ -206,7 +213,7 @@ class RawPdu {
    * @param {number} value - Byte value.
    * @param {number} count - Number of times to write PDU value.
    */
-  writeByteMultiple(name, value, count) {
+  writeByteMultiple(name: string, value: number, count: number) {
     for (let i = 0; i < count; i++) {
       this.writeByte(name, value);
     }
@@ -218,7 +225,7 @@ class RawPdu {
    * @param {string} name - Field name to write.
    * @param {Buffer} value - Byte values.
    */
-  writeBytes(name, value) {
+  writeBytes(name: string, value: Buffer) {
     this.buffer.writeBuffer(value);
   }
 
@@ -228,7 +235,7 @@ class RawPdu {
    * @param {string} name - Field name to write.
    * @param {number} value - Unsigned short value.
    */
-  writeUInt16(name, value) {
+  writeUInt16(name: string, value: number) {
     this.buffer.writeUInt16BE(value);
   }
 
@@ -238,7 +245,7 @@ class RawPdu {
    * @param {string} name - Field name to write.
    * @param {number} value - Unsigned int value.
    */
-  writeUInt32(name, value) {
+  writeUInt32(name: string, value: number) {
     this.buffer.writeUInt32BE(value);
   }
 
@@ -248,7 +255,7 @@ class RawPdu {
    * @param {string} name - Field name to write.
    * @param {string} value - String value.
    */
-  writeString(name, value) {
+  writeString(name: string, value: string) {
     for (let i = 0, len = value.length; i < len; ++i) {
       this.buffer.writeUInt8(value.charCodeAt(i));
     }
@@ -262,7 +269,7 @@ class RawPdu {
    * @param {number} count - Number of characters to write.
    * @param {string} pad - Padding character.
    */
-  writeStringWithPadding(name, value, count, pad) {
+  writeStringWithPadding(name: string, value: string, count: number, pad: string) {
     this.writeString(name, value.padEnd(count, pad));
   }
 
@@ -272,7 +279,7 @@ class RawPdu {
    * @param {string} name - Field name.
    */
   // eslint-disable-next-line no-unused-vars
-  markLength16(name) {
+  markLength16(name: string) {
     this.m16.push(this.buffer.writeOffset);
     this.buffer.writeUInt16BE(0);
   }
@@ -295,7 +302,7 @@ class RawPdu {
    * @param {string} name - Field name.
    */
   // eslint-disable-next-line no-unused-vars
-  markLength32(name) {
+  markLength32(name: string) {
     this.m32.push(this.buffer.writeOffset);
     this.buffer.writeUInt32BE(0);
   }
@@ -322,7 +329,7 @@ class RawPdu {
    * @param {Array<string>} chars - The characters to trim from string.
    * @returns {string} Trimmed string.
    */
-  _trim(str, chars) {
+  _trim(str: string, chars: Array<string>): string {
     let start = 0;
     let end = str.length;
     while (start < end && chars.indexOf(str[start]) >= 0) {
@@ -340,12 +347,13 @@ class RawPdu {
 
 //#region AAssociateRQ
 class AAssociateRQ {
+  association: Association;
   /**
    * Creates an instance of AAssociateRQ.
    * @constructor
    * @param {Association} association - Association information.
    */
-  constructor(association) {
+  constructor(association: Association) {
     this.association = association;
   }
 
@@ -354,7 +362,7 @@ class AAssociateRQ {
    * @method
    * @returns {Association} Association information.
    */
-  getAssociation() {
+  getAssociation(): Association {
     return this.association;
   }
 
@@ -363,7 +371,7 @@ class AAssociateRQ {
    * @method
    * @returns {RawPdu} PDU.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x01);
 
     pdu.writeUInt16('Version', 0x0001);
@@ -444,7 +452,7 @@ class AAssociateRQ {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     let l = pdu.getLength() - 6;
 
     pdu.readUInt16('Version');
@@ -508,12 +516,13 @@ class AAssociateRQ {
 
 //#region AAssociateAC
 class AAssociateAC {
+  association: Association;
   /**
    * Creates an instance of AAssociateAC.
    * @constructor
    * @param {Association} association - Association information.
    */
-  constructor(association) {
+  constructor(association: Association) {
     this.association = association;
   }
 
@@ -522,7 +531,7 @@ class AAssociateAC {
    * @method
    * @returns {Association} Association information.
    */
-  getAssociation() {
+  getAssociation(): Association {
     return this.association;
   }
 
@@ -531,7 +540,7 @@ class AAssociateAC {
    * @method
    * @returns {RawPdu} PDU.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x02);
 
     pdu.writeUInt16('Version', 0x0001);
@@ -608,7 +617,7 @@ class AAssociateAC {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     let l = pdu.getLength() - 6;
 
     pdu.readUInt16('Version');
@@ -691,15 +700,19 @@ class AAssociateAC {
 
 //#region AAssociateRJ
 class AAssociateRJ {
+  result: RejectResult;
+  source: number;
+  reason: any;
+
   /**
    * Creates an instance of AAssociateRJ.
    * @constructor
-   * @param {number} [result] - Rejection result.
-   * @param {number} [source] - Rejection source.
-   * @param {number} [source] - Rejection reason.
+   * @param {RejectResult} [result] - Rejection result.
+   * @param {RejectSource} [source] - Rejection source.
+   * @param {RejectReason} [reason] - Rejection reason.
    */
-  constructor(result, source, reason) {
-    this.result = result || RejectResult.Permanent;
+  constructor(result?: RejectResult, source?: RejectSource, reason?: RejectReason) {
+    this.result = result || RejectResult.NotSpecified;
     this.source = source || RejectSource.ServiceUser;
     this.reason = reason || RejectReason.NoReasonGiven;
   }
@@ -709,7 +722,7 @@ class AAssociateRJ {
    * @method
    * @returns {number} Rejection result.
    */
-  getResult() {
+  getResult(): number {
     return this.result;
   }
 
@@ -718,7 +731,7 @@ class AAssociateRJ {
    * @method
    * @returns {number} Rejection source.
    */
-  getSource() {
+  getSource(): number {
     return this.source;
   }
 
@@ -727,7 +740,7 @@ class AAssociateRJ {
    * @method
    * @returns {number} Rejection reason.
    */
-  getReason() {
+  getReason(): number {
     return this.reason;
   }
 
@@ -736,7 +749,7 @@ class AAssociateRJ {
    * @method
    * @returns {RawPdu} PDU.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x03);
 
     pdu.writeByte('Reserved', 0x00);
@@ -751,7 +764,7 @@ class AAssociateRJ {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     pdu.readByte('Reserved');
     this.result = pdu.readByte('Result');
     this.source = pdu.readByte('Source');
@@ -763,17 +776,11 @@ class AAssociateRJ {
 //#region AReleaseRQ
 class AReleaseRQ {
   /**
-   * Creates an instance of AReleaseRQ.
-   * @constructor
-   */
-  constructor() {}
-
-  /**
    * Writes A-RELEASE-RQ to PDU.
    * @method
    * @returns {RawPdu} PDU.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x05);
 
     pdu.writeUInt32('Reserved', 0x00000000);
@@ -785,7 +792,7 @@ class AReleaseRQ {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     pdu.readUInt32('Reserved');
   }
 }
@@ -794,17 +801,11 @@ class AReleaseRQ {
 //#region AReleaseRP
 class AReleaseRP {
   /**
-   * Creates an instance of AReleaseRP.
-   * @constructor
-   */
-  constructor() {}
-
-  /**
    * Writes A-RELEASE-RP to PDU buffer.
    * @method
    * @returns {RawPdu} PDU buffer.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x06);
 
     pdu.writeUInt32('Reserved', 0x00000000);
@@ -816,7 +817,7 @@ class AReleaseRP {
    * @method
    * @param {RawPdu} PDU buffer.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     pdu.readUInt32('Reserved');
   }
 }
@@ -824,15 +825,18 @@ class AReleaseRP {
 
 //#region AAbort
 class AAbort {
+  source: AbortSource;
+  reason: number;
+
   /**
    * Creates an instance of AAbort.
    * @constructor
-   * @param {number} [source] - Rejection source.
+   * @param {AbortSource} [source] - Rejection source.
    * @param {number} [reason] - Rejection reason.
    */
-  constructor(source, reason) {
+  constructor(source?: AbortSource, reason?: number) {
     this.source = source || AbortSource.ServiceUser;
-    this.reason = reason || AbortReason.NotSpecified;
+    this.reason = reason || AbortReason.Unknown;
   }
 
   /**
@@ -840,7 +844,7 @@ class AAbort {
    * @method
    * @returns {number} Abort source.
    */
-  getSource() {
+  getSource(): number {
     return this.source;
   }
 
@@ -849,7 +853,7 @@ class AAbort {
    * @method
    * @returns {number} Abort reason.
    */
-  getReason() {
+  getReason(): number {
     return this.reason;
   }
 
@@ -858,7 +862,7 @@ class AAbort {
    * @method
    * @returns {RawPdu} PDU.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x07);
 
     pdu.writeByte('Reserved', 0x00);
@@ -874,7 +878,7 @@ class AAbort {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     pdu.readByte('Reserved');
     pdu.readByte('Reserved');
     this.source = pdu.readByte('Source');
@@ -885,15 +889,20 @@ class AAbort {
 
 //#region Pdv
 class Pdv {
+  pcId: number;
+  value: Buffer;
+  command: boolean;
+  last: boolean;
+
   /**
    * Creates an instance of Pdv.
    * @constructor
-   * @param {number} pcId - Presentation context ID.
-   * @param {Buffer} value - PDV data.
-   * @param {boolean} command - Is command.
-   * @param {boolean} last - Is last fragment of command or data.
+   * @param {number} [pcId] - Presentation context ID.
+   * @param {Buffer} [value] - PDV data.
+   * @param {boolean} [command] - Is command.
+   * @param {boolean} [last] - Is last fragment of command or data.
    */
-  constructor(pcId, value, command, last) {
+  constructor(pcId?: number, value?: Buffer, command?: boolean, last?: boolean) {
     this.pcId = pcId;
     this.value = value;
     this.command = command;
@@ -905,7 +914,7 @@ class Pdv {
    * @method
    * @returns {number} Presentation context ID.
    */
-  getPresentationContextId() {
+  getPresentationContextId(): number {
     return this.pcId;
   }
 
@@ -915,7 +924,7 @@ class Pdv {
    * @returns {Buffer} PDV data.
    */
 
-  getValue() {
+  getValue(): Buffer {
     return this.value;
   }
 
@@ -924,7 +933,7 @@ class Pdv {
    * @method
    * @returns {boolean} Is command.
    */
-  isCommand() {
+  isCommand(): boolean {
     return this.command;
   }
 
@@ -933,7 +942,7 @@ class Pdv {
    * @method
    * @returns {boolean} Is last fragment.
    */
-  isLastFragment() {
+  isLastFragment(): boolean {
     return this.last;
   }
 
@@ -942,7 +951,7 @@ class Pdv {
    * @method
    * @returns {number} PDV length.
    */
-  getLength() {
+  getLength(): number {
     return this.value.length + 6;
   }
 
@@ -951,7 +960,7 @@ class Pdv {
    * @method
    * @param {RawPdu} PDU.
    */
-  write(pdu) {
+  write(pdu: RawPdu) {
     const mch = (this.last ? 2 : 0) + (this.command ? 1 : 0);
     pdu.markLength32('PDV-Length');
     pdu.writeByte('Presentation Context ID', this.pcId);
@@ -965,7 +974,7 @@ class Pdv {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     const len = pdu.readUInt32('PDV-Length');
     this.pcId = pdu.readByte('Presentation Context ID');
     const mch = pdu.readByte('Message Control Header');
@@ -980,6 +989,8 @@ class Pdv {
 
 //#region PDataTF
 class PDataTF {
+  pdvs: Pdv[];
+
   /**
    * Creates an instance of PDataTF.
    * @constructor
@@ -993,7 +1004,7 @@ class PDataTF {
    * @method
    * @returns {Array<Pdv>} PDVs in this P-DATA-TF.
    */
-  getPdvs() {
+  getPdvs(): Array<Pdv> {
     return this.pdvs;
   }
 
@@ -1002,7 +1013,7 @@ class PDataTF {
    * @method
    * @returns {number} PDV count.
    */
-  getPdvCount() {
+  getPdvCount(): number {
     return this.pdvs.length;
   }
 
@@ -1011,7 +1022,7 @@ class PDataTF {
    * @method
    * @param {Pdv} pdv - PDV.
    */
-  addPdv(pdv) {
+  addPdv(pdv: Pdv) {
     return this.pdvs.push(pdv);
   }
 
@@ -1028,7 +1039,7 @@ class PDataTF {
    * @method
    * @returns {number} Length of PDVs.
    */
-  getLengthOfPdvs() {
+  getLengthOfPdvs(): number {
     let len = 0;
     this.pdvs.forEach((pdv) => {
       len += pdv.getLength();
@@ -1041,7 +1052,7 @@ class PDataTF {
    * @method
    * @returns {RawPdu} PDU.
    */
-  write() {
+  write(): RawPdu {
     const pdu = new RawPdu(0x04);
     this.pdvs.forEach((pdv) => {
       pdv.write(pdu);
@@ -1054,7 +1065,7 @@ class PDataTF {
    * @method
    * @param {RawPdu} PDU.
    */
-  read(pdu) {
+  read(pdu: RawPdu) {
     const len = pdu.getLength();
     let read = 0;
     while (read < len) {
@@ -1067,7 +1078,7 @@ class PDataTF {
 //#endregion
 
 //#region Exports
-module.exports = {
+export {
   RawPdu,
   AAssociateRQ,
   AAssociateAC,

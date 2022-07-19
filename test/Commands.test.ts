@@ -1,4 +1,4 @@
-const {
+import {
   Command,
   Request,
   Response,
@@ -24,19 +24,14 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
-} = require('./../src/Command');
-const Dataset = require('../src/Dataset');
-const {
-  CommandFieldType,
-  Priority,
-  SopClass,
-  Status,
-  TransferSyntax,
-} = require('./../src/Constants');
+} from '../src/Command';
+import Dataset from '../src/Dataset';
+import { CommandFieldType, Priority, SopClass, Status, TransferSyntax } from '../src/Constants';
 
-const chai = require('chai');
+import { expect as _expect } from 'chai';
+import { describe, it } from 'mocha';
 
-const expect = chai.expect;
+const expect = _expect;
 
 describe('Command', () => {
   it('should correctly create a command', () => {
@@ -56,7 +51,7 @@ describe('Command', () => {
 
   it('should correctly create a request', () => {
     const uid = Dataset.generateDerivedUid();
-    const request = new Request(1, uid, 2, true);
+    const request = new Request(1, uid, true);
     const commandDataset = request.getCommandDataset();
 
     expect(request.getAffectedSopClassUid()).to.be.eq(uid);

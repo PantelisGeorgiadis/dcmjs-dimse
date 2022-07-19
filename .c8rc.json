@@ -1,8 +1,17 @@
 {
-  "reporter": ["text", "html"],
+  "reporter": [
+    "text",
+    "html"
+  ],
   "clean": true,
-  "include": ["src/*.js"],
-  "exclude": ["src/index.js", "src/version.js", "src/log.js"],
+  "include": [
+    "src/*.ts"
+  ],
+  "exclude": [
+    "src/index.js",
+    "src/version.js",
+    "src/log.js"
+  ],
   "check-coverage": true,
   "lines": 80,
   "functions": 80,

@@ -1,9 +1,9 @@
-const { PresentationContext, Association } = require('./Association');
-const Dataset = require('./Dataset');
-const Implementation = require('./Implementation');
-const Client = require('./Client');
-const { Server, Scp } = require('./Server');
-const {
+import { PresentationContext, Association } from './Association';
+import Dataset from './Dataset';
+import Implementation from './Implementation';
+import Client from './Client';
+import { Server, Scp } from './Server';
+import {
   CEchoRequest,
   CEchoResponse,
   CFindRequest,
@@ -26,8 +26,8 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
-} = require('./Command');
-const {
+} from './Command';
+import {
   CommandFieldType,
   PresentationContextResult,
   AbortSource,
@@ -41,9 +41,9 @@ const {
   StorageClass,
   SopClass,
   TransferSyntax,
-} = require('./Constants');
-const log = require('./log');
-const version = require('./version');
+} from './Constants';
+import log from './log';
+import version from './version';
 
 //#region association
 const association = {
@@ -114,8 +114,13 @@ const DcmjsDimse = {
   constants,
   log,
   version,
+
+  ...association,
+  ...requests,
+  ...responses,
+  ...constants,
 };
 
 //#region Exports
-module.exports = DcmjsDimse;
+export default DcmjsDimse;
 //#endregion
