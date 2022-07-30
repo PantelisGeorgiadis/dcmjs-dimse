@@ -97,7 +97,7 @@ class PresentationContext {
   /**
    * Gets the accepted transfer syntax UID.
    * @method
-   * @returns {string} Transfer syntax UID.
+   * @returns {string|undefined} Accepted transfer syntax UID or undefined.
    */
   getAcceptedTransferSyntaxUid() {
     return this.transferSyntaxes.length > 0 ? this.transferSyntaxes[0] : undefined;
@@ -116,7 +116,7 @@ class PresentationContext {
    * Sets the presentation context result.
    * @method
    * @param {number} result - Result.
-   * @param {string} acceptedTransferSyntax - Accepted transfer syntax UID.
+   * @param {string} [acceptedTransferSyntax] - Accepted transfer syntax UID.
    */
   setResult(result, acceptedTransferSyntaxUid) {
     this.result = result;
@@ -434,6 +434,7 @@ class Association {
   /**
    * Gets accepted presentation context from request.
    * @method
+   * @param {Request} request - Request.
    * @return {PresentationContext} Presentation context.
    */
   getAcceptedPresentationContextFromRequest(request) {

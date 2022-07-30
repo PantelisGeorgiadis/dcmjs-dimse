@@ -94,12 +94,12 @@ class Command {
 
     if (includeCommandDataset) {
       str.push('DIMSE Command Dataset:');
-      str.push('===============================================');
+      str.push('='.repeat(50));
       str.push(JSON.stringify(this.commandDataset.getElements()));
     }
     if (includeDataset && this.dataset) {
       str.push('DIMSE Dataset:');
-      str.push('===============================================');
+      str.push('='.repeat(50));
       str.push(JSON.stringify(this.dataset.getElements()));
     }
 

@@ -50,6 +50,10 @@ module.exports = {
       }),
     ],
   },
+  externals: Object.keys(pkg.dependencies).reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+  }, new Object()),
   plugins: [
     new BannerPlugin({
       banner: getBanner(),

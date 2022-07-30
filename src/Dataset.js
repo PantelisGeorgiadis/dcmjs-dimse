@@ -200,7 +200,7 @@ class Dataset {
   toString() {
     const str = [];
     str.push('Dataset:');
-    str.push('===============================================');
+    str.push('='.repeat(50));
     str.push(JSON.stringify(this.getElements()));
 
     return str.join('\n');
@@ -244,7 +244,7 @@ class Dataset {
       transferSyntaxUid === TransferSyntax.ImplicitVRLittleEndian
         ? TransferSyntax.ImplicitVRLittleEndian
         : TransferSyntax.ExplicitVRLittleEndian;
-    const denaturalizedDataset = DicomMessage.read(stream, syntaxLengthTypeToDecode, true);
+    const denaturalizedDataset = DicomMessage._read(stream, syntaxLengthTypeToDecode, true);
 
     return DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
   }
