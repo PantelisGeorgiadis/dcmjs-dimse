@@ -224,6 +224,10 @@ class Network extends AsyncEventEmitter {
       }
       const context = this.association.getAcceptedPresentationContextFromRequest(request);
       if (context) {
+        // Lazy load the datasets to store
+        if (request instanceof CStoreRequest) {
+          request.loadFullDatasetIfNeeded();
+        }
         request.setMessageId(this._getNextMessageId());
         this.pending.push(request);
         const dimse = { context, command: request };

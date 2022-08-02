@@ -887,10 +887,16 @@ class CStoreRequest extends Request {
       return;
     }
     if (typeof datasetOrFile === 'string' || datasetOrFile instanceof String) {
-      const dataset = Dataset.fromFile(datasetOrFile);
+      const dataset = Dataset.fromFile(datasetOrFile, undefined, {
+        untilTag: '00080018', // SOPInstanceUID
+        includeUntilTagValue: true,
+      });
       this.setAffectedSopClassUid(dataset.getElement('SOPClassUID'));
       this.setAffectedSopInstanceUid(dataset.getElement('SOPInstanceUID'));
       this.setDataset(dataset);
+
+      this.needsFullDatasetLoading = true;
+      this.datasetOrFile = datasetOrFile;
     }
   }
 
@@ -912,6 +918,22 @@ class CStoreRequest extends Request {
   setPriority(priority) {
     const command = this.getCommandDataset();
     command.setElement('Priority', priority);
+  }
+
+  /**
+   * Loads the full dataset when, during the command construction,
+   * only the minimum necessary tags were loaded (e.g. loaded from file).
+   * @method
+   */
+  loadFullDatasetIfNeeded() {
+    if (
+      this.needsFullDatasetLoading !== undefined &&
+      this.needsFullDatasetLoading === true &&
+      this.datasetOrFile !== undefined &&
+      this.datasetOrFile.trim() !== ''
+    ) {
+      this.setDataset(Dataset.fromFile(this.datasetOrFile));
+    }
   }
 }
 //#endregion

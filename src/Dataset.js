@@ -123,21 +123,22 @@ class Dataset {
    * @param {string} path - P10 file path.
    * @param {function(Error, Dataset)} [callback] - P10 file reading callback function.
    * If this is not provided, the function runs synchronously.
+   * @param {object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
    * @returns {Dataset|undefined} Dataset or undefined, if the function runs asynchronously.
    */
-  static fromFile(path, callback) {
+  static fromFile(path, callback, readOptions) {
     if (callback !== undefined && callback instanceof Function) {
       fs.readFile(path, (error, fileBuffer) => {
         if (error) {
           callback(error, undefined);
           return;
         }
-        callback(undefined, this._fromP10Buffer(fileBuffer));
+        callback(undefined, this._fromP10Buffer(fileBuffer, readOptions));
       });
       return;
     }
 
-    return this._fromP10Buffer(fs.readFileSync(path));
+    return this._fromP10Buffer(fs.readFileSync(path), readOptions);
   }
 
   /**
@@ -148,8 +149,7 @@ class Dataset {
    * If this is not provided, the function runs synchronously.
    * @param {Object} [nameMap] - Additional DICOM tags to recognize when denaturalizing the
    * dataset. Can be used to support writing private fields/tags.
-   * @param {object} [writeOptions] - The write options to pass through to
-   * `DicomDict.write()`. Optional.
+   * @param {object} [writeOptions] - The write options to pass through to `DicomDict.write()`.
    */
   toFile(path, callback, nameMap, writeOptions) {
     const elements = {
@@ -212,12 +212,17 @@ class Dataset {
    * @method
    * @private
    * @param {Buffer} buffer - p10 buffer.
+   * @param {object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
    * @returns {Dataset} Dataset.
    */
-  static _fromP10Buffer(buffer) {
+  static _fromP10Buffer(buffer, readOptions) {
+    readOptions = readOptions || {};
+    const baseOptions = { ignoreErrors: true };
+    readOptions = { ...baseOptions, ...readOptions };
+
     const dicomDict = DicomMessage.readFile(
       buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-      { ignoreErrors: true }
+      readOptions
     );
     const meta = DicomMetaDictionary.naturalizeDataset(dicomDict.meta);
     const transferSyntaxUid = meta.TransferSyntaxUID;
