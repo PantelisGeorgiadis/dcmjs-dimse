@@ -54,7 +54,7 @@ Object.freeze(PresentationContextResult);
  */
 const AbortSource = {
   ServiceUser: 0,
-  Reserved: 1,
+  Unknown: 1,
   ServiceProvider: 2,
 };
 Object.freeze(AbortSource);
@@ -66,9 +66,12 @@ Object.freeze(AbortSource);
  * @constant {Object}
  */
 const AbortReason = {
-  Unknown: 0,
-  ServiceUser: 1,
-  ServiceProvider: 2,
+  NotSpecified: 0,
+  UnrecognizedPdu: 1,
+  UnexpectedPdu: 2,
+  UnrecognizedPduParameter: 4,
+  UnexpectedPduParameter: 5,
+  InvalidPduParameter: 6,
 };
 Object.freeze(AbortReason);
 //#endregion
@@ -79,12 +82,8 @@ Object.freeze(AbortReason);
  * @constant {Object}
  */
 const RejectResult = {
-  NotSpecified: 0,
-  UnrecognizedPdu: 1,
-  UnexpectedPdu: 2,
-  UnrecognizedPduParameter: 4,
-  UnexpectedPduParameter: 5,
-  InvalidPduParameter: 6,
+  Permanent: 1,
+  Transient: 2,
 };
 Object.freeze(RejectResult);
 //#endregion
@@ -108,13 +107,14 @@ Object.freeze(RejectSource);
  * @constant {Object}
  */
 const RejectReason = {
-  // Service user
   NoReasonGiven: 1,
+  // Service user
   ApplicationContextNotSupported: 2,
   CallingAeNotRecognized: 3,
   CalledAeNotRecognized: 7,
-  // Service provider
-  ProtocolVersionNotSupported: 1,
+  // Service provider - ACSE
+  ProtocolVersionNotSupported: 2,
+  // Service provider - Presentation
   TemporaryCongestion: 1,
   LocalLimitExceeded: 2,
 };

@@ -43,6 +43,7 @@ const log = require('./log');
 
 const AsyncEventEmitter = require('async-eventemitter');
 const { SmartBuffer } = require('smart-buffer');
+const { EOL } = require('os');
 
 //#region Network
 class Network extends AsyncEventEmitter {
@@ -93,7 +94,7 @@ class Network extends AsyncEventEmitter {
     const rqPdu = rq.write();
 
     this.logId = this.association.getCalledAeTitle();
-    log.info(`${this.logId} -> Association request:\n${this.association.toString()}`);
+    log.info(`${this.logId} -> Association request:${EOL}${this.association.toString()}`);
     this._sendPdu(rqPdu);
   }
 
@@ -111,7 +112,7 @@ class Network extends AsyncEventEmitter {
     const rq = new AAssociateAC(this.association);
     const rqPdu = rq.write();
 
-    log.info(`${this.logId} -> Association accept:\n${this.association.toString()}`);
+    log.info(`${this.logId} -> Association accept:${EOL}${this.association.toString()}`);
     this._sendPdu(rqPdu);
   }
 
@@ -126,11 +127,7 @@ class Network extends AsyncEventEmitter {
     const rq = new AAssociateRJ(result, source, reason);
     const rqPdu = rq.write();
 
-    log.info(
-      `${
-        this.logId
-      } -> Association reject [result: ${rq.getResult()}; source: ${rq.getSource()}; reason: ${rq.getReason()}]`
-    );
+    log.info(`${this.logId} -> Association reject ${rq.toString()}`);
     this._sendPdu(rqPdu);
   }
 
@@ -168,7 +165,7 @@ class Network extends AsyncEventEmitter {
     const rq = new AAbort(source, reason);
     const rqPdu = rq.write();
 
-    log.info(`${this.logId} -> Abort [source: ${rq.getSource()}; reason: ${rq.getReason()}]`);
+    log.info(`${this.logId} -> Abort ${rq.toString()}`);
     this._sendPdu(rqPdu);
   }
 
@@ -358,7 +355,7 @@ class Network extends AsyncEventEmitter {
           const pdu = new AAssociateRQ(this.association);
           pdu.read(raw);
           this.logId = this.association.getCallingAeTitle();
-          log.info(`${this.logId} <- Association request:\n${this.association.toString()}`);
+          log.info(`${this.logId} <- Association request:${EOL}${this.association.toString()}`);
           this.emit('associationRequested', this.association);
           break;
         }
@@ -366,18 +363,14 @@ class Network extends AsyncEventEmitter {
           const pdu = new AAssociateAC(this.association);
           pdu.read(raw);
           this.logId = this.association.getCalledAeTitle();
-          log.info(`${this.logId} <- Association accept:\n${this.association.toString()}`);
+          log.info(`${this.logId} <- Association accept:${EOL}${this.association.toString()}`);
           this.emit('associationAccepted', this.association);
           break;
         }
         case 0x03: {
           const pdu = new AAssociateRJ();
           pdu.read(raw);
-          log.info(
-            `${
-              this.logId
-            } <- Association reject [result: ${pdu.getResult()}, source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
-          );
+          log.info(`${this.logId} <- Association reject ${pdu.toString()}`);
           this.emit('associationRejected', {
             result: pdu.getResult(),
             source: pdu.getSource(),
@@ -408,12 +401,11 @@ class Network extends AsyncEventEmitter {
         case 0x07: {
           const pdu = new AAbort();
           pdu.read(raw);
-          log.info(
-            `${
-              this.logId
-            } <- Association abort [source: ${pdu.getSource()}, reason: ${pdu.getReason()}]`
-          );
-          this.emit('abort');
+          log.info(`${this.logId} <- Association abort ${pdu.toString()}`);
+          this.emit('abort', {
+            source: pdu.getSource(),
+            reason: pdu.getReason(),
+          });
           break;
         }
         case 0xff: {

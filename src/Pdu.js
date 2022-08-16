@@ -8,6 +8,7 @@ const {
 } = require('./Constants');
 
 const { SmartBuffer } = require('smart-buffer');
+const { EOL } = require('os');
 
 //#region RawPdu
 class RawPdu {
@@ -48,15 +49,6 @@ class RawPdu {
    */
   getLength() {
     return this.buffer.length;
-  }
-
-  /**
-   * Gets the PDU description.
-   * @method
-   * @returns {string} PDU description.
-   */
-  toString() {
-    return `PDU [type=${this.getType()}, length=${this.getLength()}]`;
   }
 
   /**
@@ -113,7 +105,7 @@ class RawPdu {
     const length = this.buffer.length;
     if (offset + bytes > length) {
       throw new Error(
-        `${toString()} (length=${length}, offset=${offset}, bytes=${bytes}, field=${name}) Requested offset out of range!`
+        `${this.toString()} [length: ${length}, offset: ${offset}, bytes: ${bytes}, field: ${name}] Requested offset out of range!`
       );
     }
   }
@@ -311,6 +303,15 @@ class RawPdu {
     this.buffer.writeUInt32BE(p2 - p1 - 4);
     this.buffer.writeOffset = p2;
   }
+
+  /**
+   * Gets the PDU description.
+   * @method
+   * @returns {string} PDU description.
+   */
+  toString() {
+    return `(PDU) [type: ${this.getType()}, length: ${this.getLength()}]`;
+  }
   //#endregion
 
   //#region Private Methods
@@ -503,6 +504,15 @@ class AAssociateRQ {
       }
     }
   }
+
+  /**
+   * Gets the A-ASSOCIATE-RQ description.
+   * @method
+   * @returns {string} A-ASSOCIATE-RQ description.
+   */
+  toString() {
+    return `(A-ASSOCIATE-RQ)${EOL}${this.association.toString()}`;
+  }
 }
 //#endregion
 
@@ -686,6 +696,15 @@ class AAssociateAC {
       }
     }
   }
+
+  /**
+   * Gets the A-ASSOCIATE-AC description.
+   * @method
+   * @returns {string} A-ASSOCIATE-AC description.
+   */
+  toString() {
+    return `(A-ASSOCIATE-AC)${EOL}${this.association.toString()}`;
+  }
 }
 //#endregion
 
@@ -696,7 +715,7 @@ class AAssociateRJ {
    * @constructor
    * @param {number} [result] - Rejection result.
    * @param {number} [source] - Rejection source.
-   * @param {number} [source] - Rejection reason.
+   * @param {number} [reason] - Rejection reason.
    */
   constructor(result, source, reason) {
     this.result = result || RejectResult.Permanent;
@@ -746,6 +765,7 @@ class AAssociateRJ {
 
     return pdu;
   }
+
   /**
    * Reads A-ASSOCIATE-RJ from PDU.
    * @method
@@ -757,6 +777,105 @@ class AAssociateRJ {
     this.source = pdu.readByte('Source');
     this.reason = pdu.readByte('Reason');
   }
+
+  /**
+   * Gets the A-ASSOCIATE-RJ description.
+   * @method
+   * @returns {string} A-ASSOCIATE-RJ description.
+   */
+  toString() {
+    return `(A-ASSOCIATE-RJ) [result: ${this._resultToString(
+      this.getResult()
+    )}, source: ${this._sourceToString(this.getSource())}, reason: ${this._reasonToString(
+      this.getSource(),
+      this.getReason()
+    )}]`;
+  }
+
+  //#region Private Methods
+  /**
+   * Returns a readable string from rejection result.
+   * @method
+   * @private
+   * @param {number} result - Rejection result.
+   * @returns {string} Readable string.
+   */
+  _resultToString(result) {
+    switch (result) {
+      case RejectResult.Permanent:
+        return 'Permanent';
+      case RejectResult.Transient:
+        return 'Transient';
+      default:
+        return `${result}`;
+    }
+  }
+
+  /**
+   * Returns a readable string from rejection source.
+   * @method
+   * @private
+   * @param {number} source - Rejection source.
+   * @returns {string} Readable string.
+   */
+  _sourceToString(source) {
+    switch (source) {
+      case RejectSource.ServiceUser:
+        return 'Service user';
+      case RejectSource.ServiceProviderAcse:
+        return 'Service provider (ACSE)';
+      case RejectSource.ServiceProviderPresentation:
+        return 'Service provider (Presentation)';
+      default:
+        return `${source}`;
+    }
+  }
+
+  /**
+   * Returns a readable string from rejection reason.
+   * @method
+   * @private
+   * @param {number} source - Rejection source.
+   * @param {number} reason - Rejection reason.
+   * @returns {string} Readable string.
+   */
+  _reasonToString(source, reason) {
+    if (source === RejectSource.ServiceUser) {
+      switch (reason) {
+        case RejectReason.NoReasonGiven:
+          return 'No reason given';
+        case RejectReason.ApplicationContextNotSupported:
+          return 'Application context name not supported';
+        case RejectReason.CallingAeNotRecognized:
+          return 'Calling AE title not recognized';
+        case RejectReason.CalledAeNotRecognized:
+          return 'Called AE title not recognized';
+        default:
+          return `${reason}`;
+      }
+    } else if (source === RejectSource.ServiceProviderAcse) {
+      switch (reason) {
+        case RejectReason.NoReasonGiven:
+          return 'No reason given';
+        case RejectReason.ProtocolVersionNotSupported:
+          return 'Protocol version not supported';
+        default:
+          return `${reason}`;
+      }
+    } else if (source === RejectSource.ServiceProviderPresentation) {
+      switch (reason) {
+        case RejectReason.TemporaryCongestion:
+          return 'Temporary congestion';
+        case RejectReason.LocalLimitExceeded:
+          return 'Local limit exceeded';
+        default:
+          return `${reason}`;
+      }
+    }
+
+    return `${reason}`;
+  }
+  //#endregion
 }
 //#endregion
 
@@ -788,6 +907,15 @@ class AReleaseRQ {
   read(pdu) {
     pdu.readUInt32('Reserved');
   }
+
+  /**
+   * Gets the A-RELEASE-RQ description.
+   * @method
+   * @returns {string} A-RELEASE-RQ description.
+   */
+  toString() {
+    return '(A-RELEASE-RQ)';
+  }
 }
 //#endregion
 
@@ -818,6 +946,15 @@ class AReleaseRP {
    */
   read(pdu) {
     pdu.readUInt32('Reserved');
+  }
+
+  /**
+   * Gets the A-RELEASE-RP description.
+   * @method
+   * @returns {string} A-RELEASE-RP description.
+   */
+  toString() {
+    return '(A-RELEASE-RP)';
   }
 }
 //#endregion
@@ -880,6 +1017,65 @@ class AAbort {
     this.source = pdu.readByte('Source');
     this.reason = pdu.readByte('Reason');
   }
+
+  /**
+   * Gets the A-ABORT description.
+   * @method
+   * @returns {string} A-ABORT description.
+   */
+  toString() {
+    return `(A-ABORT) [source: ${this._sourceToString(
+      this.getSource()
+    )}, reason: ${this._reasonToString(this.getReason())}]`;
+  }
+
+  //#region Private Methods
+  /**
+   * Returns a readable string from abortion source.
+   * @method
+   * @private
+   * @param {number} source - Abortion source.
+   * @returns {string} Readable string.
+   */
+  _sourceToString(source) {
+    switch (source) {
+      case AbortSource.ServiceUser:
+        return 'Service user';
+      case AbortSource.Unknown:
+        return 'Unknown';
+      case AbortSource.ServiceProvider:
+        return 'Service provider';
+      default:
+        return `${source}`;
+    }
+  }
+
+  /**
+   * Returns a readable string from abortion reason.
+   * @method
+   * @private
+   * @param {number} reason - Abortion reason.
+   * @returns {string} Readable string.
+   */
+  _reasonToString(reason) {
+    switch (reason) {
+      case AbortReason.NotSpecified:
+        return 'Not specified';
+      case AbortReason.UnrecognizedPdu:
+        return 'Unrecognized PDU';
+      case AbortReason.UnexpectedPdu:
+        return 'Unexpected PDU';
+      case AbortReason.UnrecognizedPduParameter:
+        return 'Unrecognized PDU parameter';
+      case AbortReason.UnexpectedPduParameter:
+        return 'Unexpected PDU parameter';
+      case AbortReason.InvalidPduParameter:
+        return 'Invalid PDU parameter';
+      default:
+        return `${reason}`;
+    }
+  }
+  //#endregion
 }
 //#endregion
 
@@ -975,6 +1171,15 @@ class Pdv {
 
     return len + 4;
   }
+
+  /**
+   * Gets the PDV description.
+   * @method
+   * @returns {string} PDV description.
+   */
+  toString() {
+    return `(PDV) [pc: ${this.getPresentationContextId()}, command: ${this.isCommand()}, last: ${this.isLastFragment()}, length: ${this.getLength()}]`;
+  }
 }
 //#endregion
 
@@ -1033,6 +1238,7 @@ class PDataTF {
     this.pdvs.forEach((pdv) => {
       len += pdv.getLength();
     });
+
     return len;
   }
 
@@ -1046,6 +1252,7 @@ class PDataTF {
     this.pdvs.forEach((pdv) => {
       pdv.write(pdu);
     });
+
     return pdu;
   }
 
@@ -1062,6 +1269,15 @@ class PDataTF {
       read += pdv.read(pdu);
       this.pdvs.push(pdv);
     }
+  }
+
+  /**
+   * Gets the P-DATA-TF description.
+   * @method
+   * @returns {string} P-DATA-TF description.
+   */
+  toString() {
+    return `(P-DATA-TF) [PDV count: ${this.getPdvCount()}, PDV length: ${this.getLengthOfPdvs()}]`;
   }
 }
 //#endregion

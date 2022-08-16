@@ -9,6 +9,8 @@ const {
 } = require('./Constants');
 const Implementation = require('./Implementation');
 
+const { EOL } = require('os');
+
 //#region PresentationContext
 class PresentationContext {
   /**
@@ -502,7 +504,7 @@ class Association {
     });
     str.push('');
 
-    return str.join('\n');
+    return str.join(EOL);
   }
 
   //#region Private Methods

@@ -5,6 +5,7 @@ const AsyncEventEmitter = require('async-eventemitter');
 const dcmjs = require('dcmjs');
 const { DicomMetaDictionary } = dcmjs.data;
 const { Mixin } = require('ts-mixer');
+const { EOL } = require('os');
 
 //#region Command
 class Command {
@@ -103,7 +104,7 @@ class Command {
       str.push(JSON.stringify(this.dataset.getElements()));
     }
 
-    return str.join('\n');
+    return str.join(EOL);
   }
 
   //#region Private Methods

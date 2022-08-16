@@ -1,7 +1,8 @@
 const { TransferSyntax, StorageClass } = require('./Constants');
 const Implementation = require('./Implementation');
 
-const fs = require('fs');
+const { readFile, readFileSync, writeFile, writeFileSync } = require('fs');
+const { EOL } = require('os');
 const dcmjs = require('dcmjs');
 const { DicomMetaDictionary, DicomDict, DicomMessage, ReadBufferStream, WriteBufferStream } =
   dcmjs.data;
@@ -128,7 +129,7 @@ class Dataset {
    */
   static fromFile(path, callback, readOptions) {
     if (callback !== undefined && callback instanceof Function) {
-      fs.readFile(path, (error, fileBuffer) => {
+      readFile(path, (error, fileBuffer) => {
         if (error) {
           callback(error, undefined);
           return;
@@ -138,7 +139,7 @@ class Dataset {
       return;
     }
 
-    return this._fromP10Buffer(fs.readFileSync(path), readOptions);
+    return this._fromP10Buffer(readFileSync(path), readOptions);
   }
 
   /**
@@ -176,9 +177,9 @@ class Dataset {
       : DicomMetaDictionary.denaturalizeDataset(elements);
 
     if (callback instanceof Function) {
-      fs.writeFile(path, Buffer.from(dicomDict.write(writeOptions)), callback);
+      writeFile(path, Buffer.from(dicomDict.write(writeOptions)), callback);
     } else {
-      fs.writeFileSync(path, Buffer.from(dicomDict.write(writeOptions)));
+      writeFileSync(path, Buffer.from(dicomDict.write(writeOptions)));
     }
   }
 
@@ -203,7 +204,7 @@ class Dataset {
     str.push('='.repeat(50));
     str.push(JSON.stringify(this.getElements()));
 
-    return str.join('\n');
+    return str.join(EOL);
   }
 
   //#region Private Methods
