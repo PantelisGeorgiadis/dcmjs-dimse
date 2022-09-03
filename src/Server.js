@@ -86,6 +86,9 @@ class Scp extends Network {
     this.on('nSetRequest', (request, callback) => {
       this.nSetRequest(request, callback);
     });
+    this.on('cCancelRequest', (request) => {
+      this.cCancelRequest(request);
+    });
   }
 
   /**
@@ -229,6 +232,16 @@ class Scp extends Network {
   nSetRequest(request, callback) {
     log.error('nSetRequest method must be implemented');
     callback(NSetResponse.fromRequest(request));
+  }
+
+  /**
+   * C-CANCEL request received.
+   * @method
+   * @param {CCancelRequest} request - C-CANCEL request.
+   */
+  // eslint-disable-next-line no-unused-vars
+  cCancelRequest(request) {
+    log.error('cCancelRequest method must be implemented');
   }
 }
 /* c8 ignore stop */
