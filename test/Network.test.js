@@ -24,6 +24,8 @@ const {
   PresentationContextResult,
   Status,
   StorageClass,
+  AbortSource,
+  AbortReason,
 } = require('./../src/Constants');
 const log = require('./../src/log');
 
@@ -217,6 +219,59 @@ class CancelingScp extends Scp {
   }
   cCancelRequest(request) {
     this.cancelation.setCancelation(true);
+  }
+  associationReleaseRequested() {
+    this.sendAssociationReleaseResponse();
+  }
+}
+
+class AbortingScp extends Scp {
+  constructor(socket, opts) {
+    super(socket, opts);
+    this.association = undefined;
+
+    this.abortion = {
+      _aborted: false,
+      _listener: (val) => {},
+      setAbortion(val) {
+        this._aborted = val;
+        this._listener(val);
+      },
+      getAbortion() {
+        return this._aborted;
+      },
+      abortListener: function (listener) {
+        this._listener = listener;
+      },
+    };
+  }
+  associationRequested(association) {
+    this.association = association;
+    const contexts = association.getPresentationContexts();
+    contexts.forEach((c) => {
+      const context = association.getPresentationContext(c.id);
+      if (context.getAbstractSyntaxUid() === SopClass.StudyRootQueryRetrieveInformationModelFind) {
+        context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
+      } else {
+        context.setResult(PresentationContextResult.RejectAbstractSyntaxNotSupported);
+      }
+    });
+    this.sendAssociationAccept();
+  }
+  cFindRequest(request, callback) {
+    this.abortion.abortListener((val) => {
+      if (val === true) {
+        const response = CFindResponse.fromRequest(request);
+        response.setStatus(
+          // Abusively used here just to get feedback on the client that the association was aborted
+          Status.UnrecognizedOperation
+        );
+        callback([response]);
+      }
+    });
+  }
+  abort(source, reason) {
+    this.abortion.setAbortion(true);
   }
   associationReleaseRequested() {
     this.sendAssociationReleaseResponse();
@@ -539,5 +594,32 @@ describe('Network', () => {
       server.close();
     });
     client.send('127.0.0.1', 2110, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should correctly perform and serve an A-ABORT operation', () => {
+    const server = new Server(AbortingScp);
+    server.listen(2111);
+
+    let aborted = false;
+
+    const client = new Client();
+    const request = CFindRequest.createStudyFindRequest({ PatientID: '12345' });
+    request.on('response', (response) => {
+      if (response.getStatus() === Status.UnrecognizedOperation) {
+        aborted = true;
+      }
+    });
+    client.addRequest(request);
+    client.on('associationAccepted', (association) => {
+      // Abort after 500ms from association acceptance,
+      // assuming that the SCP would have received the
+      // C-FIND operation by that time
+      setTimeout(() => client.abort(AbortSource.ServiceUser, AbortReason.InvalidPduParameter), 500);
+    });
+    client.on('closed', () => {
+      expect(aborted).to.be.true;
+      server.close();
+    });
+    client.send('127.0.0.1', 2111, 'CALLINGAET', 'CALLEDAET');
   });
 });

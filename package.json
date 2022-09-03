@@ -39,7 +39,7 @@
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
     "async-eventemitter": "^0.2.4",
-    "dcmjs": "^0.24.9",
+    "dcmjs": "^0.24.10",
     "smart-buffer": "^4.2.0",
     "ts-mixer": "^6.0.1",
     "winston": "^3.8.1"
@@ -57,7 +57,7 @@
     "prettier": "^2.7.1",
     "selfsigned": "^2.0.1",
     "shx": "^0.3.3",
-    "terser-webpack-plugin": "^5.3.4",
+    "terser-webpack-plugin": "^5.3.6",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   }

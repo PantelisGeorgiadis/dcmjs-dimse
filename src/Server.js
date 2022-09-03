@@ -89,6 +89,9 @@ class Scp extends Network {
     this.on('cCancelRequest', (request) => {
       this.cCancelRequest(request);
     });
+    this.on('abort', ({ source, reason }) => {
+      this.abort(source, reason);
+    });
   }
 
   /**
@@ -242,6 +245,17 @@ class Scp extends Network {
   // eslint-disable-next-line no-unused-vars
   cCancelRequest(request) {
     log.error('cCancelRequest method must be implemented');
+  }
+
+  /**
+   * A-ABORT received.
+   * @method
+   * @param {AbortSource} source - Abortion source.
+   * @param {AbortReason} reason - Abortion reason.
+   */
+  // eslint-disable-next-line no-unused-vars
+  abort(source, reason) {
+    log.error('abort method must be implemented');
   }
 }
 /* c8 ignore stop */

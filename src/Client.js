@@ -178,6 +178,21 @@ class Client extends AsyncEventEmitter {
   }
 
   /**
+   * Aborts the established association.
+   * @method
+   * @param {AbortSource} [source] - Abortion source.
+   * @param {AbortReason} [reason] - Abortion reason.
+   * @throws Error if the network has not been initialized.
+   */
+  abort(source, reason) {
+    if (!this.network) {
+      throw new Error('Network has not been initialized');
+    }
+
+    this.network.sendAbort(source, reason);
+  }
+
+  /**
    * Cancels a C-FIND, C-MOVE or C-GET request.
    * @method
    * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
@@ -188,6 +203,7 @@ class Client extends AsyncEventEmitter {
     if (!this.network) {
       throw new Error('Network has not been initialized');
     }
+
     this.network.sendCancel(request);
   }
 }

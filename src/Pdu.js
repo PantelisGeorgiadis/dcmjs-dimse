@@ -964,8 +964,8 @@ class AAbort {
   /**
    * Creates an instance of AAbort.
    * @constructor
-   * @param {number} [source] - Rejection source.
-   * @param {number} [reason] - Rejection reason.
+   * @param {number} [source] - Abortion source.
+   * @param {number} [reason] - Abortion reason.
    */
   constructor(source, reason) {
     this.source = source || AbortSource.ServiceUser;

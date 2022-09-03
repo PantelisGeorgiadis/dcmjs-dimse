@@ -157,20 +157,6 @@ class Network extends AsyncEventEmitter {
   }
 
   /**
-   * Sends abort request.
-   * @method
-   * @param {number} [source] - Rejection source.
-   * @param {number} [reason] - Rejection reason.
-   */
-  sendAbort(source, reason) {
-    const rq = new AAbort(source, reason);
-    const rqPdu = rq.write();
-
-    log.info(`${this.logId} -> Abort ${rq.toString()}`);
-    this._sendPdu(rqPdu);
-  }
-
-  /**
    * Sends requests.
    * @method
    * @param {Array<Request>|Request} requests - Requests to perform.
@@ -194,6 +180,7 @@ class Network extends AsyncEventEmitter {
       );
       return;
     }
+
     const cancelRequest = CCancelRequest.fromRequest(request);
     const context = this.association.getAcceptedPresentationContextFromRequest(cancelRequest);
     if (!context) {
@@ -204,6 +191,25 @@ class Network extends AsyncEventEmitter {
     }
     const dimse = { context, command: cancelRequest };
     this._sendDimse(dimse);
+  }
+
+  /**
+   * Sends abort request.
+   * @method
+   * @param {number} [source] - Abortion source.
+   * @param {number} [reason] - Abortion reason.
+   */
+  sendAbort(source, reason) {
+    if (!this.association) {
+      log.error(`There is no association to perform abort. Skipping...`);
+      return;
+    }
+
+    const rq = new AAbort(source, reason);
+    const rqPdu = rq.write();
+
+    log.info(`${this.logId} -> Abort ${rq.toString()}`);
+    this._sendPdu(rqPdu);
   }
 
   //#region Private Methods
@@ -439,7 +445,7 @@ class Network extends AsyncEventEmitter {
           break;
         }
         default:
-          throw new Error('Unknown PDU type');
+          throw new Error(`Unknown PDU type: ${raw.getType()}`);
       }
     } catch (err) {
       log.error(`${this.logId} -> Error reading PDU [type: ${raw.getType()}]: ${err.message}`);
