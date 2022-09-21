@@ -12,4 +12,5 @@ documentation/
 .gitignore
 .jsdocrc.json
 .c8rc.json
+index.test-d.ts
 webpack.config.js

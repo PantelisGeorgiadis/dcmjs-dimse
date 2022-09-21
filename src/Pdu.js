@@ -15,7 +15,7 @@ class RawPdu {
   /**
    * Creates an instance of Pdu for reading or writing PDUs.
    * @constructor
-   * @param {Number|Buffer} typeOrBuffer - Type of PDU or PDU Buffer.
+   * @param {number|Buffer} typeOrBuffer - Type of PDU or PDU Buffer.
    */
   constructor(typeOrBuffer) {
     this.m16 = [];

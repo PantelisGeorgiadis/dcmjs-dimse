@@ -87,7 +87,7 @@ class PresentationContext {
   }
 
   /**
-   * Checks if transfer syntax UID is present.
+   * Checks whether transfer syntax UID is present.
    * @method
    * @param {string} transferSyntaxUid - Transfer syntax UID.
    * @returns {boolean} Whether transfer syntax UID is present.
@@ -156,6 +156,25 @@ class PresentationContext {
       default:
         return 'Unknown';
     }
+  }
+
+  /**
+   * Gets the presentation context description.
+   * @method
+   * @return {string} Presentation context description.
+   */
+  toString() {
+    const str = [];
+    str.push(
+      `Presentation Context:  ${this.getPresentationContextId()} [${this.getResultDescription()}]`
+    );
+    str.push(`  Abstract:  ${this.getAbstractSyntaxUid()}`);
+    const syntaxes = this.getTransferSyntaxUids();
+    syntaxes.forEach((tx) => {
+      str.push(`      Transfer:  ${tx}`);
+    });
+
+    return str.join(EOL);
   }
 }
 //#endregion
@@ -378,11 +397,11 @@ class Association {
    * Adds presentation context from request.
    * @method
    * @param {Request} request - Request.
-   * @param {Array<TransferSyntax>} [transferSyntaxes] - Transfer syntax UIDs to propose.
+   * @param {string|Array<string>} [transferSyntaxUidOrUids] - Transfer syntax UID or UIDs to propose.
    * @returns {number} Presentation context ID.
    */
-  addPresentationContextFromRequest(request, transferSyntaxes) {
-    let syntaxes = transferSyntaxes || TransferSyntax.ImplicitVRLittleEndian;
+  addPresentationContextFromRequest(request, transferSyntaxUidOrUids) {
+    let syntaxes = transferSyntaxUidOrUids || TransferSyntax.ImplicitVRLittleEndian;
     syntaxes = Array.isArray(syntaxes) ? syntaxes : [syntaxes];
 
     const sopClassUid = this._sopClassFromRequest(request);
@@ -437,7 +456,7 @@ class Association {
    * Gets accepted presentation context from request.
    * @method
    * @param {Request} request - Request.
-   * @return {PresentationContext} Presentation context.
+   * @return {PresentationContext|undefined} Accepted presentation context, if found.
    */
   getAcceptedPresentationContextFromRequest(request) {
     let acceptedContext = undefined;

@@ -41,7 +41,7 @@ class Command {
   /**
    * Gets dataset.
    * @method
-   * @returns {Dataset} Dataset.
+   * @returns {Dataset|undefined} Dataset, if exists.
    */
   getDataset() {
     return this.dataset;
@@ -874,7 +874,7 @@ class CStoreRequest extends Request {
   /**
    * Creates an instance of CStoreRequest.
    * @constructor
-   * @param {Object|String} datasetOrFile - Dataset or part10 file path.
+   * @param {Dataset|string} datasetOrFile - Dataset or part10 file path.
    * @param {Priority} [priority] - Request priority.
    */
   constructor(datasetOrFile, priority) {
@@ -1743,7 +1743,7 @@ class NGetRequest extends Request {
 //#region NGetResponse
 class NGetResponse extends Response {
   /**
-   * Creates an instance of NEventReportResponse.
+   * Creates an instance of NGetResponse.
    * @constructor
    * @param {string} affectedSopClassUid - Affected SOP Class UID.
    * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
@@ -1797,7 +1797,7 @@ class NSetRequest extends Request {
 //#region NSetResponse
 class NSetResponse extends Response {
   /**
-   * Creates an instance of NEventReportResponse.
+   * Creates an instance of NSetResponse.
    * @constructor
    * @param {string} affectedSopClassUid - Affected SOP Class UID.
    * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.

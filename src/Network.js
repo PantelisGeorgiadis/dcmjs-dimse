@@ -374,6 +374,7 @@ class Network extends AsyncEventEmitter {
    * @method
    * @private
    * @param {Buffer} data - Accumulated PDU data.
+   * @throws Error in case of an unknown PDU type.
    */
   _processPdu(data) {
     const raw = new RawPdu(data);
@@ -773,7 +774,7 @@ class PduAccumulator extends AsyncEventEmitter {
    * @method
    * @private
    * @param {Buffer} data - The received data from the network.
-   * @returns {Number|undefined} The remaining bytes for a full PDU or undefined.
+   * @returns {number|undefined} The remaining bytes for a full PDU or undefined.
    */
   _process(data) {
     if (this.receiving === undefined) {

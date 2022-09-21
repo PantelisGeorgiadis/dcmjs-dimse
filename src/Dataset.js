@@ -32,7 +32,7 @@ class Dataset {
    * Gets element value.
    * @method
    * @param {string} tag - Element tag.
-   * @returns {string} Element value.
+   * @returns {string|undefined} Element value or undefined if element doesn't exist.
    */
   getElement(tag) {
     return this.elements[tag];
@@ -89,7 +89,7 @@ class Dataset {
   }
 
   /**
-   * Gets elements encoded in a DICOM dataset buffer meant for a command.
+   * Gets command elements encoded in a DICOM dataset buffer.
    * @method
    * @returns {Buffer} DICOM dataset.
    */
@@ -118,7 +118,7 @@ class Dataset {
   }
 
   /**
-   * Loads a dataset from p10 file.
+   * Loads a dataset from DICOM P10 file.
    * @method
    * @static
    * @param {string} path - P10 file path.
@@ -143,7 +143,7 @@ class Dataset {
   }
 
   /**
-   * Saves a dataset to p10 file.
+   * Saves a dataset to DICOM P10 file.
    * @method
    * @param {string} path - P10 file path.
    * @param {function(Error)} [callback] - P10 file writing callback function.
