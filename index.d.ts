@@ -1,3 +1,4 @@
+import DataSetElements from './datasetElements';
 import AsyncEventEmitter from 'async-eventemitter';
 import { Mixin } from 'ts-mixer';
 import { Logger } from 'winston';
@@ -177,26 +178,29 @@ declare namespace TransferSyntax {
   const Jpeg2000Lossy: string;
 }
 
+
+
+
 declare class Dataset {
   /**
    * Creates an instance of Dataset.
    */
-  constructor(elementsOrBuffer?: Record<string, unknown> | Buffer, transferSyntaxUid?: string);
+  constructor(elementsOrBuffer?: DataSetElements | Buffer, transferSyntaxUid?: string);
 
   /**
    * Gets element value.
    */
-  getElement(tag: string): string | undefined;
+  getElement<TagName extends keyof DataSetElements>(tag: TagName): DataSetElements[TagName]| undefined;
 
   /**
    * Sets element value.
    */
-  setElement(tag: string, value: string): void;
+  setElement<TagName extends keyof DataSetElements>(tag: TagName, value: DataSetElements[TagName]): void;
 
   /**
    * Gets all elements.
    */
-  getElements(): Record<string, unknown>;
+  getElements(): DataSetElements //Record<string, unknown>;
 
   /**
    * Gets DICOM transfer syntax UID.
