@@ -42,19 +42,7 @@ const {
   NGetResponse,
   NSetResponse,
 } = responses;
-const {
-  PresentationContextResult,
-  AbortSource,
-  AbortReason,
-  RejectResult,
-  RejectSource,
-  RejectReason,
-  Priority,
-  Status,
-  StorageClass,
-  SopClass,
-  TransferSyntax,
-} = constants;
+const { Priority, Status, SopClass, TransferSyntax } = constants;
 
 // log
 expectType<typeof log>(log.error('error'));

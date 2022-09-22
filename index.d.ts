@@ -1142,7 +1142,7 @@ declare class CCancelRequest extends Request {
   static fromRequest(request: CFindRequest | CMoveRequest | CGetRequest): CCancelRequest;
 }
 
-declare class Network {
+declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   /**
    * Creates an instance of Network.
    */
@@ -1301,7 +1301,7 @@ declare class Scp extends Network {
   abort(source: number, reason: number): void;
 }
 
-declare class Server {
+declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   /**
    * Creates an instance of Server.
    */
@@ -1336,7 +1336,7 @@ declare class Server {
   close(): void;
 }
 
-declare class Client {
+declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   /**
    * Creates an instance of Client.
    */

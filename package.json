@@ -1,6 +1,6 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",
@@ -13,8 +13,9 @@
     "coverage": "c8 mocha -c .c8rc.json test/**/*.test.js",
     "doc": "npm run doc:generate && open-cli documentation/index.html",
     "doc:generate": "npm run clean:docs && jsdoc -c .jsdocrc.json",
-    "dev:examples": "nodemon examples/index.js",
-    "start:examples": "node examples/index.js",
+    "dev:examples:js": "nodemon examples/index.js",
+    "start:examples:js": "node examples/index.js",
+    "start:examples:ts": "ts-node examples/index.ts",
     "build": "npm run version && npm run lint && npm run test && npm run coverage && npm run webpack",
     "start": "npm run webpack",
     "prepublish": "npm run build",
@@ -23,7 +24,7 @@
     "test:node": "mocha test/**/*.test.js",
     "test:types": "tsd",
     "test": "npm run test:types && npm run test:node",
-    "lint": "eslint -c .eslintrc.json --fix src && prettier --tab-width 2 --single-quote true --print-width 100 --use-tabs false --write src/**/*.js test/**/*.js examples/**/*.js *.ts"
+    "lint": "eslint -c .eslintrc.json --fix src && prettier --tab-width 2 --single-quote true --print-width 100 --use-tabs false --write src/**/*.js test/**/*.js examples/**/*.{js,ts} *.ts"
   },
   "repository": {
     "type": "git",
@@ -63,7 +64,9 @@
     "selfsigned": "^2.1.1",
     "shx": "^0.3.3",
     "terser-webpack-plugin": "^5.3.6",
+    "ts-node": "^10.9.1",
     "tsd": "^0.24.1",
+    "typescript": "^4.8.3",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   }
