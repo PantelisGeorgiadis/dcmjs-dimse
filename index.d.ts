@@ -3,6 +3,7 @@ import { Mixin } from 'ts-mixer';
 import { Logger } from 'winston';
 import { Socket } from 'net';
 import { TLSSocket } from 'tls';
+import { DicomElements, DicomElements_WML } from './index.dto/element.dto';
 
 declare namespace PresentationContextResult {
   const Proposed: number;
@@ -181,17 +182,17 @@ declare class Dataset {
   /**
    * Creates an instance of Dataset.
    */
-  constructor(elementsOrBuffer?: Record<string, unknown> | Buffer, transferSyntaxUid?: string);
+  constructor(elementsOrBuffer?: Partial<DicomElements> | Buffer, transferSyntaxUid?: string);
 
   /**
    * Gets element value.
    */
-  getElement(tag: string): string | undefined;
+  getElement(tag: keyof DicomElements): string | undefined;
 
   /**
    * Sets element value.
    */
-  setElement(tag: string, value: string): void;
+  setElement(tag: keyof DicomElements, value: string): void;
 
   /**
    * Gets all elements.
@@ -500,12 +501,13 @@ declare class Command {
   toString(opts?: { includeCommandDataset?: boolean; includeDataset?: boolean }): string;
 }
 
-declare class Request extends Mixin(Command, AsyncEventEmitter) {
+declare class Request extends Mixin(Command, AsyncEventEmitter<ServerEventName.EventMap<RequestEventMap>>) {
   /**
    * Creates an instance of Request.
    */
   constructor(type: number, affectedOrRequestedClassUid: string, hasDataset: boolean);
 
+  on<E extends keyof RequestEventMap>(event: E & string, listener: ServerEventName.EventMap<RequestEventMap>[E]): this;
   /**
    * Gets affected SOP class UID.
    */
@@ -1301,7 +1303,7 @@ declare class Scp extends Network {
   abort(source: number, reason: number): void;
 }
 
-declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
+declare class Server extends AsyncEventEmitter<ServerEventName.EventMap<ServerEventMap>> {
   /**
    * Creates an instance of Server.
    */
@@ -1330,17 +1332,21 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
     }
   ): void;
 
+  // on(event: keyof ServerEventMap & string, listener: ServerEventName.EventMap<ServerEventMap>[keyof ServerEventMap]): this;
+  on(event: keyof ServerEventMap, listener: ServerEventName.EventMap<ServerEventMap>[keyof ServerEventMap]): this;
   /**
    * Closes server.
    */
   close(): void;
 }
 
-declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
+declare class Client extends AsyncEventEmitter<ServerEventName.EventMap<ClientEventMap>> {
   /**
    * Creates an instance of Client.
    */
   constructor();
+
+  on(event: keyof ClientEventMap & string, listener: ServerEventName.EventMap<ClientEventMap>[keyof ClientEventMap]): this;
 
   /**
    * Adds a request.
@@ -1453,4 +1459,17 @@ export namespace responses {
   export { NSetResponse };
 }
 
-export { Dataset, Implementation, Client, Server, Scp, log, version };
+export interface Types {
+  T_DicomElements: Partial<DicomElements>;
+  T_DicomElements_WML: Partial<DicomElements_WML>;
+}
+
+export {
+  Dataset,
+  Implementation,
+  Client,
+  Server,
+  Scp,
+  log,
+  version,
+};
