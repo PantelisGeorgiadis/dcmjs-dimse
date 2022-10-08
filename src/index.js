@@ -2,6 +2,7 @@ const { PresentationContext, Association } = require('./Association');
 const Dataset = require('./Dataset');
 const Implementation = require('./Implementation');
 const Client = require('./Client');
+const Statistics = require('./Statistics');
 const { Server, Scp } = require('./Server');
 const {
   CEchoRequest,
@@ -110,6 +111,7 @@ const DcmjsDimse = {
   Client,
   Server,
   Scp,
+  Statistics,
   association,
   requests,
   responses,

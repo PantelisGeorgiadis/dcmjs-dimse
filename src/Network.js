@@ -40,6 +40,7 @@ const {
 } = require('./Command');
 const Dataset = require('./Dataset');
 const Implementation = require('./Implementation');
+const Statistics = require('./Statistics');
 const log = require('./log');
 
 const AsyncEventEmitter = require('async-eventemitter');
@@ -80,6 +81,7 @@ class Network extends AsyncEventEmitter {
     this.connectedTime = undefined;
     this.lastPduTime = undefined;
     this.timeoutIntervalId = undefined;
+    this.statistics = new Statistics();
 
     this._wrapSocket();
   }
@@ -212,6 +214,15 @@ class Network extends AsyncEventEmitter {
     this._sendPdu(rqPdu);
   }
 
+  /**
+   * Gets network statistics.
+   * @method
+   * @returns {Statistics} Network statistics.
+   */
+  getStatistics() {
+    return this.statistics;
+  }
+
   //#region Private Methods
   /**
    * Advances the message ID.
@@ -232,6 +243,7 @@ class Network extends AsyncEventEmitter {
     try {
       const buffer = pdu.writePdu();
       this.socket.write(buffer);
+      this.statistics.addBytesSent(buffer.length);
     } catch (err) {
       log.error(`${this.logId} -> Error sending PDU [type: ${pdu.getType()}]: ${err.message}`);
       this.emit('networkError', err);
@@ -343,6 +355,7 @@ class Network extends AsyncEventEmitter {
     const pdu = pDataTf.write();
     const pduBuffer = pdu.writePdu();
     this.socket.write(pduBuffer);
+    this.statistics.addBytesSent(pduBuffer.length);
 
     const dataset = command.getDataset();
     if (dataset) {
@@ -365,6 +378,7 @@ class Network extends AsyncEventEmitter {
         const pdu = pDataTf.write();
         const pduBuffer = pdu.writePdu();
         this.socket.write(pduBuffer);
+        this.statistics.addBytesSent(pduBuffer.length);
       }
     }
   }
@@ -682,6 +696,7 @@ class Network extends AsyncEventEmitter {
     });
     this.socket.on('data', (data) => {
       pduAccumulator.accumulate(data);
+      this.statistics.addBytesReceived(data.length);
     });
     this.socket.on('error', (err) => {
       this._reset();

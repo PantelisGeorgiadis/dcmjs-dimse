@@ -7,6 +7,7 @@ import {
   Client,
   Server,
   Scp,
+  Statistics,
   log,
   version,
   association,
@@ -344,6 +345,16 @@ expectType<number>(cancelRequest.getMessageIdBeingRespondedTo());
 expectError(cancelRequest.setMessageIdBeingRespondedTo('1'));
 expectType<requests.CCancelRequest>(CCancelRequest.fromRequest(new CFindRequest(1)));
 
+// Statistics
+const statistics = new Statistics();
+expectType<number>(statistics.getBytesReceived());
+expectType<number>(statistics.getBytesSent());
+expectError(statistics.addBytesReceived('1'));
+expectError(statistics.addBytesSent('1'));
+expectError(statistics.addFromOtherStatistics('1'));
+expectType<void>(statistics.reset());
+expectType<string>(statistics.toString());
+
 // Server
 class TestScp extends Scp {
   constructor(
@@ -425,6 +436,7 @@ expectError(server.listen('2104'));
 expectError(server.listen(2104, '1'));
 expectType<void>(server.listen(2104));
 expectType<void>(server.close());
+expectType<Statistics>(server.getStatistics());
 
 // Client
 expectType<Client>(new Client());
@@ -439,6 +451,7 @@ expectType<void>(
     new PresentationContext(1, SopClass.ModalityWorklistInformationModelFind)
   )
 );
+expectType<Statistics>(client.getStatistics());
 expectError(client.send('1'));
 expectError(client.send('1', '2'));
 expectError(client.send('1', '2', 3, 4));

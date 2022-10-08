@@ -156,4 +156,8 @@ operations.forEach((o) => {
   Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle]);
 });
 
-setTimeout(() => server.close(), 3000);
+setTimeout(() => {
+  server.close();
+  const statistics = server.getStatistics();
+  console.log('Server statistics:', statistics.toString());
+}, 3000);

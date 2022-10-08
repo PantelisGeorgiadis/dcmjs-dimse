@@ -1198,6 +1198,48 @@ declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   sendAbort(source?: number, reason?: number): void;
 }
 
+declare class Statistics {
+  /**
+   * Creates an instance of Statistics.
+   */
+  constructor();
+
+  /**
+   * Gets the received bytes.
+   */
+  getBytesReceived(): number;
+
+  /**
+   * Gets the sent bytes.
+   */
+  getBytesSent(): number;
+
+  /**
+   * Adds bytes to the received bytes.
+   */
+  addBytesReceived(bytes: number): void;
+
+  /**
+   * Adds bytes to the sent bytes.
+   */
+  addBytesSent(bytes: number): void;
+
+  /**
+   * Adds values from other statistics.
+   */
+  addFromOtherStatistics(statistics: Statistics): void;
+
+  /**
+   * Resets received and sent bytes.
+   */
+  reset(): void;
+
+  /**
+   * Gets the statistics description.
+   */
+  toString(): string;
+}
+
 declare class Scp extends Network {
   /**
    * Creates an instance of Scp.
@@ -1331,6 +1373,11 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   ): void;
 
   /**
+   * Gets network statistics.
+   */
+  getStatistics(): Statistics;
+
+  /**
    * Closes server.
    */
   close(): void;
@@ -1383,6 +1430,11 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       };
     }
   ): void;
+
+  /**
+   * Gets network statistics.
+   */
+  getStatistics(): Statistics;
 
   /**
    * Aborts the established association.
@@ -1453,4 +1505,4 @@ export namespace responses {
   export { NSetResponse };
 }
 
-export { Dataset, Implementation, Client, Server, Scp, log, version };
+export { Dataset, Implementation, Client, Server, Scp, Statistics, log, version };

@@ -13,6 +13,7 @@ const {
   NGetResponse,
   NSetResponse,
 } = require('./Command');
+const Statistics = require('./Statistics');
 
 const AsyncEventEmitter = require('async-eventemitter');
 const net = require('net');
@@ -273,6 +274,7 @@ class Server extends AsyncEventEmitter {
     this.scp = { class: scpClass };
     this.server = undefined;
     this.clients = [];
+    this.statistics = new Statistics();
   }
 
   /**
@@ -324,6 +326,9 @@ class Server extends AsyncEventEmitter {
       );
       const client = new this.scp.class(socket, opts);
       client.connected = true;
+      client.on('close', () => {
+        this.statistics.addFromOtherStatistics(client.getStatistics());
+      });
       this.clients.push(client);
 
       this.clients = this.clients.filter((item) => item.connected);
@@ -337,6 +342,15 @@ class Server extends AsyncEventEmitter {
       this.emit('networkError', err);
     });
     this.server.listen(port);
+  }
+
+  /**
+   * Gets network statistics.
+   * @method
+   * @returns {Statistics} Network statistics.
+   */
+  getStatistics() {
+    return this.statistics;
   }
 
   /**

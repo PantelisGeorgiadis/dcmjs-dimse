@@ -2,6 +2,7 @@ const Network = require('./Network');
 const { Association, PresentationContext } = require('./Association');
 const { TransferSyntax } = require('./Constants');
 const { Request } = require('./Command');
+const Statistics = require('./Statistics');
 const log = require('./log');
 
 const AsyncEventEmitter = require('async-eventemitter');
@@ -19,6 +20,7 @@ class Client extends AsyncEventEmitter {
     this.requests = [];
     this.additionalPresentationContexts = [];
     this.network = undefined;
+    this.statistics = new Statistics();
   }
 
   /**
@@ -150,12 +152,10 @@ class Client extends AsyncEventEmitter {
     network.on('associationReleaseResponse', () => {
       this.emit('associationReleased');
       socket.end();
-      this.network = undefined;
     });
     network.on('associationRejected', (reject) => {
       this.emit('associationRejected', reject);
       socket.end();
-      this.network = undefined;
     });
     network.on('done', () => {
       setTimeout(() => network.sendAssociationReleaseRequest(), this.associationLingerTimeout);
@@ -168,13 +168,23 @@ class Client extends AsyncEventEmitter {
     });
     network.on('networkError', (err) => {
       socket.end();
-      this.network = undefined;
       this.emit('networkError', err);
     });
     network.on('close', () => {
+      this.statistics.addFromOtherStatistics(network.getStatistics());
+      this.network = undefined;
       this.emit('closed');
     });
     this.network = network;
+  }
+
+  /**
+   * Gets network statistics.
+   * @method
+   * @returns {Statistics} Network statistics.
+   */
+  getStatistics() {
+    return this.statistics;
   }
 
   /**
