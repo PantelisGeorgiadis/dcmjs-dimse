@@ -255,6 +255,7 @@ Please check the respecting [Wiki][dcmjs-dimse-wiki-examples-url] section for mo
 
 ### Related libraries
 * [dcmjs-imaging][dcmjs-imaging-url] - DICOM image and overlay rendering for Node.js and browser using dcmjs.
+* [dcmjs-ecg][dcmjs-ecg-url] - DICOM electrocardiography (ECG) rendering for Node.js and browser using dcmjs.
 
 ### License
 dcmjs-dimse is released under the MIT License.
@@ -273,5 +274,6 @@ dcmjs-dimse is released under the MIT License.
 [mdcm-url]: https://github.com/fo-dicom/mdcm
 [dicom-dimse-url]: https://github.com/OHIF/dicom-dimse
 [dcmjs-imaging-url]: https://github.com/PantelisGeorgiadis/dcmjs-imaging
+[dcmjs-ecg-url]: https://github.com/PantelisGeorgiadis/dcmjs-ecg
 
 [dcmjs-dimse-wiki-examples-url]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/wiki/Examples
