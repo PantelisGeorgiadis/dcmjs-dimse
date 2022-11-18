@@ -124,7 +124,7 @@ class Dataset {
    * @param {string} path - P10 file path.
    * @param {function(Error, Dataset)} [callback] - P10 file reading callback function.
    * If this is not provided, the function runs synchronously.
-   * @param {object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
+   * @param {Object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
    * @returns {Dataset|undefined} Dataset or undefined, if the function runs asynchronously.
    */
   static fromFile(path, callback, readOptions) {
@@ -150,7 +150,7 @@ class Dataset {
    * If this is not provided, the function runs synchronously.
    * @param {Object} [nameMap] - Additional DICOM tags to recognize when denaturalizing the
    * dataset. Can be used to support writing private fields/tags.
-   * @param {object} [writeOptions] - The write options to pass through to `DicomDict.write()`.
+   * @param {Object} [writeOptions] - The write options to pass through to `DicomDict.write()`.
    */
   toFile(path, callback, nameMap, writeOptions) {
     const elements = {
@@ -213,7 +213,7 @@ class Dataset {
    * @method
    * @private
    * @param {Buffer} buffer - p10 buffer.
-   * @param {object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
+   * @param {Object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
    * @returns {Dataset} Dataset.
    */
   static _fromP10Buffer(buffer, readOptions) {

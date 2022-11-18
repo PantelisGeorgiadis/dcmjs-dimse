@@ -224,7 +224,7 @@ declare class Dataset {
   static fromFile(
     path: string,
     callback?: (error: Error, dataset: Dataset) => void,
-    readOptions?: object
+    readOptions?: Record<string, unknown>
   ): Dataset | undefined;
 
   /**
@@ -233,8 +233,8 @@ declare class Dataset {
   toFile(
     path: string,
     callback?: (error: Error) => void,
-    nameMap?: any,
-    writeOptions?: object
+    nameMap?: Record<string, unknown>,
+    writeOptions?: Record<string, unknown>
   ): void;
 
   /**
