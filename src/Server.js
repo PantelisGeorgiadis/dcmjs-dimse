@@ -33,9 +33,9 @@ class Scp extends Network {
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    * @param {Object} [opts.securityOptions] - Security options.
-   * @param {Buffer} [opts.securityOptions.key] - Server private key in PEM format.
-   * @param {Buffer} [opts.securityOptions.cert] - Server public certificate in PEM format.
-   * @param {Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted client certificates in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.key] - Server private key in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.cert] - Server public certificate in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted client certificates in PEM format.
    * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
    * certificate from clients that connect and attempt to verify it.
    * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
@@ -288,9 +288,9 @@ class Server extends AsyncEventEmitter {
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    * @param {Object} [opts.securityOptions] - Security options.
-   * @param {Buffer} [opts.securityOptions.key] - Server private key in PEM format.
-   * @param {Buffer} [opts.securityOptions.cert] - Server public certificate in PEM format.
-   * @param {Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted client certificates in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.key] - Server private key in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.cert] - Server public certificate in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted client certificates in PEM format.
    * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
    * certificate from clients that connect and attempt to verify it.
    * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which

@@ -36,6 +36,7 @@ class Client extends AsyncEventEmitter {
     }
     // Prevent duplicates
     if (this.requests.includes(request)) {
+      log.warn(`${request.toString()} request has already been added. Ignoring...`);
       return;
     }
     this.requests.push(request);
@@ -53,18 +54,22 @@ class Client extends AsyncEventEmitter {
    * Adds an additional presentation context.
    * @method
    * @param {PresentationContext} context - Presentation context.
+   * @param {boolean} [addAsNew] - Flag to indicate whether to add the provided context
+   * as a new one, irrespectively if the respected SOP class already exists in the association.
    * @throws Error if request is not an instance of the Request class.
    */
-  addAdditionalPresentationContext(context) {
+  addAdditionalPresentationContext(context, addAsNew) {
+    addAsNew = addAsNew || false;
     // Check if request is actually a context!
     if (!(context instanceof PresentationContext)) {
       throw new Error(`${context.toString()} is not a presentation context`);
     }
     // Prevent duplicates
-    if (this.additionalPresentationContexts.includes(context)) {
+    if (this.additionalPresentationContexts.some((i) => i.context === context)) {
+      log.warn(`${context.toString()} context has already been added. Ignoring...`);
       return;
     }
-    this.additionalPresentationContexts.push(context);
+    this.additionalPresentationContexts.push({ context, addAsNew });
   }
 
   /**
@@ -82,9 +87,9 @@ class Client extends AsyncEventEmitter {
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
    * @param {Object} [opts.securityOptions] - Security options.
-   * @param {Buffer} [opts.securityOptions.key] - Client private key in PEM format.
-   * @param {Buffer} [opts.securityOptions.cert] - Client public certificate in PEM format.
-   * @param {Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted server certificates in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.key] - Client private key in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.cert] - Client public certificate in PEM format.
+   * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.ca] - Trusted server certificates in PEM format.
    * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
    * certificate from server that connect and attempt to verify it.
    * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
@@ -114,9 +119,11 @@ class Client extends AsyncEventEmitter {
     });
 
     // Add additional presentation contexts
-    this.additionalPresentationContexts.forEach((context) => {
-      const pcId = association.addOrGetPresentationContext(context.getAbstractSyntaxUid());
-      const transferSyntaxes = context.getTransferSyntaxUids();
+    this.additionalPresentationContexts.forEach((item) => {
+      const pcId = item.addAsNew
+        ? association.addPresentationContext(item.context.getAbstractSyntaxUid())
+        : association.addOrGetPresentationContext(item.context.getAbstractSyntaxUid());
+      const transferSyntaxes = item.context.getTransferSyntaxUids();
       transferSyntaxes.forEach((transferSyntax) => {
         association.addTransferSyntaxToPresentationContext(pcId, transferSyntax);
       });

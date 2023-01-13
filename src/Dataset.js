@@ -177,7 +177,10 @@ class Dataset {
       : DicomMetaDictionary.denaturalizeDataset(elements);
 
     if (callback instanceof Function) {
-      writeFile(path, Buffer.from(dicomDict.write(writeOptions)), callback);
+      writeFile(path, Buffer.from(dicomDict.write(writeOptions)), (error) => {
+        callback(error ? error : undefined);
+        return;
+      });
     } else {
       writeFileSync(path, Buffer.from(dicomDict.write(writeOptions)));
     }

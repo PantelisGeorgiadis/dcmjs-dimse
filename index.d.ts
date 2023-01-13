@@ -223,7 +223,7 @@ declare class Dataset {
    */
   static fromFile(
     path: string,
-    callback?: (error: Error, dataset: Dataset) => void,
+    callback?: (error: Error | undefined, dataset: Dataset | undefined) => void,
     readOptions?: Record<string, unknown>
   ): Dataset | undefined;
 
@@ -232,7 +232,7 @@ declare class Dataset {
    */
   toFile(
     path: string,
-    callback?: (error: Error) => void,
+    callback?: (error: Error | undefined) => void,
     nameMap?: Record<string, unknown>,
     writeOptions?: Record<string, unknown>
   ): void;
@@ -438,6 +438,11 @@ declare class Association {
     id: number;
     context: PresentationContext;
   }>;
+
+  /**
+   * Clears all presentation contexts.
+   */
+  clearPresentationContexts(): void;
 
   /**
    * Adds presentation context from request.
@@ -864,6 +869,18 @@ declare class CGetRequest extends Request {
   setPriority(priority: number): void;
 
   /**
+   * Gets the flag indicating whether to add all known storage SOP
+   * classes, as presentation contexts, during the association.
+   */
+  getAddStorageSopClassesToAssociation(): boolean;
+
+  /**
+   * Sets the flag indicating whether to add all known storage SOP
+   * classes, as presentation contexts, during the association.
+   */
+  setAddStorageSopClassesToAssociation(add: boolean): void;
+
+  /**
    * Creates study get request.
    */
   static createStudyGetRequest(studyInstanceUid: string, priority?: number): CGetRequest;
@@ -1253,9 +1270,9 @@ declare class Scp extends Network {
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
       securityOptions?: {
-        key?: Buffer;
-        cert?: Buffer;
-        ca?: Buffer | Array<Buffer>;
+        key?: string | Array<string> | Buffer | Array<Buffer>;
+        cert?: string | Array<string> | Buffer | Array<Buffer>;
+        ca?: string | Array<string> | Buffer | Array<Buffer>;
         requestCert?: boolean;
         rejectUnauthorized?: boolean;
         minVersion?: string;
@@ -1361,9 +1378,9 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
       securityOptions?: {
-        key?: Buffer;
-        cert?: Buffer;
-        ca?: Buffer | Array<Buffer>;
+        key?: string | Array<string> | Buffer | Array<Buffer>;
+        cert?: string | Array<string> | Buffer | Array<Buffer>;
+        ca?: string | Array<string> | Buffer | Array<Buffer>;
         requestCert?: boolean;
         rejectUnauthorized?: boolean;
         minVersion?: string;
@@ -1402,7 +1419,7 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   /**
    * Adds an additional presentation context.
    */
-  addAdditionalPresentationContext(context: PresentationContext): void;
+  addAdditionalPresentationContext(context: PresentationContext, addAsNew?: boolean): void;
 
   /**
    * Sends requests to the remote host.
@@ -1420,9 +1437,9 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
       securityOptions?: {
-        key?: Buffer;
-        cert?: Buffer;
-        ca?: Buffer | Array<Buffer>;
+        key?: string | Array<string> | Buffer | Array<Buffer>;
+        cert?: string | Array<string> | Buffer | Array<Buffer>;
+        ca?: string | Array<string> | Buffer | Array<Buffer>;
         requestCert?: boolean;
         rejectUnauthorized?: boolean;
         minVersion?: string;
@@ -1477,6 +1494,7 @@ export namespace association {
 }
 
 export namespace requests {
+  export { Request };
   export { CEchoRequest };
   export { CFindRequest };
   export { CStoreRequest };
@@ -1492,6 +1510,7 @@ export namespace requests {
 }
 
 export namespace responses {
+  export { Response };
   export { CEchoResponse };
   export { CFindResponse };
   export { CStoreResponse };

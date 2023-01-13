@@ -231,6 +231,7 @@ describe('Command', () => {
     );
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CGetRequest);
     expect(request.getPriority()).to.be.eq(Priority.Medium);
+    expect(request.getAddStorageSopClassesToAssociation()).to.be.eq(true);
     expect(request.hasDataset()).to.be.true;
     expect(dataset.getElement('StudyInstanceUID')).to.be.eq(uid);
     expect(dataset.getElement('QueryRetrieveLevel')).to.be.eq('STUDY');

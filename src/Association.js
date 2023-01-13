@@ -394,6 +394,14 @@ class Association {
   }
 
   /**
+   * Clears all presentation contexts.
+   * @method
+   */
+  clearPresentationContexts() {
+    this.presentationContexts.length = 0;
+  }
+
+  /**
    * Adds presentation context from request.
    * @method
    * @param {Request} request - Request.
@@ -435,13 +443,15 @@ class Association {
       syntaxes.forEach((syntax) => {
         this.addTransferSyntaxToPresentationContext(pcId, syntax);
       });
-      Object.keys(StorageClass).forEach((uid) => {
-        const storageClassUid = StorageClass[uid];
-        const storagePcId = this.addOrGetPresentationContext(storageClassUid);
-        syntaxes.forEach((syntax) => {
-          this.addTransferSyntaxToPresentationContext(storagePcId, syntax);
+      if (request.getAddStorageSopClassesToAssociation() === true) {
+        Object.keys(StorageClass).forEach((uid) => {
+          const storageClassUid = StorageClass[uid];
+          const storagePcId = this.addOrGetPresentationContext(storageClassUid);
+          syntaxes.forEach((syntax) => {
+            this.addTransferSyntaxToPresentationContext(storagePcId, syntax);
+          });
         });
-      });
+      }
     } else {
       pcId = this.addOrGetPresentationContext(sopClassUid);
       syntaxes.forEach((syntax) => {

@@ -337,7 +337,7 @@ class Request extends Mixin(Command, AsyncEventEmitter) {
    * @return {string} Request description.
    */
   toString(opts) {
-    return `${super.toString(opts)} [id: ${this.getMessageId()}]`;
+    return `${super.toString(opts)} [id: ${this.getMessageId() || ''}]`;
   }
 }
 //#endregion
@@ -524,11 +524,9 @@ class Response extends Command {
    * @return {string} Response description.
    */
   toString(opts) {
-    return `${super.toString(
-      opts
-    )} [id: ${this.getMessageIdBeingRespondedTo()}; status: ${this._statusToString(
-      this.getStatus()
-    )}]`;
+    return `${super.toString(opts)} [id: ${
+      this.getMessageIdBeingRespondedTo() || ''
+    }; status: ${this._statusToString(this.getStatus())}]`;
   }
 
   //#region Private Methods
@@ -1183,6 +1181,7 @@ class CGetRequest extends Request {
   constructor(priority) {
     super(CommandFieldType.CGetRequest, SopClass.StudyRootQueryRetrieveInformationModelGet, false);
     this.setPriority(priority || Priority.Medium);
+    this.addStorageSopClassesToAssociation = true;
   }
 
   /**
@@ -1203,6 +1202,26 @@ class CGetRequest extends Request {
   setPriority(priority) {
     const command = this.getCommandDataset();
     command.setElement('Priority', priority);
+  }
+
+  /**
+   * Gets the flag indicating whether to add all known storage SOP
+   * classes, as presentation contexts, during the association.
+   * @method
+   * @return {boolean} Flag indicating whether to add all known storage SOP classes.
+   */
+  getAddStorageSopClassesToAssociation() {
+    return this.addStorageSopClassesToAssociation;
+  }
+
+  /**
+   * Sets the flag indicating whether to add all known storage SOP
+   * classes, as presentation contexts, during the association.
+   * @method
+   * @param {boolean} add - Flag indicating whether to add all known storage SOP classes.
+   */
+  setAddStorageSopClassesToAssociation(add) {
+    this.addStorageSopClassesToAssociation = add;
   }
 
   /**

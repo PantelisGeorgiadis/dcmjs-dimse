@@ -23,7 +23,7 @@ describe('Association', () => {
     expect(association.getCalledAeTitle()).to.be.eq(calledAet);
   });
 
-  it('should correctly add presentation contexts', () => {
+  it('should correctly add and clear presentation contexts', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
 
@@ -34,6 +34,10 @@ describe('Association', () => {
 
     expect(context.getAbstractSyntaxUid()).to.be.eq('1.2.3.4.5.6.7.8.9');
     expect(context.getAcceptedTransferSyntaxUid()).to.be.eq('9.8.7.6.5.4.3.2.1');
+
+    association.clearPresentationContexts();
+    const contexts = association.getPresentationContexts();
+    expect(contexts.length).to.be.eq(0);
   });
 
   it('should correctly set presentation context results', () => {

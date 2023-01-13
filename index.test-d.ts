@@ -17,6 +17,7 @@ import {
 } from '.';
 const { PresentationContext, Association } = association;
 const {
+  Request,
   CEchoRequest,
   CFindRequest,
   CStoreRequest,
@@ -31,6 +32,7 @@ const {
   CCancelRequest,
 } = requests;
 const {
+  Response,
   CEchoResponse,
   CFindResponse,
   CStoreResponse,
@@ -105,6 +107,7 @@ expectType<association.PresentationContext>(assoc.getPresentationContext(1));
 expectType<Array<{ id: number; context: association.PresentationContext }>>(
   assoc.getPresentationContexts()
 );
+expectType<void>(assoc.clearPresentationContexts());
 expectError(assoc.addPresentationContextFromRequest('1', 2));
 expectType<number>(assoc.addPresentationContextFromRequest(new CEchoRequest()));
 expectError(assoc.getAcceptedPresentationContextFromRequest('1'));
@@ -120,6 +123,58 @@ expectType<string>(Implementation.getImplementationVersion());
 expectError(Implementation.setImplementationVersion(1));
 expectType<number>(Implementation.getMaxPduLength());
 expectError(Implementation.setMaxPduLength('1'));
+
+// Request
+expectError(new Request('1', 123, 'true'));
+expectType<requests.Request>(new Request(1, '1.2.3.4.5', false));
+
+const request = new Request(1, '1.2.3.4.5', false);
+expectType<string>(request.getAffectedSopClassUid());
+expectError(request.setAffectedSopClassUid(1));
+expectType<void>(request.setAffectedSopClassUid('1.2.3.4'));
+expectType<string>(request.getRequestedSopClassUid());
+expectError(request.setRequestedSopClassUid(1));
+expectType<void>(request.setRequestedSopClassUid('1.2.3.4'));
+expectType<string>(request.getAffectedSopInstanceUid());
+expectError(request.setAffectedSopInstanceUid(1));
+expectType<void>(request.setAffectedSopInstanceUid('1.2.3.4'));
+expectType<string>(request.getRequestedSopInstanceUid());
+expectError(request.setRequestedSopInstanceUid(1));
+expectType<void>(request.setRequestedSopInstanceUid('1.2.3.4'));
+expectType<number>(request.getMessageId());
+expectError(request.setMessageId('1'));
+expectType<void>(request.setMessageId(1));
+expectError(request.raiseResponseEvent({}));
+expectError(request.raiseInstanceEvent({}));
+expectType<string>(request.toString());
+
+// Response
+expectError(new Response('1', 123, 'true', '2', 1));
+expectType<responses.Response>(new Response(1, '1.2.3.4.5', false, 2, ''));
+
+const response = new Response(1, '1.2.3.4.5', false, 2, '');
+expectType<string>(response.getAffectedSopClassUid());
+expectError(response.setAffectedSopClassUid(1));
+expectType<void>(response.setAffectedSopClassUid('1.2.3.4'));
+expectType<string>(response.getRequestedSopClassUid());
+expectError(response.setRequestedSopClassUid(1));
+expectType<void>(response.setRequestedSopClassUid('1.2.3.4'));
+expectType<string>(response.getAffectedSopInstanceUid());
+expectError(response.setAffectedSopInstanceUid(1));
+expectType<void>(response.setAffectedSopInstanceUid('1.2.3.4'));
+expectType<string>(response.getRequestedSopInstanceUid());
+expectError(response.setRequestedSopInstanceUid(1));
+expectType<void>(response.setRequestedSopInstanceUid('1.2.3.4'));
+expectType<number>(response.getStatus());
+expectError(response.setStatus('1'));
+expectType<void>(response.setStatus(1));
+expectType<string>(response.getErrorComment());
+expectError(response.setErrorComment(1));
+expectType<void>(response.setErrorComment('ERROR'));
+expectType<number>(response.getMessageIdBeingRespondedTo());
+expectError(response.setMessageIdBeingRespondedTo('1'));
+expectType<void>(response.setMessageIdBeingRespondedTo(1));
+expectType<string>(response.toString());
 
 // CEchoRequest
 expectType<requests.CEchoRequest>(new CEchoRequest());
@@ -205,6 +260,8 @@ expectType<requests.CMoveRequest>(new CMoveRequest());
 const getRequest = new CGetRequest(Priority.High);
 expectType<number>(getRequest.getPriority());
 expectError(getRequest.setPriority('1'));
+expectType<boolean>(getRequest.getAddStorageSopClassesToAssociation());
+expectError(getRequest.setAddStorageSopClassesToAssociation('true'));
 expectError(CGetRequest.createStudyGetRequest(1));
 expectError(CGetRequest.createStudyGetRequest(1, '2'));
 expectType<requests.CGetRequest>(CGetRequest.createStudyGetRequest('1'));
@@ -446,9 +503,16 @@ expectType<void>(client.clearRequests());
 expectError(client.addRequest('1'));
 expectType<void>(client.addRequest(new CEchoRequest()));
 expectError(client.addAdditionalPresentationContext('1'));
+expectError(client.addAdditionalPresentationContext('1', 'true'));
 expectType<void>(
   client.addAdditionalPresentationContext(
     new PresentationContext(1, SopClass.ModalityWorklistInformationModelFind)
+  )
+);
+expectType<void>(
+  client.addAdditionalPresentationContext(
+    new PresentationContext(1, SopClass.ModalityWorklistInformationModelFind),
+    true
   )
 );
 expectType<Statistics>(client.getStatistics());

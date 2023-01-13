@@ -299,6 +299,14 @@ describe('Network', () => {
         TransferSyntax.ImplicitVRLittleEndian
       )
     );
+    client.addAdditionalPresentationContext(
+      new PresentationContext(
+        0,
+        SopClass.ModalityWorklistInformationModelFind,
+        TransferSyntax.ExplicitVRLittleEndian
+      ),
+      true
+    );
     client.on('associationRejected', (reject) => {
       rejected = true;
     });
