@@ -59,8 +59,8 @@ declare namespace Status {
   const Success: number;
   const Cancel: number;
   const Pending: number;
-  const SopClassNotSupported: number;
   const ClassInstanceConflict: number;
+  const DataSetSopClassMismatch: number;
   const DuplicateSOPInstance: number;
   const DuplicateInvocation: number;
   const InvalidArgumentValue: number;
@@ -69,14 +69,19 @@ declare namespace Status {
   const MissingAttribute: number;
   const MissingAttributeValue: number;
   const MistypedArgument: number;
+  const MoveDestinationUnknown: number;
+  const NoSuchActionType: number;
   const NoSuchArgument: number;
   const NoSuchEventType: number;
   const NoSuchObjectInstance: number;
   const NoSuchSopClass: number;
+  const NotAuthorized: number;
+  const OutOfResourcesNumberOfMatches: number;
+  const OutOfResourcesSubOperations: number;
   const ProcessingFailure: number;
   const ResourceLimitation: number;
+  const SopClassNotSupported: number;
   const UnrecognizedOperation: number;
-  const NoSuchActionType: number;
 }
 
 declare namespace StorageClass {
