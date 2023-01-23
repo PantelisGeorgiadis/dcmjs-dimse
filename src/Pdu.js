@@ -1,9 +1,9 @@
 const {
+  AbortReason,
+  AbortSource,
+  RejectReason,
   RejectResult,
   RejectSource,
-  RejectReason,
-  AbortSource,
-  AbortReason,
   TransferSyntax,
 } = require('./Constants');
 
@@ -428,12 +428,53 @@ class AAssociateRQ {
     pdu.writeString('Implementation Class UID', this.association.getImplementationClassUid());
     pdu.writeLength16();
 
+    // Asynchronous Operations Negotiation
+    if (
+      this.association.getNegotiateAsyncOps() &&
+      (this.association.getMaxAsyncOpsInvoked() !== 1 ||
+        this.association.getMaxAsyncOpsPerformed() !== 1)
+    ) {
+      pdu.writeByte('Item-Type', 0x53);
+      pdu.writeByte('Reserved', 0x00);
+      pdu.writeUInt16('Item-Length', 0x0004);
+      pdu.writeUInt16('Asynchronous Operations Invoked', this.association.getMaxAsyncOpsInvoked());
+      pdu.writeUInt16(
+        'Asynchronous Operations Performed',
+        this.association.getMaxAsyncOpsPerformed()
+      );
+    }
+
     // Implementation Version
     pdu.writeByte('Item-Type', 0x55);
     pdu.writeByte('Reserved', 0x00);
     pdu.markLength16('Item-Length');
     pdu.writeString('Implementation Version', this.association.getImplementationVersion());
     pdu.writeLength16();
+
+    // User Identity Negotiation
+    if (this.association.getNegotiateUserIdentity()) {
+      pdu.writeByte('Item-Type', 0x58);
+      pdu.writeByte('Reserved', 0x00);
+      pdu.markLength16('Item-Length');
+      pdu.writeByte('User Identity Type', this.association.getUserIdentityType());
+      pdu.writeByte(
+        'Positive Response Requested',
+        this.association.getUserIdentityPositiveResponseRequested()
+      );
+      pdu.markLength16('User Identity Primary Field-Length');
+      pdu.writeString(
+        'User Identity Primary Field',
+        this.association.getUserIdentityPrimaryField()
+      );
+      pdu.writeLength16();
+      pdu.markLength16('User Identity Secondary Field-Length');
+      pdu.writeString(
+        'User Identity Secondary Field',
+        this.association.getUserIdentitySecondaryField()
+      );
+      pdu.writeLength16();
+      pdu.writeLength16();
+    }
 
     pdu.writeLength16();
 
@@ -495,8 +536,33 @@ class AAssociateRQ {
             this.association.setImplementationClassUid(
               pdu.readString('Implementation Class UID', ul)
             );
+          } else if (ut === 0x53) {
+            this.association.setMaxAsyncOpsInvoked(
+              pdu.readUInt16('Asynchronous Operations Invoked')
+            );
+            this.association.setMaxAsyncOpsPerformed(
+              pdu.readUInt16('Asynchronous Operations Performed')
+            );
+            this.association.setNegotiateAsyncOps(
+              this.association.getMaxAsyncOpsInvoked() !== 1 ||
+                this.association.getMaxAsyncOpsPerformed() !== 1
+            );
           } else if (ut === 0x55) {
             this.association.setImplementationVersion(pdu.readString('Implementation Version', ul));
+          } else if (ut === 0x58) {
+            this.association.setUserIdentityType(pdu.readByte('User Identity Type'));
+            this.association.setUserIdentityPositiveResponseRequested(
+              pdu.readByte('Positive Response Requested') === 1
+            );
+            const pl = pdu.readUInt16('User Identity Primary Field-Length');
+            this.association.setUserIdentityPrimaryField(
+              pdu.readString('User Identity Primary Field', pl)
+            );
+            const sl = pdu.readUInt16('User Identity Secondary Field-Length');
+            this.association.setUserIdentitySecondaryField(
+              pdu.readString('User Identity Secondary Field', sl)
+            );
+            this.association.setNegotiateUserIdentity(true);
           } else {
             pdu.skipBytes('Unhandled User Item', ul);
           }
@@ -601,12 +667,39 @@ class AAssociateAC {
     pdu.writeString('Implementation Class UID', this.association.getImplementationClassUid());
     pdu.writeLength16();
 
+    // Asynchronous Operations Negotiation
+    if (
+      this.association.getNegotiateAsyncOps() &&
+      (this.association.getMaxAsyncOpsInvoked() !== 1 ||
+        this.association.getMaxAsyncOpsPerformed() !== 1)
+    ) {
+      pdu.writeByte('Item-Type', 0x53);
+      pdu.writeByte('Reserved', 0x00);
+      pdu.writeUInt16('Item-Length', 0x0004);
+      pdu.writeUInt16('Asynchronous Operations Invoked', this.association.getMaxAsyncOpsInvoked());
+      pdu.writeUInt16(
+        'Asynchronous Operations Performed',
+        this.association.getMaxAsyncOpsPerformed()
+      );
+    }
+
     // Implementation Version
     pdu.writeByte('Item-Type', 0x55);
     pdu.writeByte('Reserved', 0x00);
     pdu.markLength16('Item-Length');
     pdu.writeString('Implementation Version', this.association.getImplementationVersion());
     pdu.writeLength16();
+
+    // User Identity Negotiation
+    if (this.association.getNegotiateUserIdentityServerResponse()) {
+      pdu.writeByte('Item-Type', 0x59);
+      pdu.writeByte('Reserved', 0x00);
+      pdu.markLength16('Item-Length');
+      pdu.markLength16('Server Response-Length');
+      pdu.writeString('Server Response', this.association.getUserIdentityServerResponse());
+      pdu.writeLength16();
+      pdu.writeLength16();
+    }
 
     pdu.writeLength16();
 
@@ -682,8 +775,23 @@ class AAssociateAC {
             this.association.setImplementationClassUid(
               pdu.readString('Implementation Class UID', ul)
             );
+          } else if (ut === 0x53) {
+            this.association.setMaxAsyncOpsInvoked(
+              pdu.readUInt16('Asynchronous Operations Invoked')
+            );
+            this.association.setMaxAsyncOpsPerformed(
+              pdu.readUInt16('Asynchronous Operations Performed')
+            );
+            this.association.setNegotiateAsyncOps(
+              this.association.getMaxAsyncOpsInvoked() !== 1 ||
+                this.association.getMaxAsyncOpsPerformed() !== 1
+            );
           } else if (ut === 0x55) {
             this.association.setImplementationVersion(pdu.readString('Implementation Version', ul));
+          } else if (ut === 0x59) {
+            const sl = pdu.readUInt16('Server Response-Length');
+            this.association.setUserIdentityServerResponse(pdu.readString('Server Response', sl));
+            this.association.setNegotiateUserIdentityServerResponse(true);
           } else {
             pdu.skipBytes('User Item Value', ul);
           }
@@ -1284,14 +1392,14 @@ class PDataTF {
 
 //#region Exports
 module.exports = {
-  RawPdu,
-  AAssociateRQ,
+  AAbort,
   AAssociateAC,
   AAssociateRJ,
-  AReleaseRQ,
+  AAssociateRQ,
   AReleaseRP,
-  AAbort,
-  Pdv,
+  AReleaseRQ,
   PDataTF,
+  Pdv,
+  RawPdu,
 };
 //#endregion

@@ -1,6 +1,6 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",
@@ -42,7 +42,7 @@
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
     "async-eventemitter": "^0.2.4",
-    "dcmjs": "^0.29.3",
+    "dcmjs": "^0.29.4",
     "smart-buffer": "^4.2.0",
     "ts-mixer": "^6.0.2",
     "winston": "^3.8.2"
@@ -53,13 +53,13 @@
     "c8": "^7.12.0",
     "chai": "^4.3.7",
     "docdash": "^2.0.1",
-    "eslint": "^8.31.0",
+    "eslint": "^8.32.0",
     "jsdoc": "^4.0.0",
     "mocha": "^10.2.0",
     "mock-fs": "^5.2.0",
     "nodemon": "^2.0.20",
     "open-cli": "^7.1.0",
-    "prettier": "^2.8.2",
+    "prettier": "^2.8.3",
     "selfsigned": "^2.1.1",
     "shx": "^0.3.3",
     "terser-webpack-plugin": "^5.3.6",

@@ -13,6 +13,14 @@ declare namespace PresentationContextResult {
   const RejectTransferSyntaxesNotSupported: number;
 }
 
+declare namespace UserIdentityType {
+  const Username: number;
+  const UsernameAndPasscode: number;
+  const Kerberos: number;
+  const Saml: number;
+  const Jwt: number;
+}
+
 declare namespace AbortSource {
   const ServiceUser: number;
   const Unknown: number;
@@ -407,6 +415,116 @@ declare class Association {
    * Sets the implementation version.
    */
   setImplementationVersion(version: string): void;
+
+  /**
+   * Gets a flag indicating whether to negotiate asynchronous operations.
+   */
+  getNegotiateAsyncOps(): boolean;
+
+  /**
+   * Sets a flag indicating whether to negotiate asynchronous operations.
+   */
+  setNegotiateAsyncOps(negotiate: boolean): void;
+
+  /**
+   * Gets the supported maximum number of asynchronous operations invoked.
+   */
+  getMaxAsyncOpsInvoked(): number;
+
+  /**
+   * Sets the supported maximum number of asynchronous operations invoked.
+   */
+  setMaxAsyncOpsInvoked(ops: number): void;
+
+  /**
+   * Gets the supported maximum number of asynchronous operations performed.
+   */
+  getMaxAsyncOpsPerformed(): number;
+
+  /**
+   * Sets the supported maximum number of asynchronous operations performed.
+   */
+  setMaxAsyncOpsPerformed(ops: number): void;
+
+  /**
+   * Gets a flag indicating whether to negotiate user identity.
+   */
+  getNegotiateUserIdentity(): boolean;
+
+  /**
+   * Sets a flag indicating whether to negotiate user identity.
+   */
+  setNegotiateUserIdentity(negotiate: boolean): void;
+
+  /**
+   * Gets the user identity type.
+   */
+  getUserIdentityType(): number;
+
+  /**
+   * Sets the user identity type.
+   */
+  setUserIdentityType(type: number): void;
+
+  /**
+   * Gets a flag indicating whether a positive response requested.
+   */
+  getUserIdentityPositiveResponseRequested(): boolean;
+
+  /**
+   * Sets a flag indicating whether a positive response requested.
+   */
+  setUserIdentityPositiveResponseRequested(positiveResponseRequested: boolean): void;
+
+  /**
+   * Gets the user identity primary field.
+   * This field might contain the username, the Kerberos service ticket or the JWT.
+   */
+  getUserIdentityPrimaryField(): string;
+
+  /**
+   * Sets the user identity primary field.
+   * This field might contain the username, the Kerberos service ticket or the JWT.
+   */
+  setUserIdentityPrimaryField(primaryField: string): void;
+
+  /**
+   * Gets the user identity secondary field.
+   * This field might contain the passcode.
+   */
+  getUserIdentitySecondaryField(): string;
+
+  /**
+   * Sets the user identity secondary field.
+   * This field might contain the passcode.
+   */
+  setUserIdentitySecondaryField(secondaryField: string): void;
+
+  /**
+   * Gets a flag indicating whether to negotiate user identity server response.
+   */
+  getNegotiateUserIdentityServerResponse(): boolean;
+
+  /**
+   * Sets a flag indicating whether to negotiate user identity server response.
+   */
+  setNegotiateUserIdentityServerResponse(negotiate: boolean): void;
+
+  /**
+   * Gets the user identity server response.
+   * This field might contain the Kerberos server ticket if the user identity type value was 3,
+   * the SAML response if the user identity type value was 4, or it might be empty
+   * if the user identity type value was 1 or 2.
+   */
+  getUserIdentityServerResponse(): string;
+
+  /**
+   * Sets the user identity server response.
+   * This field might contain the Kerberos server ticket if the user identity type value was 3,
+   * the SAML response if the user identity type value was 4, or it might be empty
+   * if the user identity type value was 1 or 2.
+   */
+  setUserIdentityServerResponse(serverResponse: string): void;
 
   /**
    * Adds presentation context to association.
@@ -1441,6 +1559,16 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       associationLingerTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      asyncOps?: {
+        maxAsyncOpsInvoked?: number;
+        maxAsyncOpsPerformed?: number;
+      };
+      userIdentity?: {
+        type?: number;
+        positiveResponseRequested?: boolean;
+        primaryField?: string;
+        secondaryField?: string;
+      };
       securityOptions?: {
         key?: string | Array<string> | Buffer | Array<Buffer>;
         cert?: string | Array<string> | Buffer | Array<Buffer>;
@@ -1481,6 +1609,7 @@ declare const version: string;
 
 export namespace constants {
   export { PresentationContextResult };
+  export { UserIdentityType };
   export { AbortSource };
   export { AbortReason };
   export { RejectResult };

@@ -1,14 +1,19 @@
 const { Association } = require('./../src/Association');
 const {
-  RawPdu,
-  AAssociateRQ,
+  AAbort,
   AAssociateAC,
   AAssociateRJ,
-  Pdv,
+  AAssociateRQ,
   PDataTF,
-  AAbort,
+  Pdv,
+  RawPdu,
 } = require('../src/Pdu');
-const { PresentationContextResult, SopClass, TransferSyntax } = require('./../src/Constants');
+const {
+  PresentationContextResult,
+  SopClass,
+  TransferSyntax,
+  UserIdentityType,
+} = require('./../src/Constants');
 const Implementation = require('./../src/Implementation');
 
 const chai = require('chai');
@@ -19,9 +24,23 @@ describe('PDU', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
     const maxPdu = 1024;
+    const maxAsyncOpsInvoked = 3;
+    const maxAsyncOpsPerformed = 4;
+    const userIdentityType = UserIdentityType.Saml;
+    const userIdentityPrimaryField = 'JOHN';
+    const userIdentitySecondaryField = 'DOE';
 
     const assoc1 = new Association(callingAet, calledAet);
     assoc1.setMaxPduLength(maxPdu);
+    assoc1.setNegotiateAsyncOps(true);
+    assoc1.setMaxAsyncOpsInvoked(maxAsyncOpsInvoked);
+    assoc1.setMaxAsyncOpsPerformed(maxAsyncOpsPerformed);
+    assoc1.setNegotiateUserIdentity(true);
+    assoc1.setUserIdentityType(userIdentityType);
+    assoc1.setUserIdentityPositiveResponseRequested(true);
+    assoc1.setUserIdentityPrimaryField(userIdentityPrimaryField);
+    assoc1.setUserIdentitySecondaryField(userIdentitySecondaryField);
+
     const pcId = assoc1.addPresentationContext(SopClass.Verification);
     assoc1.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
 
@@ -42,7 +61,18 @@ describe('PDU', () => {
     expect(assoc1.getCalledAeTitle()).to.be.eq(assoc2.getCalledAeTitle());
     expect(assoc1.getImplementationVersion()).to.be.eq(Implementation.getImplementationVersion());
     expect(assoc1.getImplementationClassUid()).to.be.eq(Implementation.getImplementationClassUid());
-    expect(assoc1.getMaxPduLength()).to.be.eq(maxPdu);
+    expect(assoc1.getMaxPduLength()).to.be.eq(assoc2.getMaxPduLength());
+    expect(assoc1.getNegotiateAsyncOps()).to.be.eq(assoc2.getNegotiateAsyncOps());
+    expect(assoc1.getMaxAsyncOpsInvoked()).to.be.eq(assoc2.getMaxAsyncOpsInvoked());
+    expect(assoc1.getMaxAsyncOpsPerformed()).to.be.eq(assoc2.getMaxAsyncOpsPerformed());
+    expect(assoc1.getNegotiateUserIdentity()).to.be.eq(assoc2.getNegotiateUserIdentity());
+    expect(assoc1.getUserIdentityType()).to.be.eq(assoc2.getUserIdentityType());
+    expect(assoc1.getUserIdentityPositiveResponseRequested()).to.be.eq(
+      assoc2.getUserIdentityPositiveResponseRequested()
+    );
+    expect(assoc1.getUserIdentityPrimaryField()).to.be.eq(assoc2.getUserIdentityPrimaryField());
+    expect(assoc1.getUserIdentitySecondaryField()).to.be.eq(assoc2.getUserIdentitySecondaryField());
+
     expect(pc1.getAbstractSyntaxUid()).to.be.eq(pc2.getAbstractSyntaxUid());
     expect(pc1.getAcceptedTransferSyntaxUid()).to.be.eq(pc2.getAcceptedTransferSyntaxUid());
   });
@@ -50,11 +80,19 @@ describe('PDU', () => {
   it('should correctly write and read an A-ASSOCIATE-AC PDU', () => {
     const callingAet = 'CALLINGAET';
     const calledAet = 'CALLEDAET';
+    const maxAsyncOpsInvoked = 3;
+    const maxAsyncOpsPerformed = 4;
+    const userIdentityServerResponse = 'ALLOWED';
     const sop = SopClass.Verification;
     const tx = TransferSyntax.ImplicitVRLittleEndian;
     const res = PresentationContextResult.Accept;
 
     const assoc1 = new Association(callingAet, calledAet);
+    assoc1.setNegotiateAsyncOps(true);
+    assoc1.setMaxAsyncOpsInvoked(maxAsyncOpsInvoked);
+    assoc1.setMaxAsyncOpsPerformed(maxAsyncOpsPerformed);
+    assoc1.setNegotiateUserIdentityServerResponse(true);
+    assoc1.setUserIdentityServerResponse(userIdentityServerResponse);
     const pcId = assoc1.addPresentationContext(sop);
     assoc1.addTransferSyntaxToPresentationContext(pcId, tx);
     const context1 = assoc1.getPresentationContext(pcId);
@@ -66,12 +104,20 @@ describe('PDU', () => {
     const rq2 = new AAssociateAC(assoc1);
     rq2.read(pduRq);
 
-    const pcs1 = rq1.getAssociation().getPresentationContexts();
-    const pc1 = pcs1[0].context;
+    const pcs2 = rq2.getAssociation().getPresentationContexts();
+    const pc2 = pcs2[0].context;
 
-    expect(pc1.getAbstractSyntaxUid()).to.be.eq(sop);
-    expect(pc1.getAcceptedTransferSyntaxUid()).to.be.eq(tx);
-    expect(pc1.getResult()).to.be.eq(res);
+    expect(rq2.getAssociation().getNegotiateAsyncOps()).to.be.eq(true);
+    expect(rq2.getAssociation().getMaxAsyncOpsInvoked()).to.be.eq(maxAsyncOpsInvoked);
+    expect(rq2.getAssociation().getMaxAsyncOpsPerformed()).to.be.eq(maxAsyncOpsPerformed);
+    expect(rq2.getAssociation().getNegotiateUserIdentityServerResponse()).to.be.eq(true);
+    expect(rq2.getAssociation().getUserIdentityServerResponse()).to.be.eq(
+      userIdentityServerResponse
+    );
+
+    expect(pc2.getAbstractSyntaxUid()).to.be.eq(sop);
+    expect(pc2.getAcceptedTransferSyntaxUid()).to.be.eq(tx);
+    expect(pc2.getResult()).to.be.eq(res);
   });
 
   it('should correctly write and read an A-ASSOCIATE-RJ PDU', () => {

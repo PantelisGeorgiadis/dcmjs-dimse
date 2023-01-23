@@ -1,5 +1,5 @@
 const Dataset = require('./../src/Dataset');
-const { TransferSyntax, StorageClass } = require('./../src/Constants');
+const { StorageClass, TransferSyntax } = require('./../src/Constants');
 
 const chai = require('chai');
 const expect = chai.expect;

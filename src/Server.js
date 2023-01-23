@@ -1,19 +1,19 @@
-const Network = require('./Network');
-const log = require('./log');
 const {
   CEchoResponse,
   CFindResponse,
-  CStoreResponse,
-  CMoveResponse,
   CGetResponse,
-  NCreateResponse,
+  CMoveResponse,
+  CStoreResponse,
   NActionResponse,
+  NCreateResponse,
   NDeleteResponse,
   NEventReportResponse,
   NGetResponse,
   NSetResponse,
 } = require('./Command');
+const Network = require('./Network');
 const Statistics = require('./Statistics');
+const log = require('./log');
 
 const AsyncEventEmitter = require('async-eventemitter');
 const net = require('net');
@@ -370,5 +370,5 @@ class Server extends AsyncEventEmitter {
 //#endregion
 
 //#region Exports
-module.exports = { Server, Scp };
+module.exports = { Scp, Server };
 //#endregion

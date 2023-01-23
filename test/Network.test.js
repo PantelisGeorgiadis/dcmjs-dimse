@@ -1,16 +1,16 @@
 const Client = require('./../src/Client');
 const Dataset = require('./../src/Dataset');
 const { PresentationContext } = require('./../src/Association');
-const { Server, Scp } = require('./../src/Server');
+const { Scp, Server } = require('./../src/Server');
 const {
   CEchoRequest,
   CEchoResponse,
   CFindRequest,
   CFindResponse,
-  CStoreRequest,
-  CStoreResponse,
   CGetRequest,
   CGetResponse,
+  CStoreRequest,
+  CStoreResponse,
   NActionRequest,
   NActionResponse,
   NEventReportRequest,
@@ -19,13 +19,14 @@ const {
   NGetResponse,
 } = require('../src/Command');
 const {
-  SopClass,
-  TransferSyntax,
+  AbortReason,
+  AbortSource,
   PresentationContextResult,
+  SopClass,
   Status,
   StorageClass,
-  AbortSource,
-  AbortReason,
+  TransferSyntax,
+  UserIdentityType,
 } = require('./../src/Constants');
 const log = require('./../src/log');
 
@@ -54,6 +55,52 @@ class RejectingScp extends Scp {
   associationRequested(association) {
     this.association = association;
     this.sendAssociationReject();
+  }
+}
+
+class UserIdentityScp extends Scp {
+  constructor(socket, opts) {
+    super(socket, opts);
+    this.association = undefined;
+  }
+  associationRequested(association) {
+    this.association = association;
+    if (
+      this.association.getNegotiateUserIdentity() &&
+      this.association.getUserIdentityPositiveResponseRequested()
+    ) {
+      if (this.association.getUserIdentityType() === UserIdentityType.Username) {
+        this.association.setUserIdentityServerResponse(
+          this.association.getUserIdentityPrimaryField()
+        );
+        this.association.setNegotiateUserIdentityServerResponse(true);
+      } else {
+        this.sendAssociationReject(
+          RejectResult.Permanent,
+          RejectSource.ServiceUser,
+          RejectReason.NoReasonGiven
+        );
+        return;
+      }
+    }
+    const contexts = association.getPresentationContexts();
+    contexts.forEach((c) => {
+      const context = association.getPresentationContext(c.id);
+      if (context.getAbstractSyntaxUid() === SopClass.Verification) {
+        context.setResult(PresentationContextResult.Accept, TransferSyntax.ImplicitVRLittleEndian);
+      } else {
+        context.setResult(PresentationContextResult.RejectAbstractSyntaxNotSupported);
+      }
+    });
+    this.sendAssociationAccept();
+  }
+  cEchoRequest(request, callback) {
+    const response = CEchoResponse.fromRequest(request);
+    response.setStatus(Status.Success);
+    callback(response);
+  }
+  associationReleaseRequested() {
+    this.sendAssociationReleaseResponse();
   }
 }
 
@@ -317,11 +364,39 @@ describe('Network', () => {
     client.send('127.0.0.1', 2101, 'CALLINGAET', 'CALLEDAET');
   });
 
+  it('should be able to handle association with user identity', () => {
+    const server = new Server(UserIdentityScp);
+    server.listen(2102);
+
+    const username = 'USERNAME';
+    let serverResponse = '';
+
+    const client = new Client();
+    const request = new CEchoRequest();
+    client.addRequest(request);
+    client.on('associationAccepted', (association) => {
+      if (association.getNegotiateUserIdentityServerResponse()) {
+        serverResponse = association.getUserIdentityServerResponse();
+      }
+    });
+    client.on('closed', () => {
+      expect(username).to.be.eq(serverResponse);
+      server.close();
+    });
+    client.send('127.0.0.1', 2102, 'CALLINGAET', 'CALLEDAET', {
+      userIdentity: {
+        type: UserIdentityType.Username,
+        positiveResponseRequested: true,
+        primaryField: username,
+      },
+    });
+  });
+
   it('should correctly perform and serve a C-ECHO operation', () => {
     let status = Status.ProcessingFailure;
 
     const server = new Server(AcceptingScp);
-    server.listen(2102);
+    server.listen(2103);
 
     const client = new Client();
     const request = new CEchoRequest();
@@ -333,7 +408,7 @@ describe('Network', () => {
       expect(status).to.be.eq(Status.Success);
       server.close();
     });
-    client.send('127.0.0.1', 2102, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2103, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a secure C-ECHO operation (TLS)', () => {
@@ -364,7 +439,7 @@ describe('Network', () => {
     });
 
     const server = new Server(AcceptingScp);
-    server.listen(2103, {
+    server.listen(2104, {
       securityOptions: {
         key: serverPems.private,
         cert: serverPems.cert,
@@ -384,7 +459,7 @@ describe('Network', () => {
       expect(status).to.be.eq(Status.Success);
       server.close();
     });
-    client.send('127.0.0.1', 2103, 'CALLINGAET', 'CALLEDAET', {
+    client.send('127.0.0.1', 2104, 'CALLINGAET', 'CALLEDAET', {
       securityOptions: {
         key: clientPems.private,
         cert: clientPems.cert,
@@ -397,7 +472,7 @@ describe('Network', () => {
 
   it('should correctly perform and serve a C-FIND operation (Study)', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2104);
+    server.listen(2105);
 
     let ret = undefined;
 
@@ -414,12 +489,12 @@ describe('Network', () => {
       expect(ret.getElement('PatientName')).to.be.eq(datasets[0].getElement('PatientName'));
       server.close();
     });
-    client.send('127.0.0.1', 2104, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-FIND operation (Worklist)', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2105);
+    server.listen(2106);
 
     let ret = undefined;
 
@@ -436,12 +511,12 @@ describe('Network', () => {
       expect(ret.getElement('PatientName')).to.be.eq(datasets[1].getElement('PatientName'));
       server.close();
     });
-    client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-STORE operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2106);
+    server.listen(2107);
 
     let ret = undefined;
 
@@ -467,12 +542,12 @@ describe('Network', () => {
       expect(ret.getElement('PatientName')).to.be.eq(datasets[2].getElement('PatientName'));
       server.close();
     });
-    client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-GET operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2107);
+    server.listen(2108);
 
     let ret = undefined;
     const studyInstanceUid = Dataset.generateDerivedUid();
@@ -504,12 +579,12 @@ describe('Network', () => {
       );
       server.close();
     });
-    client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-ACTION operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2108);
+    server.listen(2109);
 
     let ret = undefined;
     const sopInstanceUid = Dataset.generateDerivedUid();
@@ -546,12 +621,12 @@ describe('Network', () => {
       expect(failedSOPSequenceItem.FailureReason).to.be.eq(0x0112);
       server.close();
     });
-    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-GET operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2109);
+    server.listen(2110);
 
     let ret = undefined;
 
@@ -574,12 +649,12 @@ describe('Network', () => {
       expect(ret.getElement('Manufacturer')).to.be.eq('Manufacturer');
       server.close();
     });
-    client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2110, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-CANCEL operation', () => {
     const server = new Server(CancelingScp);
-    server.listen(2110);
+    server.listen(2111);
 
     let canceled = false;
 
@@ -601,12 +676,12 @@ describe('Network', () => {
       expect(canceled).to.be.true;
       server.close();
     });
-    client.send('127.0.0.1', 2110, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2111, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve an A-ABORT operation', () => {
     const server = new Server(AbortingScp);
-    server.listen(2111);
+    server.listen(2112);
 
     let aborted = false;
 
@@ -628,6 +703,6 @@ describe('Network', () => {
       expect(aborted).to.be.true;
       server.close();
     });
-    client.send('127.0.0.1', 2111, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2112, 'CALLINGAET', 'CALLEDAET');
   });
 });

@@ -1,10 +1,10 @@
-const { TransferSyntax, StorageClass } = require('./Constants');
+const { StorageClass, TransferSyntax } = require('./Constants');
 const Implementation = require('./Implementation');
 
 const { readFile, readFileSync, writeFile, writeFileSync } = require('fs');
 const { EOL } = require('os');
 const dcmjs = require('dcmjs');
-const { DicomMetaDictionary, DicomDict, DicomMessage, ReadBufferStream, WriteBufferStream } =
+const { DicomDict, DicomMessage, DicomMetaDictionary, ReadBufferStream, WriteBufferStream } =
   dcmjs.data;
 const dcmjsLog = dcmjs.log;
 

@@ -19,7 +19,7 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 
 ### Features
 - Implements C-ECHO, C-FIND, C-STORE, C-MOVE, C-GET, C-CANCEL, N-CREATE, N-ACTION, N-DELETE, N-EVENT-REPORT, N-GET and N-SET services as SCU and SCP.
-- Supports secure DICOM TLS connections.
+- Supports secure DICOM TLS connections and user identity negotiation.
 - Allows custom DICOM implementations (Implementation Class UID and Implementation Version).
 - Provides asynchronous event handlers for incoming SCP requests.
 
@@ -146,6 +146,7 @@ const { CEchoResponse, CFindResponse, CStoreResponse } = dcmjsDimse.responses;
 const {
   Status,
   PresentationContextResult,
+  UserIdentityType,
   RejectResult,
   RejectSource,
   RejectReason,
@@ -174,6 +175,28 @@ class DcmjsDimseScp extends Scp {
       return;
     }
 
+    // Evaluate user identity and reject association, if needed
+    if (
+      this.association.getNegotiateUserIdentity() &&
+      this.association.getUserIdentityPositiveResponseRequested()
+    ) {
+      if (
+        this.association.getUserIdentityType() === UserIdentityType.UsernameAndPasscode &&
+        this.association.getUserIdentityPrimaryField() === 'USERNAME' &&
+        this.association.getUserIdentitySecondaryField() === 'PASSWORD'
+      ) {
+        this.association.setUserIdentityServerResponse('');
+        this.association.setNegotiateUserIdentityServerResponse(true);
+      } else {
+        this.sendAssociationReject(
+          RejectResult.Permanent,
+          RejectSource.ServiceUser,
+          RejectReason.NoReasonGiven
+        );
+        return;
+      }
+    }
+
     // Optionally set the preferred max PDU length
     this.association.setMaxPduLength(65536);
 
@@ -188,11 +211,11 @@ class DcmjsDimseScp extends Scp {
       ) {
         const transferSyntaxes = context.getTransferSyntaxUids();
         transferSyntaxes.forEach((transferSyntax) => {
-          if (transferSyntax === TransferSyntax.ImplicitVRLittleEndian) {
-            context.setResult(
-              PresentationContextResult.Accept,
-              TransferSyntax.ImplicitVRLittleEndian
-            );
+          if (
+            transferSyntax === TransferSyntax.ImplicitVRLittleEndian ||
+            transferSyntax === TransferSyntax.ExplicitVRLittleEndian
+          ) {
+            context.setResult(PresentationContextResult.Accept, transferSyntax);
           } else {
             context.setResult(PresentationContextResult.RejectTransferSyntaxesNotSupported);
           }

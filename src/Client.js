@@ -1,7 +1,7 @@
-const Network = require('./Network');
 const { Association, PresentationContext } = require('./Association');
-const { TransferSyntax } = require('./Constants');
+const { TransferSyntax, UserIdentityType } = require('./Constants');
 const { Request } = require('./Command');
+const Network = require('./Network');
 const Statistics = require('./Statistics');
 const log = require('./log');
 
@@ -86,6 +86,14 @@ class Client extends AsyncEventEmitter {
    * @param {number} [opts.associationLingerTimeout] - Association linger timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.asyncOps] - Asynchronous operations options.
+   * @param {number} [opts.asyncOps.maxAsyncOpsInvoked] - Supported maximum number of asynchronous operations invoked.
+   * @param {number} [opts.asyncOps.maxAsyncOpsPerformed] - Supported maximum number of asynchronous operations performed.
+   * @param {Object} [opts.userIdentity] - User identity negotiation options.
+   * @param {UserIdentityType} [opts.userIdentity.type] - User identity type.
+   * @param {boolean} [opts.userIdentity.positiveResponseRequested] - Expect positive response.
+   * @param {string} [opts.userIdentity.primaryField] - User identity primary field.
+   * @param {string} [opts.userIdentity.secondaryField] - User identity secondary field.
    * @param {Object} [opts.securityOptions] - Security options.
    * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.key] - Client private key in PEM format.
    * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.cert] - Client public certificate in PEM format.
@@ -111,6 +119,24 @@ class Client extends AsyncEventEmitter {
 
     // Create association object
     const association = new Association(callingAeTitle, calledAeTitle);
+    if (opts.asyncOps) {
+      association.setMaxAsyncOpsInvoked(opts.asyncOps.maxAsyncOpsInvoked || 1);
+      association.setMaxAsyncOpsPerformed(opts.asyncOps.maxAsyncOpsPerformed || 1);
+      association.setNegotiateAsyncOps(
+        association.getMaxAsyncOpsInvoked() !== 1 || association.getMaxAsyncOpsPerformed() !== 1
+      );
+    }
+    if (opts.userIdentity) {
+      association.setUserIdentityType(opts.userIdentity.type || UserIdentityType.Username);
+      association.setUserIdentityPositiveResponseRequested(
+        opts.userIdentity.positiveResponseRequested || false
+      );
+      association.setUserIdentityPrimaryField(opts.userIdentity.primaryField || '');
+      association.setUserIdentitySecondaryField(opts.userIdentity.secondaryField || '');
+      association.setNegotiateUserIdentity(true);
+    }
+
+    // Add requests
     this.requests.forEach((request) => {
       association.addPresentationContextFromRequest(request, [
         TransferSyntax.ImplicitVRLittleEndian,

@@ -1,21 +1,35 @@
-import { Dataset, Client, Server, Scp, association, requests, responses, constants } from './..';
-import path from 'path';
+import { association, Client, constants, Dataset, requests, responses, Scp, Server } from './..';
 import { Socket } from 'net';
+import path from 'path';
 
 const { CEchoRequest, CFindRequest, CStoreRequest } = requests;
 const { CEchoResponse, CFindResponse, CStoreResponse } = responses;
 const {
-  Status,
   PresentationContextResult,
+  RejectReason,
   RejectResult,
   RejectSource,
-  RejectReason,
-  TransferSyntax,
   SopClass,
+  Status,
   StorageClass,
+  TransferSyntax,
+  UserIdentityType,
 } = constants;
 
-function performCEcho(host: string, port: number, callingAeTitle: string, calledAeTitle: string) {
+function performCEcho(
+  host: string,
+  port: number,
+  callingAeTitle: string,
+  calledAeTitle: string,
+  opts: {
+    userIdentity?: {
+      type?: number;
+      positiveResponseRequested?: boolean;
+      primaryField?: string;
+      secondaryField?: string;
+    };
+  }
+) {
   const client = new Client();
   const request = new CEchoRequest();
   request.on('response', (response) => {
@@ -24,14 +38,22 @@ function performCEcho(host: string, port: number, callingAeTitle: string, called
     }
   });
   client.addRequest(request);
-  client.send(host, port, callingAeTitle, calledAeTitle);
+  client.send(host, port, callingAeTitle, calledAeTitle, opts);
 }
 
 function performCFindStudy(
   host: string,
   port: number,
   callingAeTitle: string,
-  calledAeTitle: string
+  calledAeTitle: string,
+  opts: {
+    userIdentity?: {
+      type?: number;
+      positiveResponseRequested?: boolean;
+      primaryField?: string;
+      secondaryField?: string;
+    };
+  }
 ) {
   const client = new Client();
   const request = CFindRequest.createStudyFindRequest({ PatientName: '*' });
@@ -41,14 +63,22 @@ function performCFindStudy(
     }
   });
   client.addRequest(request);
-  client.send(host, port, callingAeTitle, calledAeTitle);
+  client.send(host, port, callingAeTitle, calledAeTitle, opts);
 }
 
 function performCFindMwl(
   host: string,
   port: number,
   callingAeTitle: string,
-  calledAeTitle: string
+  calledAeTitle: string,
+  opts: {
+    userIdentity?: {
+      type?: number;
+      positiveResponseRequested?: boolean;
+      primaryField?: string;
+      secondaryField?: string;
+    };
+  }
 ) {
   const client = new Client();
   const request = CFindRequest.createWorklistFindRequest({ PatientName: '*' });
@@ -58,10 +88,23 @@ function performCFindMwl(
     }
   });
   client.addRequest(request);
-  client.send(host, port, callingAeTitle, calledAeTitle);
+  client.send(host, port, callingAeTitle, calledAeTitle, opts);
 }
 
-function performCStore(host: string, port: number, callingAeTitle: string, calledAeTitle: string) {
+function performCStore(
+  host: string,
+  port: number,
+  callingAeTitle: string,
+  calledAeTitle: string,
+  opts: {
+    userIdentity?: {
+      type?: number;
+      positiveResponseRequested?: boolean;
+      primaryField?: string;
+      secondaryField?: string;
+    };
+  }
+) {
   const rootPath = process.cwd();
   const elePath = path.join(rootPath, 'datasets', 'ele.dcm');
   const j2kPath = path.join(rootPath, 'datasets', 'j2k.dcm');
@@ -73,7 +116,7 @@ function performCStore(host: string, port: number, callingAeTitle: string, calle
   client.addRequest(new CStoreRequest(j2kPath));
   client.addRequest(new CStoreRequest(srPath));
   client.addRequest(new CStoreRequest(pdfPath));
-  client.send(host, port, callingAeTitle, calledAeTitle);
+  client.send(host, port, callingAeTitle, calledAeTitle, opts);
 }
 
 class ExampleScp extends Scp {
@@ -87,6 +130,7 @@ class ExampleScp extends Scp {
   associationRequested(association: association.Association) {
     this.association = association;
 
+    // Evaluate calling/called AET and reject association, if needed
     if (this.association.getCallingAeTitle() !== 'SCU') {
       this.sendAssociationReject(
         RejectResult.Permanent,
@@ -94,6 +138,28 @@ class ExampleScp extends Scp {
         RejectReason.CallingAeNotRecognized
       );
       return;
+    }
+
+    // Evaluate user identity and reject association, if needed
+    if (
+      this.association.getNegotiateUserIdentity() &&
+      this.association.getUserIdentityPositiveResponseRequested()
+    ) {
+      if (
+        this.association.getUserIdentityType() === UserIdentityType.UsernameAndPasscode &&
+        this.association.getUserIdentityPrimaryField() === 'Username' &&
+        this.association.getUserIdentitySecondaryField() === 'Password'
+      ) {
+        this.association.setUserIdentityServerResponse('');
+        this.association.setNegotiateUserIdentityServerResponse(true);
+      } else {
+        this.sendAssociationReject(
+          RejectResult.Permanent,
+          RejectSource.ServiceUser,
+          RejectReason.NoReasonGiven
+        );
+        return;
+      }
     }
 
     const contexts = association.getPresentationContexts();
@@ -107,11 +173,11 @@ class ExampleScp extends Scp {
       ) {
         const transferSyntaxes = context.getTransferSyntaxUids();
         transferSyntaxes.forEach((transferSyntax) => {
-          if (transferSyntax === TransferSyntax.ImplicitVRLittleEndian) {
-            context.setResult(
-              PresentationContextResult.Accept,
-              TransferSyntax.ImplicitVRLittleEndian
-            );
+          if (
+            transferSyntax === TransferSyntax.ImplicitVRLittleEndian ||
+            transferSyntax === TransferSyntax.ExplicitVRLittleEndian
+          ) {
+            context.setResult(PresentationContextResult.Accept, transferSyntax);
           } else {
             context.setResult(PresentationContextResult.RejectTransferSyntaxesNotSupported);
           }
@@ -172,9 +238,18 @@ const calledAeTitle = 'ANY-SCP';
 const server = new Server(ExampleScp);
 server.listen(port);
 
+const opts = {
+  userIdentity: {
+    type: UserIdentityType.UsernameAndPasscode,
+    positiveResponseRequested: true,
+    primaryField: 'Username',
+    secondaryField: 'Password',
+  },
+};
+
 const operations = [performCEcho, performCFindStudy, performCFindMwl, performCStore];
 operations.forEach((o) => {
-  Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle]);
+  Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle, opts]);
 });
 
 setTimeout(() => {

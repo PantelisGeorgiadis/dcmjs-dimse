@@ -1,12 +1,13 @@
 const Dataset = require('../src/Dataset');
 const { Association } = require('./../src/Association');
-const { Request, CStoreRequest, CGetRequest } = require('../src/Command');
+const { CGetRequest, CStoreRequest, Request } = require('../src/Command');
 const {
   CommandFieldType,
   SopClass,
   TransferSyntax,
   PresentationContextResult,
   StorageClass,
+  UserIdentityType,
 } = require('./../src/Constants');
 
 const chai = require('chai');
@@ -21,6 +22,49 @@ describe('Association', () => {
 
     expect(association.getCallingAeTitle()).to.be.eq(callingAet);
     expect(association.getCalledAeTitle()).to.be.eq(calledAet);
+  });
+
+  it('should correctly handle user identity and async ops', () => {
+    const callingAet = 'CALLINGAET';
+    const calledAet = 'CALLEDAET';
+
+    const association = new Association(callingAet, calledAet);
+
+    expect(association.getCallingAeTitle()).to.be.eq(callingAet);
+    expect(association.getCalledAeTitle()).to.be.eq(calledAet);
+    expect(association.getCalledAeTitle()).to.be.eq(calledAet);
+    expect(association.getUserIdentityType()).to.be.eq(UserIdentityType.Username);
+    expect(association.getNegotiateAsyncOps()).to.be.eq(false);
+    expect(association.getMaxAsyncOpsInvoked()).to.be.eq(1);
+    expect(association.getMaxAsyncOpsPerformed()).to.be.eq(1);
+    expect(association.getNegotiateUserIdentity()).to.be.eq(false);
+    expect(association.getUserIdentityPositiveResponseRequested()).to.be.eq(false);
+    expect(association.getUserIdentityPrimaryField()).to.be.eq('');
+    expect(association.getUserIdentitySecondaryField()).to.be.eq('');
+    expect(association.getNegotiateUserIdentityServerResponse()).to.be.eq(false);
+    expect(association.getUserIdentityServerResponse()).to.be.eq('');
+
+    association.setNegotiateAsyncOps(true);
+    association.setMaxAsyncOpsInvoked(3);
+    association.setMaxAsyncOpsPerformed(4);
+    association.setNegotiateUserIdentity(true);
+    association.setUserIdentityType(1);
+    association.setUserIdentityPositiveResponseRequested(true);
+    association.setUserIdentityPrimaryField('JOHN');
+    association.setUserIdentitySecondaryField('DOE');
+    association.setNegotiateUserIdentityServerResponse(true);
+    association.setUserIdentityServerResponse('ALLOWED');
+
+    expect(association.getNegotiateAsyncOps()).to.be.eq(true);
+    expect(association.getMaxAsyncOpsInvoked()).to.be.eq(3);
+    expect(association.getMaxAsyncOpsPerformed()).to.be.eq(4);
+    expect(association.getNegotiateUserIdentity()).to.be.eq(true);
+    expect(association.getUserIdentityType()).to.be.eq(1);
+    expect(association.getUserIdentityPositiveResponseRequested()).to.be.eq(true);
+    expect(association.getUserIdentityPrimaryField()).to.be.eq('JOHN');
+    expect(association.getUserIdentitySecondaryField()).to.be.eq('DOE');
+    expect(association.getNegotiateUserIdentityServerResponse()).to.be.eq(true);
+    expect(association.getUserIdentityServerResponse()).to.be.eq('ALLOWED');
   });
 
   it('should correctly add and clear presentation contexts', () => {

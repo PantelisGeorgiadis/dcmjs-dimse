@@ -1,11 +1,12 @@
-const { CStoreRequest, CGetRequest } = require('./Command');
+const { CGetRequest, CStoreRequest } = require('./Command');
 const {
   CommandFieldType,
   PresentationContextResult,
-  Uid,
   SopClass,
   StorageClass,
   TransferSyntax,
+  Uid,
+  UserIdentityType,
 } = require('./Constants');
 const Implementation = require('./Implementation');
 
@@ -195,6 +196,16 @@ class Association {
     this.implementationClassUid = Implementation.getImplementationClassUid();
     this.implementationVersion = Implementation.getImplementationVersion();
     this.presentationContexts = [];
+    this.negotiateAsyncOps = false;
+    this.maxAsyncOpsInvoked = 1;
+    this.maxAsyncOpsPerformed = 1;
+    this.negotiateUserIdentity = false;
+    this.userIdentityType = UserIdentityType.Username;
+    this.userIdentityPositiveResponseRequested = false;
+    this.userIdentityPrimaryField = '';
+    this.userIdentitySecondaryField = '';
+    this.negotiateUserIdentityServerResponse = false;
+    this.userIdentityServerResponse = '';
   }
 
   /**
@@ -294,6 +305,196 @@ class Association {
    */
   setImplementationVersion(version) {
     this.implementationVersion = version;
+  }
+
+  /**
+   * Gets a flag indicating whether to negotiate asynchronous operations.
+   * @method
+   * @returns {boolean} Flag indicating whether to negotiate asynchronous operations.
+   */
+  getNegotiateAsyncOps() {
+    return this.negotiateAsyncOps;
+  }
+
+  /**
+   * Sets a flag indicating whether to negotiate asynchronous operations.
+   * @method
+   * @param {boolean} negotiate - Flag indicating whether to negotiate asynchronous operations.
+   */
+  setNegotiateAsyncOps(negotiate) {
+    this.negotiateAsyncOps = negotiate;
+  }
+
+  /**
+   * Gets the supported maximum number of asynchronous operations invoked.
+   * @method
+   * @returns {number} Maximum number of asynchronous operations invoked.
+   */
+  getMaxAsyncOpsInvoked() {
+    return this.maxAsyncOpsInvoked;
+  }
+
+  /**
+   * Sets the supported maximum number of asynchronous operations invoked.
+   * @method
+   * @param {number} ops - Maximum number of asynchronous operations invoked.
+   */
+  setMaxAsyncOpsInvoked(ops) {
+    this.maxAsyncOpsInvoked = ops;
+  }
+
+  /**
+   * Gets the supported maximum number of asynchronous operations performed.
+   * @method
+   * @returns {number} Maximum number of asynchronous operations performed.
+   */
+  getMaxAsyncOpsPerformed() {
+    return this.maxAsyncOpsPerformed;
+  }
+
+  /**
+   * Sets the supported maximum number of asynchronous operations performed.
+   * @method
+   * @param {number} ops - Maximum number of asynchronous operations performed.
+   */
+  setMaxAsyncOpsPerformed(ops) {
+    this.maxAsyncOpsPerformed = ops;
+  }
+
+  /**
+   * Gets a flag indicating whether to negotiate user identity.
+   * @method
+   * @returns {boolean} Flag indicating whether to negotiate user identity.
+   */
+  getNegotiateUserIdentity() {
+    return this.negotiateUserIdentity;
+  }
+
+  /**
+   * Sets a flag indicating whether to negotiate user identity.
+   * @method
+   * @param {boolean} negotiate - Flag indicating whether to negotiate user identity.
+   */
+  setNegotiateUserIdentity(negotiate) {
+    this.negotiateUserIdentity = negotiate;
+  }
+
+  /**
+   * Gets the user identity type.
+   * @method
+   * @returns {UserIdentityType} User identity type.
+   */
+  getUserIdentityType() {
+    return this.userIdentityType;
+  }
+
+  /**
+   * Sets the user identity type.
+   * @method
+   * @param {UserIdentityType} type - User identity type.
+   */
+  setUserIdentityType(type) {
+    this.userIdentityType = type;
+  }
+
+  /**
+   * Gets a flag indicating whether a positive response requested.
+   * @method
+   * @returns {boolean} Flag to indicate whether a positive response requested.
+   */
+  getUserIdentityPositiveResponseRequested() {
+    return this.userIdentityPositiveResponseRequested;
+  }
+
+  /**
+   * Sets a flag indicating whether a positive response requested.
+   * @method
+   * @param {boolean} positiveResponseRequested - Flag to indicate whether a positive response requested.
+   */
+  setUserIdentityPositiveResponseRequested(positiveResponseRequested) {
+    this.userIdentityPositiveResponseRequested = positiveResponseRequested;
+  }
+
+  /**
+   * Gets the user identity primary field.
+   * This field might contain the username, the Kerberos service ticket or the JWT.
+   * @method
+   * @returns {string} User identity primary field.
+   */
+  getUserIdentityPrimaryField() {
+    return this.userIdentityPrimaryField;
+  }
+
+  /**
+   * Sets the user identity primary field.
+   * This field might contain the username, the Kerberos service ticket or the JWT.
+   * @method
+   * @param {string} primaryField - User identity primary field.
+   */
+  setUserIdentityPrimaryField(primaryField) {
+    this.userIdentityPrimaryField = primaryField;
+  }
+
+  /**
+   * Gets the user identity secondary field.
+   * This field might contain the passcode.
+   * @method
+   * @returns {string} User identity secondary field.
+   */
+  getUserIdentitySecondaryField() {
+    return this.userIdentitySecondaryField;
+  }
+
+  /**
+   * Sets the user identity secondary field.
+   * This field might contain the passcode.
+   * @method
+   * @param {string} secondaryField - User identity secondary field.
+   */
+  setUserIdentitySecondaryField(secondaryField) {
+    this.userIdentitySecondaryField = secondaryField;
+  }
+
+  /**
+   * Gets a flag indicating whether to negotiate user identity server response.
+   * @method
+   * @returns {boolean} Flag indicating whether to negotiate user identity server response.
+   */
+  getNegotiateUserIdentityServerResponse() {
+    return this.negotiateUserIdentityServerResponse;
+  }
+
+  /**
+   * Sets a flag indicating whether to negotiate user identity server response.
+   * @method
+   * @param {boolean} negotiate - Flag indicating whether to negotiate user identity server response.
+   */
+  setNegotiateUserIdentityServerResponse(negotiate) {
+    this.negotiateUserIdentityServerResponse = negotiate;
+  }
+
+  /**
+   * Gets the user identity server response.
+   * This field might contain the Kerberos server ticket if the user identity type value was 3,
+   * the SAML response if the user identity type value was 4, or it might be empty
+   * if the user identity type value was 1 or 2.
+   * @method
+   * @returns {string} User identity server response.
+   */
+  getUserIdentityServerResponse() {
+    return this.userIdentityServerResponse;
+  }
+
+  /**
+   * Sets the user identity server response.
+   * This field might contain the Kerberos server ticket if the user identity type value was 3,
+   * the SAML response if the user identity type value was 4, or it might be empty
+   * if the user identity type value was 1 or 2.
+   * @method
+   * @param {string} serverResponse - User identity server response.
+   */
+  setUserIdentityServerResponse(serverResponse) {
+    this.userIdentityServerResponse = serverResponse;
   }
 
   /**
@@ -509,12 +710,24 @@ class Association {
    */
   toString() {
     const str = [];
-    str.push(`Application Context:     ${this.applicationContextName}`);
-    str.push(`Implementation Class:    ${this.implementationClassUid}`);
-    str.push(`Implementation Version:  ${this.implementationVersion}`);
-    str.push(`Maximum PDU Length:      ${this.maxPduLength}`);
-    str.push(`Called AE Title:         ${this.calledAeTitle}`);
-    str.push(`Calling AE Title:        ${this.callingAeTitle}`);
+    str.push(`Application Context:     ${this.getApplicationContextName()}`);
+    str.push(`Implementation Class:    ${this.getImplementationClassUid()}`);
+    str.push(`Implementation Version:  ${this.getImplementationVersion()}`);
+    str.push(`Maximum PDU Length:      ${this.getMaxPduLength()}`);
+    str.push(`Called AE Title:         ${this.getCalledAeTitle()}`);
+    str.push(`Calling AE Title:        ${this.getCallingAeTitle()}`);
+    if (this.getNegotiateAsyncOps()) {
+      str.push(
+        `Asynchronous Operations: Invoked: ${this.getMaxAsyncOpsInvoked()} Performed:${this.getMaxAsyncOpsPerformed()}`
+      );
+    }
+    if (this.getNegotiateUserIdentity()) {
+      str.push(
+        `User Identity:           ${
+          this._userIdentityTypeToString(this.getUserIdentityType()) || ''
+        }`
+      );
+    }
     str.push(`Presentation Contexts:   ${this.presentationContexts.length}`);
     this.presentationContexts.forEach((pc) => {
       const context = this.getPresentationContext(pc.id);
@@ -576,10 +789,34 @@ class Association {
         return request.getAffectedSopClassUid();
     }
   }
+
+  /**
+   * Returns a readable string from user identity type.
+   * @method
+   * @private
+   * @param {number} type - User identity type.
+   * @returns {string} Readable string.
+   */
+  _userIdentityTypeToString(type) {
+    switch (type) {
+      case UserIdentityType.Username:
+        return 'Username';
+      case UserIdentityType.UsernameAndPasscode:
+        return 'Username and Passcode';
+      case UserIdentityType.Kerberos:
+        return 'Kerberos Service Ticket';
+      case UserIdentityType.Saml:
+        return 'SAML Assertion';
+      case UserIdentityType.Jwt:
+        return 'JSON Web Token';
+      default:
+        return `${type}`;
+    }
+  }
   //#endregion
 }
 //#endregion
 
 //#region Exports
-module.exports = { PresentationContext, Association };
+module.exports = { Association, PresentationContext };
 //#endregion

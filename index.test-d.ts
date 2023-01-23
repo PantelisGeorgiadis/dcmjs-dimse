@@ -2,50 +2,50 @@ import { expectType, expectError } from 'tsd';
 import { Socket } from 'net';
 import { TLSSocket } from 'tls';
 import {
+  association,
+  Client,
+  constants,
   Dataset,
   Implementation,
-  Client,
-  Server,
-  Scp,
-  Statistics,
   log,
-  version,
-  association,
   requests,
   responses,
-  constants,
+  Scp,
+  Server,
+  Statistics,
+  version,
 } from '.';
-const { PresentationContext, Association } = association;
+const { Association, PresentationContext } = association;
 const {
-  Request,
+  CCancelRequest,
   CEchoRequest,
   CFindRequest,
-  CStoreRequest,
-  CMoveRequest,
   CGetRequest,
-  NCreateRequest,
+  CMoveRequest,
+  CStoreRequest,
   NActionRequest,
+  NCreateRequest,
   NDeleteRequest,
   NEventReportRequest,
   NGetRequest,
   NSetRequest,
-  CCancelRequest,
+  Request,
 } = requests;
 const {
-  Response,
   CEchoResponse,
   CFindResponse,
-  CStoreResponse,
-  CMoveResponse,
   CGetResponse,
-  NCreateResponse,
+  CMoveResponse,
+  CStoreResponse,
   NActionResponse,
+  NCreateResponse,
   NDeleteResponse,
   NEventReportResponse,
   NGetResponse,
   NSetResponse,
+  Response,
 } = responses;
-const { Priority, Status, SopClass, TransferSyntax } = constants;
+const { Priority, SopClass, Status, TransferSyntax } = constants;
 
 // log
 expectType<typeof log>(log.error('error'));
@@ -92,6 +92,26 @@ expectType<string>(assoc.getImplementationClassUid());
 expectError(assoc.setImplementationClassUid(1));
 expectType<string>(assoc.getImplementationVersion());
 expectError(assoc.setImplementationVersion(1));
+expectType<boolean>(assoc.getNegotiateAsyncOps());
+expectError(assoc.setNegotiateAsyncOps(1));
+expectType<number>(assoc.getMaxAsyncOpsInvoked());
+expectError(assoc.setMaxAsyncOpsInvoked('1'));
+expectType<number>(assoc.getMaxAsyncOpsPerformed());
+expectError(assoc.setMaxAsyncOpsPerformed('2'));
+expectType<boolean>(assoc.getNegotiateUserIdentity());
+expectError(assoc.setNegotiateUserIdentity(1));
+expectType<number>(assoc.getUserIdentityType());
+expectError(assoc.setUserIdentityType('1'));
+expectType<boolean>(assoc.getUserIdentityPositiveResponseRequested());
+expectError(assoc.setUserIdentityPositiveResponseRequested(1));
+expectType<string>(assoc.getUserIdentityPrimaryField());
+expectError(assoc.setUserIdentityPrimaryField(1));
+expectType<string>(assoc.getUserIdentitySecondaryField());
+expectError(assoc.setUserIdentitySecondaryField(2));
+expectType<boolean>(assoc.getNegotiateUserIdentityServerResponse());
+expectError(assoc.setNegotiateUserIdentityServerResponse(1));
+expectType<string>(assoc.getUserIdentityServerResponse());
+expectError(assoc.setUserIdentityServerResponse(1));
 expectError(assoc.addPresentationContext(1));
 expectError(assoc.addPresentationContext(1, '2'));
 expectType<number>(assoc.addPresentationContext('1.2.3.4.5', 1));

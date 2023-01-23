@@ -1,24 +1,21 @@
-const { PresentationContext, Association } = require('./Association');
-const Dataset = require('./Dataset');
-const Implementation = require('./Implementation');
-const Client = require('./Client');
-const Statistics = require('./Statistics');
-const { Server, Scp } = require('./Server');
+const { Association, PresentationContext } = require('./Association');
+const { Scp, Server } = require('./Server');
 const {
+  CCancelRequest,
   CEchoRequest,
   CEchoResponse,
   CFindRequest,
   CFindResponse,
-  CStoreRequest,
-  CStoreResponse,
-  CMoveRequest,
-  CMoveResponse,
   CGetRequest,
   CGetResponse,
-  NCreateRequest,
-  NCreateResponse,
+  CMoveRequest,
+  CMoveResponse,
+  CStoreRequest,
+  CStoreResponse,
   NActionRequest,
   NActionResponse,
+  NCreateRequest,
+  NCreateResponse,
   NDeleteRequest,
   NDeleteResponse,
   NEventReportRequest,
@@ -27,47 +24,51 @@ const {
   NGetResponse,
   NSetRequest,
   NSetResponse,
-  CCancelRequest,
 } = require('./Command');
 const {
+  AbortReason,
+  AbortSource,
   CommandFieldType,
   PresentationContextResult,
-  AbortSource,
-  AbortReason,
+  Priority,
+  RejectReason,
   RejectResult,
   RejectSource,
-  RejectReason,
-  Priority,
-  Status,
-  Uid,
-  StorageClass,
   SopClass,
+  Status,
+  StorageClass,
   TransferSyntax,
+  Uid,
+  UserIdentityType,
 } = require('./Constants');
+const Client = require('./Client');
+const Dataset = require('./Dataset');
+const Implementation = require('./Implementation');
+const Statistics = require('./Statistics');
 const log = require('./log');
 const version = require('./version');
 
 //#region association
 const association = {
-  PresentationContext,
   Association,
+  PresentationContext,
 };
 //#endregion
 
 //#region requests
 const requests = {
+  CCancelRequest,
   CEchoRequest,
   CFindRequest,
-  CStoreRequest,
-  CMoveRequest,
   CGetRequest,
-  NCreateRequest,
+  CMoveRequest,
+  CStoreRequest,
   NActionRequest,
+  NCreateRequest,
   NDeleteRequest,
   NEventReportRequest,
   NGetRequest,
   NSetRequest,
-  CCancelRequest,
 };
 //#endregion
 
@@ -75,11 +76,11 @@ const requests = {
 const responses = {
   CEchoResponse,
   CFindResponse,
-  CStoreResponse,
-  CMoveResponse,
   CGetResponse,
-  NCreateResponse,
+  CMoveResponse,
+  CStoreResponse,
   NActionResponse,
+  NCreateResponse,
   NDeleteResponse,
   NEventReportResponse,
   NGetResponse,
@@ -89,34 +90,35 @@ const responses = {
 
 //#region constants
 const constants = {
+  AbortReason,
+  AbortSource,
   CommandFieldType,
   PresentationContextResult,
-  AbortSource,
-  AbortReason,
+  Priority,
+  RejectReason,
   RejectResult,
   RejectSource,
-  RejectReason,
-  Priority,
-  Status,
-  Uid,
-  StorageClass,
   SopClass,
+  Status,
+  StorageClass,
   TransferSyntax,
+  Uid,
+  UserIdentityType,
 };
 //#endregion
 
 const DcmjsDimse = {
+  association,
+  Client,
+  constants,
   Dataset,
   Implementation,
-  Client,
-  Server,
-  Scp,
-  Statistics,
-  association,
+  log,
   requests,
   responses,
-  constants,
-  log,
+  Scp,
+  Server,
+  Statistics,
   version,
 };
 

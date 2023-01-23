@@ -47,6 +47,21 @@ const PresentationContextResult = {
 Object.freeze(PresentationContextResult);
 //#endregion
 
+//#region UserIdentityType
+/**
+ * User identity type.
+ * @constant {Object}
+ */
+const UserIdentityType = {
+  Username: 1,
+  UsernameAndPasscode: 2,
+  Kerberos: 3,
+  Saml: 4,
+  Jwt: 5,
+};
+Object.freeze(UserIdentityType);
+//#endregion
+
 //#region AbortSource
 /**
  * Abort sources.
@@ -329,20 +344,21 @@ Object.freeze(DefaultImplementation);
 
 //#region Exports
 module.exports = {
-  CommandFieldType,
-  PresentationContextResult,
-  AbortSource,
   AbortReason,
+  AbortSource,
+  CommandFieldType,
+  DefaultImplementation,
+  PresentationContextResult,
+  Priority,
+  RejectReason,
   RejectResult,
   RejectSource,
-  RejectReason,
-  Priority,
-  Status,
-  Uid,
-  StorageClass,
   SopClass,
-  TransferSyntax,
+  Status,
+  StorageClass,
   TranscodableTransferSyntaxes,
-  DefaultImplementation,
+  TransferSyntax,
+  Uid,
+  UserIdentityType,
 };
 //#endregion
