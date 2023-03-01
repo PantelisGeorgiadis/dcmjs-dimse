@@ -224,7 +224,7 @@ declare class Dataset {
   /**
    * Gets elements encoded in a DICOM dataset buffer.
    */
-  getDenaturalizedDataset(): Buffer;
+  getDenaturalizedDataset(writeOptions?: Record<string, unknown>): Buffer;
 
   /**
    * Gets command elements encoded in a DICOM dataset buffer.
@@ -1294,6 +1294,7 @@ declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       pduTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetWriteOptions?: Record<string, unknown>;
     }
   );
 
@@ -1559,6 +1560,7 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       associationLingerTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetWriteOptions?: Record<string, unknown>;
       asyncOps?: {
         maxAsyncOpsInvoked?: number;
         maxAsyncOpsPerformed?: number;

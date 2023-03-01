@@ -59,6 +59,7 @@ class Network extends AsyncEventEmitter {
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
    */
   constructor(socket, opts) {
     super();
@@ -76,6 +77,7 @@ class Network extends AsyncEventEmitter {
     this.pduTimeout = opts.pduTimeout || 1 * 60 * 1000;
     this.logCommandDatasets = opts.logCommandDatasets || false;
     this.logDatasets = opts.logDatasets || false;
+    this.datasetWriteOptions = opts.datasetWriteOptions || {};
     this.logId = '';
     this.connected = false;
     this.connectedTime = undefined;
@@ -359,7 +361,7 @@ class Network extends AsyncEventEmitter {
 
     const dataset = command.getDataset();
     if (dataset) {
-      const datasetBuffer = dataset.getDenaturalizedDataset();
+      const datasetBuffer = dataset.getDenaturalizedDataset(this.datasetWriteOptions);
 
       const datasetBufferChunks = [];
       const datasetBufferLength = datasetBuffer.length;

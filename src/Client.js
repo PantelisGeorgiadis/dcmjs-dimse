@@ -86,6 +86,7 @@ class Client extends AsyncEventEmitter {
    * @param {number} [opts.associationLingerTimeout] - Association linger timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
    * @param {Object} [opts.asyncOps] - Asynchronous operations options.
    * @param {number} [opts.asyncOps.maxAsyncOpsInvoked] - Supported maximum number of asynchronous operations invoked.
    * @param {number} [opts.asyncOps.maxAsyncOpsPerformed] - Supported maximum number of asynchronous operations performed.

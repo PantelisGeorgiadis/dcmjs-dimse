@@ -78,12 +78,13 @@ class Dataset {
   /**
    * Gets elements encoded in a DICOM dataset buffer.
    * @method
+   * @param {Object} [writeOptions] - The write options to pass through to `DicomMessage.write()`.
    * @returns {Buffer} DICOM dataset.
    */
-  getDenaturalizedDataset() {
+  getDenaturalizedDataset(writeOptions) {
     const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
     const stream = new WriteBufferStream();
-    DicomMessage.write(denaturalizedDataset, stream, this.transferSyntaxUid, {});
+    DicomMessage.write(denaturalizedDataset, stream, this.transferSyntaxUid, writeOptions);
 
     return Buffer.from(stream.getBuffer());
   }
@@ -214,6 +215,7 @@ class Dataset {
   /**
    * Creates a dataset from p10 buffer.
    * @method
+   * @static
    * @private
    * @param {Buffer} buffer - p10 buffer.
    * @param {Object} [readOptions] - The read options to pass through to `DicomMessage.readFile()`.
