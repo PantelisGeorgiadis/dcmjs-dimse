@@ -1,6 +1,6 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.1.27",
+  "version": "0.2.0",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",
@@ -45,6 +45,7 @@
   "dependencies": {
     "async-eventemitter": "^0.2.4",
     "dcmjs": "^0.30.3",
+    "memorystream": "^0.3.1",
     "smart-buffer": "^4.2.0",
     "ts-mixer": "^6.0.4",
     "winston": "^3.12.0"
