@@ -22,7 +22,7 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 - Supports secure DICOM TLS connections and user identity negotiation.
 - Transcodes sent and received datasets among all major accepted transfer syntaxes (using the [dcmjs-codecs][dcmjs-codecs-url] library).
 - Allows custom DICOM implementations (Implementation Class UID and Implementation Version).
-- Provides asynchronous event handlers for incoming SCP requests.
+- Provides asynchronous event handlers and streaming support for incoming SCP requests.
 
 
 #### Supported Transfer Syntaxes
