@@ -40,6 +40,10 @@ class Dataset {
   /**
    * Gets element value.
    * @method
+   * @param {string}
+  /**
+   * Gets element value.
+   * @method
    * @param {string} tag - Element tag.
    * @returns {string|undefined} Element value or undefined if element doesn't exist.
    */
