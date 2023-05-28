@@ -43,9 +43,9 @@ const Implementation = require('./Implementation');
 const Statistics = require('./Statistics');
 const log = require('./log');
 
-const AsyncEventEmitter = require('async-eventemitter');
 const { SmartBuffer } = require('smart-buffer');
 const { EOL } = require('os');
+const AsyncEventEmitter = require('async-eventemitter');
 
 //#region Network
 class Network extends AsyncEventEmitter {

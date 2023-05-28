@@ -1,6 +1,6 @@
+const { DefaultImplementation } = require('./../src/Constants');
 const Implementation = require('./../src/Implementation');
 const Dataset = require('./../src/Dataset');
-const { DefaultImplementation } = require('./../src/Constants');
 
 const chai = require('chai');
 const expect = chai.expect;

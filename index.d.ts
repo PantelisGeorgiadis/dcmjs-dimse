@@ -1,8 +1,8 @@
-import AsyncEventEmitter from 'async-eventemitter';
 import { Mixin } from 'ts-mixer';
 import { Logger } from 'winston';
 import { Socket } from 'net';
-import { TLSSocket } from 'tls';
+import { SecureContext, TLSSocket } from 'tls';
+import AsyncEventEmitter from 'async-eventemitter';
 
 declare namespace PresentationContextResult {
   const Proposed: number;
@@ -1401,6 +1401,9 @@ declare class Scp extends Network {
         rejectUnauthorized?: boolean;
         minVersion?: string;
         maxVersion?: string;
+        SNICallback?:
+          | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
+          | undefined;
       };
     }
   );
@@ -1509,6 +1512,9 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
         rejectUnauthorized?: boolean;
         minVersion?: string;
         maxVersion?: string;
+        SNICallback?:
+          | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
+          | undefined;
       };
     }
   ): void;
@@ -1579,6 +1585,9 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
         rejectUnauthorized?: boolean;
         minVersion?: string;
         maxVersion?: string;
+        SNICallback?:
+          | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
+          | undefined;
       };
     }
   ): void;

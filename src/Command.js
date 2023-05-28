@@ -1,11 +1,11 @@
 const { CommandFieldType, Priority, SopClass, Status } = require('./Constants');
 const Dataset = require('./Dataset');
 
+const { Mixin } = require('ts-mixer');
+const { EOL } = require('os');
 const AsyncEventEmitter = require('async-eventemitter');
 const dcmjs = require('dcmjs');
 const { DicomMetaDictionary } = dcmjs.data;
-const { Mixin } = require('ts-mixer');
-const { EOL } = require('os');
 
 //#region Command
 class Command {

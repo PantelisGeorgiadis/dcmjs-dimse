@@ -102,11 +102,12 @@ class Client extends AsyncEventEmitter {
    * @param {boolean} [opts.securityOptions.requestCert] - Flag indicating whether to request a
    * certificate from server that connect and attempt to verify it.
    * @param {boolean} [opts.securityOptions.rejectUnauthorized] - Reject any connection which
+   * is not authorized with the list of supplied trusted server certificates.
    * @param {string} [opts.securityOptions.minVersion] - The minimum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
-   * is not authorized with the list of supplied trusted server certificates.
+   * @param {function} [opts.securityOptions.SNICallback] - A function that will be called if the client supports SNI TLS extension.
    * @throws Error if there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
@@ -166,6 +167,7 @@ class Client extends AsyncEventEmitter {
         rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
         minVersion: opts.securityOptions.minVersion,
         maxVersion: opts.securityOptions.maxVersion,
+        SNICallback: opts.securityOptions.SNICallback,
       };
     }
 

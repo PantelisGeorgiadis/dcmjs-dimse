@@ -1,5 +1,3 @@
-const Client = require('./../src/Client');
-const Dataset = require('./../src/Dataset');
 const { PresentationContext } = require('./../src/Association');
 const { Scp, Server } = require('./../src/Server');
 const {
@@ -28,6 +26,8 @@ const {
   TransferSyntax,
   UserIdentityType,
 } = require('./../src/Constants');
+const Client = require('./../src/Client');
+const Dataset = require('./../src/Dataset');
 const log = require('./../src/log');
 
 const selfSigned = require('selfsigned');

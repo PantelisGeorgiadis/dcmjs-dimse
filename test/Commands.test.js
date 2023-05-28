@@ -26,7 +26,6 @@ const {
   Request,
   Response,
 } = require('./../src/Command');
-const Dataset = require('../src/Dataset');
 const {
   CommandFieldType,
   Priority,
@@ -34,9 +33,9 @@ const {
   Status,
   TransferSyntax,
 } = require('./../src/Constants');
+const Dataset = require('../src/Dataset');
 
 const chai = require('chai');
-
 const expect = chai.expect;
 
 describe('Command', () => {

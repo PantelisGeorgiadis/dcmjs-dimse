@@ -1,6 +1,6 @@
 import { expectType, expectError } from 'tsd';
 import { Socket } from 'net';
-import { TLSSocket } from 'tls';
+import { SecureContext, TLSSocket } from 'tls';
 import {
   association,
   Client,
@@ -450,6 +450,9 @@ class TestScp extends Scp {
         rejectUnauthorized?: boolean;
         minVersion?: string;
         maxVersion?: string;
+        SNICallback?:
+          | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
+          | undefined;
       };
     }
   ) {

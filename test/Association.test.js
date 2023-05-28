@@ -1,14 +1,14 @@
-const Dataset = require('../src/Dataset');
 const { Association } = require('./../src/Association');
 const { CGetRequest, CStoreRequest, Request } = require('../src/Command');
 const {
   CommandFieldType,
-  SopClass,
-  TransferSyntax,
   PresentationContextResult,
+  SopClass,
   StorageClass,
+  TransferSyntax,
   UserIdentityType,
 } = require('./../src/Constants');
+const Dataset = require('../src/Dataset');
 
 const chai = require('chai');
 const expect = chai.expect;
