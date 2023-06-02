@@ -194,7 +194,11 @@ declare class Dataset {
   /**
    * Creates an instance of Dataset.
    */
-  constructor(elementsOrBuffer?: Record<string, unknown> | Buffer, transferSyntaxUid?: string);
+  constructor(
+    elementsOrBuffer?: Record<string, unknown> | Buffer,
+    transferSyntaxUid?: string,
+    readOptions?: Record<string, unknown>
+  );
 
   /**
    * Gets element value.
@@ -224,7 +228,10 @@ declare class Dataset {
   /**
    * Gets elements encoded in a DICOM dataset buffer.
    */
-  getDenaturalizedDataset(writeOptions?: Record<string, unknown>): Buffer;
+  getDenaturalizedDataset(
+    writeOptions?: Record<string, unknown>,
+    nameMap?: Record<string, unknown>
+  ): Buffer;
 
   /**
    * Gets command elements encoded in a DICOM dataset buffer.
@@ -1294,7 +1301,9 @@ declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       pduTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
+      datasetNameMap?: Record<string, unknown>;
     }
   );
 
@@ -1393,6 +1402,9 @@ declare class Scp extends Network {
       pduTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetReadOptions?: Record<string, unknown>;
+      datasetWriteOptions?: Record<string, unknown>;
+      datasetNameMap?: Record<string, unknown>;
       securityOptions?: {
         key?: string | Array<string> | Buffer | Array<Buffer>;
         cert?: string | Array<string> | Buffer | Array<Buffer>;
@@ -1504,6 +1516,9 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       pduTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetReadOptions?: Record<string, unknown>;
+      datasetWriteOptions?: Record<string, unknown>;
+      datasetNameMap?: Record<string, unknown>;
       securityOptions?: {
         key?: string | Array<string> | Buffer | Array<Buffer>;
         cert?: string | Array<string> | Buffer | Array<Buffer>;
@@ -1566,7 +1581,9 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       associationLingerTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
+      datasetNameMap?: Record<string, unknown>;
       asyncOps?: {
         maxAsyncOpsInvoked?: number;
         maxAsyncOpsPerformed?: number;
@@ -1585,9 +1602,6 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
         rejectUnauthorized?: boolean;
         minVersion?: string;
         maxVersion?: string;
-        SNICallback?:
-          | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
-          | undefined;
       };
     }
   ): void;

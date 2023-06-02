@@ -59,7 +59,9 @@ class Network extends AsyncEventEmitter {
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.datasetReadOptions] - The read options to pass through to `DicomMessage._read()`.
    * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
+   * @param {Object} [opts.datasetNameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
    */
   constructor(socket, opts) {
     super();
@@ -77,7 +79,9 @@ class Network extends AsyncEventEmitter {
     this.pduTimeout = opts.pduTimeout || 1 * 60 * 1000;
     this.logCommandDatasets = opts.logCommandDatasets || false;
     this.logDatasets = opts.logDatasets || false;
+    this.datasetReadOptions = opts.datasetReadOptions || {};
     this.datasetWriteOptions = opts.datasetWriteOptions || {};
+    this.datasetNameMap = opts.datasetNameMap || {};
     this.logId = '';
     this.connected = false;
     this.connectedTime = undefined;
@@ -361,7 +365,10 @@ class Network extends AsyncEventEmitter {
 
     const dataset = command.getDataset();
     if (dataset) {
-      const datasetBuffer = dataset.getDenaturalizedDataset(this.datasetWriteOptions);
+      const datasetBuffer = dataset.getDenaturalizedDataset(
+        this.datasetWriteOptions,
+        this.datasetNameMap
+      );
 
       const datasetBufferChunks = [];
       const datasetBufferLength = datasetBuffer.length;
@@ -584,7 +591,8 @@ class Network extends AsyncEventEmitter {
           } else {
             const dataset = new Dataset(
               this.dimseBuffer.toBuffer(),
-              presentationContext.getAcceptedTransferSyntaxUid()
+              presentationContext.getAcceptedTransferSyntaxUid(),
+              this.datasetReadOptions
             );
             this.dimse.setDataset(dataset);
             this._performDimse(presentationContext, this.dimse);

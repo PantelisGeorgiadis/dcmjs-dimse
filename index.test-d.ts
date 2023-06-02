@@ -442,6 +442,9 @@ class TestScp extends Scp {
       pduTimeout?: number;
       logCommandDatasets?: boolean;
       logDatasets?: boolean;
+      datasetReadOptions?: Record<string, unknown>;
+      datasetWriteOptions?: Record<string, unknown>;
+      datasetNameMap?: Record<string, unknown>;
       securityOptions?: {
         key?: Buffer;
         cert?: Buffer;
