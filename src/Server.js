@@ -32,6 +32,9 @@ class Scp extends Network {
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.datasetReadOptions] - The read options to pass through to `DicomMessage._read()`.
+   * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
+   * @param {Object} [opts.datasetNameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
    * @param {Object} [opts.securityOptions] - Security options.
    * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.key] - Server private key in PEM format.
    * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.cert] - Server public certificate in PEM format.
@@ -288,6 +291,9 @@ class Server extends AsyncEventEmitter {
    * @param {number} [opts.pduTimeout] - PDU timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.datasetReadOptions] - The read options to pass through to `DicomMessage._read()`.
+   * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
+   * @param {Object} [opts.datasetNameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
    * @param {Object} [opts.securityOptions] - Security options.
    * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.key] - Server private key in PEM format.
    * @param {string|Array<string>|Buffer|Array<Buffer>} [opts.securityOptions.cert] - Server public certificate in PEM format.

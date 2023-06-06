@@ -14,14 +14,23 @@ class Dataset {
    * Creates an instance of Dataset.
    * @constructor
    * @param {Object|Buffer} [elementsOrBuffer] - Dataset elements as object or encoded as a DICOM dataset buffer.
-   * @param {string} [transferSyntaxUid] - Dataset transfer syntax
+   * @param {string} [transferSyntaxUid] - Dataset transfer syntax UID.
+   * @param {Object} [readOptions] - The read options to pass through to `DicomMessage._read()`.
    */
-  constructor(elementsOrBuffer, transferSyntaxUid) {
+  constructor(elementsOrBuffer, transferSyntaxUid, readOptions) {
+    readOptions = readOptions || {};
+    const baseOptions = { ignoreErrors: true };
+    readOptions = { ...baseOptions, ...readOptions };
+
     dcmjsLog.level = 'error';
 
     this.transferSyntaxUid = transferSyntaxUid || TransferSyntax.ImplicitVRLittleEndian;
     if (Buffer.isBuffer(elementsOrBuffer)) {
-      this.elements = this._fromElementsBuffer(elementsOrBuffer, this.transferSyntaxUid);
+      this.elements = this._fromElementsBuffer(
+        elementsOrBuffer,
+        this.transferSyntaxUid,
+        readOptions
+      );
       return;
     }
 
@@ -79,10 +88,17 @@ class Dataset {
    * Gets elements encoded in a DICOM dataset buffer.
    * @method
    * @param {Object} [writeOptions] - The write options to pass through to `DicomMessage.write()`.
+   * @param {Object} [nameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
    * @returns {Buffer} DICOM dataset.
    */
-  getDenaturalizedDataset(writeOptions) {
-    const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
+  getDenaturalizedDataset(writeOptions, nameMap) {
+    const denaturalizedDataset = nameMap
+      ? DicomMetaDictionary.denaturalizeDataset(this.getElements(), {
+          ...DicomMetaDictionary.nameMap,
+          ...nameMap,
+        })
+      : DicomMetaDictionary.denaturalizeDataset(this.getElements());
+
     const stream = new WriteBufferStream();
     DicomMessage.write(denaturalizedDataset, stream, this.transferSyntaxUid, writeOptions);
 
@@ -243,9 +259,10 @@ class Dataset {
    * @private
    * @param {Buffer} buffer - Elements buffer.
    * @param {string} transferSyntaxUid - Transfer Syntax UID.
+   * @param {Object} [readOptions] - The read options to pass through to `DicomMessage._read()`.
    * @returns {Object} Dataset elements.
    */
-  _fromElementsBuffer(buffer, transferSyntaxUid) {
+  _fromElementsBuffer(buffer, transferSyntaxUid, readOptions) {
     const stream = new ReadBufferStream(
       buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
     );
@@ -255,7 +272,7 @@ class Dataset {
       transferSyntaxUid === TransferSyntax.ImplicitVRLittleEndian
         ? TransferSyntax.ImplicitVRLittleEndian
         : TransferSyntax.ExplicitVRLittleEndian;
-    const denaturalizedDataset = DicomMessage._read(stream, syntaxLengthTypeToDecode, true);
+    const denaturalizedDataset = DicomMessage._read(stream, syntaxLengthTypeToDecode, readOptions);
 
     return DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
   }

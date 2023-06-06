@@ -1,4 +1,4 @@
-const Statistics = require('../src/Statistics');
+const Statistics = require('./../src/Statistics');
 
 const chai = require('chai');
 const expect = chai.expect;

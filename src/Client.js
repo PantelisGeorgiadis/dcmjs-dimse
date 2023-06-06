@@ -86,7 +86,9 @@ class Client extends AsyncEventEmitter {
    * @param {number} [opts.associationLingerTimeout] - Association linger timeout in milliseconds.
    * @param {boolean} [opts.logCommandDatasets] - Log DIMSE command datasets.
    * @param {boolean} [opts.logDatasets] - Log DIMSE datasets.
+   * @param {Object} [opts.datasetReadOptions] - The read options to pass through to `DicomMessage._read()`.
    * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
+   * @param {Object} [opts.datasetNameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
    * @param {Object} [opts.asyncOps] - Asynchronous operations options.
    * @param {number} [opts.asyncOps.maxAsyncOpsInvoked] - Supported maximum number of asynchronous operations invoked.
    * @param {number} [opts.asyncOps.maxAsyncOpsPerformed] - Supported maximum number of asynchronous operations performed.
@@ -107,7 +109,6 @@ class Client extends AsyncEventEmitter {
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
-   * @param {function} [opts.securityOptions.SNICallback] - A function that will be called if the client supports SNI TLS extension.
    * @throws Error if there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
@@ -167,7 +168,6 @@ class Client extends AsyncEventEmitter {
         rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
         minVersion: opts.securityOptions.minVersion,
         maxVersion: opts.securityOptions.maxVersion,
-        SNICallback: opts.securityOptions.SNICallback,
       };
     }
 

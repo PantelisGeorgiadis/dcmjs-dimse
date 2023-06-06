@@ -43,6 +43,27 @@ describe('Dataset', () => {
     expect(dataset3.getElement('StudyDescription')).to.be.eq(studyDescription);
     expect(dataset3.getElement('SeriesDescription')).to.be.eq(seriesDescription);
     expect(dataset3.getTransferSyntaxUid()).to.be.eq(TransferSyntax.ExplicitVRLittleEndian);
+
+    const dicomDataset4 = dataset3.getDenaturalizedDataset();
+
+    const dataset5 = new Dataset(dicomDataset4, TransferSyntax.ExplicitVRLittleEndian, {
+      untilTag: '00080050', // AccessionNumber
+      includeUntilTagValue: false,
+    });
+    expect(dataset5.getElement('PatientID')).to.be.undefined;
+    expect(dataset5.getElement('PatientName')).to.be.undefined;
+    expect(dataset5.getElement('StudyDescription')).to.be.undefined;
+    expect(dataset5.getElement('SeriesDescription')).to.be.undefined;
+
+    const dataset6 = new Dataset(dicomDataset4, TransferSyntax.ExplicitVRLittleEndian, {
+      untilTag: '00080050', // AccessionNumber
+      includeUntilTagValue: true,
+    });
+    expect(dataset6.getElement('AccessionNumber')).to.be.eq(accessionNumber);
+    expect(dataset5.getElement('PatientID')).to.be.undefined;
+    expect(dataset5.getElement('PatientName')).to.be.undefined;
+    expect(dataset5.getElement('StudyDescription')).to.be.undefined;
+    expect(dataset5.getElement('SeriesDescription')).to.be.undefined;
   });
 
   it('should create at least 100 different DICOM UIDs sequentially', () => {

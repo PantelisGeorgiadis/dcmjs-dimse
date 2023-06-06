@@ -15,7 +15,7 @@ const {
   NEventReportResponse,
   NGetRequest,
   NGetResponse,
-} = require('../src/Command');
+} = require('./../src/Command');
 const {
   AbortReason,
   AbortSource,
