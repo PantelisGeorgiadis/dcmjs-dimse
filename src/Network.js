@@ -513,7 +513,7 @@ class Network extends AsyncEventEmitter {
     }
   }
 
-/**
+  /**
    * Process P-DATA-TF.
    * @method
    * @private
@@ -663,7 +663,7 @@ class Network extends AsyncEventEmitter {
               const dataset = new Dataset(
                 this.dimseStream.toBuffer(),
                 presentationContext.getAcceptedTransferSyntaxUid(),
-				this.datasetReadOptions
+                this.datasetReadOptions
               );
               this.dimse.setDataset(dataset);
               this._performDimse(presentationContext, this.dimse);
