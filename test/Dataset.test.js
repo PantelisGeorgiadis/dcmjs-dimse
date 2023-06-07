@@ -60,10 +60,10 @@ describe('Dataset', () => {
       includeUntilTagValue: true,
     });
     expect(dataset6.getElement('AccessionNumber')).to.be.eq(accessionNumber);
-    expect(dataset5.getElement('PatientID')).to.be.undefined;
-    expect(dataset5.getElement('PatientName')).to.be.undefined;
-    expect(dataset5.getElement('StudyDescription')).to.be.undefined;
-    expect(dataset5.getElement('SeriesDescription')).to.be.undefined;
+    expect(dataset6.getElement('PatientID')).to.be.undefined;
+    expect(dataset6.getElement('PatientName')).to.be.undefined;
+    expect(dataset6.getElement('StudyDescription')).to.be.undefined;
+    expect(dataset6.getElement('SeriesDescription')).to.be.undefined;
   });
 
   it('should create at least 100 different DICOM UIDs sequentially', () => {
