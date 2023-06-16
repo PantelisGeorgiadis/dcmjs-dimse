@@ -166,4 +166,30 @@ describe('Dataset', () => {
       });
     });
   });
+
+  it('should throw Invalid DICOM file exception while reading non-DICOM files asynchronously', () => {
+    mockFs({
+      'fileIn.txt': mockFs.load(path.resolve(__dirname, '../datasets/non-dcm.txt')),
+    });
+    return new Promise((resolve, reject) => {
+      try {
+        Dataset.fromFile('fileIn.txt', (error, result) => {
+          if (error) {
+            return reject(error);
+          }
+
+          resolve(result);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    }).catch((error) => {
+      expect(error.message).to.equal('Invalid DICOM file, expected header is missing');
+
+    }).then(() => {
+      mockFs.restore();
+    });
+
+  });
+
 });
