@@ -152,8 +152,7 @@ class Dataset {
           return;
         }
         try {
-          const result = this._fromP10Buffer(fileBuffer, readOptions)
-          callback(undefined, result);
+          callback(undefined, this._fromP10Buffer(fileBuffer, readOptions));
         } catch (error) {
           callback(error, undefined)
         }
