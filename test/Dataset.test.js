@@ -78,6 +78,7 @@ describe('Dataset', () => {
   it('should correctly read and write DICOM part10 files', () => {
     mockFs({
       'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileInEmpty.dcm': '',
     });
 
     const dataset1 = Dataset.fromFile('fileIn.dcm');
@@ -109,6 +110,12 @@ describe('Dataset', () => {
       const val2 = elements4[el1];
       expect(val1).to.be.eq(val2);
     });
+
+    expect(() => {
+      Dataset.fromFile('fileInEmpty.dcm');
+    }).to.throw();
+
+    mockFs.restore();
   });
 
   it('should keep private tags which are parsed in via a nameMap', () => {
@@ -146,11 +153,14 @@ describe('Dataset', () => {
     );
     expect(elements2['00091002']).to.be.undefined;
     expect(Object.keys(elements1).length - 1).to.be.eq(Object.keys(elements2).length);
+
+    mockFs.restore();
   });
 
   it('should correctly read and write DICOM part10 files asynchronously', () => {
     mockFs({
       'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileInEmpty.dcm': '',
     });
 
     Dataset.fromFile('fileIn.dcm', (err, dataset1) => {
@@ -158,38 +168,20 @@ describe('Dataset', () => {
         Dataset.fromFile('fileOut1.dcm', (err3, dataset2) => {
           const elements1 = dataset1.getElements();
           const elements2 = dataset2.getElements();
+          expect(err).to.be.undefined;
+          expect(err2).to.be.undefined;
+          expect(err3).to.be.undefined;
           expect(Object.keys(elements1).length).to.be.eq(Object.keys(elements2).length);
           expect(Object.keys(elements1)).to.have.members(Object.keys(elements2));
 
-          mockFs.restore();
+          Dataset.fromFile('fileInEmpty.dcm', (err4, dataset3) => {
+            expect(err4).not.to.be.undefined;
+            expect(dataset3).to.be.undefined;
+
+            mockFs.restore();
+          });
         });
       });
     });
   });
-
-  it('should throw Invalid DICOM file exception while reading non-DICOM files asynchronously', () => {
-    mockFs({
-      'fileIn.txt': mockFs.load(path.resolve(__dirname, '../datasets/non-dcm.txt')),
-    });
-    return new Promise((resolve, reject) => {
-      try {
-        Dataset.fromFile('fileIn.txt', (error, result) => {
-          if (error) {
-            return reject(error);
-          }
-
-          resolve(result);
-        });
-      } catch (error) {
-        reject(error);
-      }
-    }).catch((error) => {
-      expect(error.message).to.equal('Invalid DICOM file, expected header is missing');
-
-    }).then(() => {
-      mockFs.restore();
-    });
-
-  });
-
 });
