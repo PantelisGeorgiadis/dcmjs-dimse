@@ -77,7 +77,7 @@ describe('Dataset', () => {
 
   it('should correctly read and write DICOM part10 files', () => {
     mockFs({
-      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileIn.dcm': mockFs.load(path.resolve(__dirname, './../datasets/pdf.dcm')),
       'fileInEmpty.dcm': '',
     });
 
@@ -119,9 +119,7 @@ describe('Dataset', () => {
   });
 
   it('should keep private tags which are parsed in via a nameMap', () => {
-    mockFs({
-      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
-    });
+    mockFs();
 
     const elements1 = {
       SOPClassUID: StorageClass.SecondaryCaptureImageStorage,
@@ -159,7 +157,7 @@ describe('Dataset', () => {
 
   it('should correctly read and write DICOM part10 files asynchronously', () => {
     mockFs({
-      'fileIn.dcm': mockFs.load(path.resolve(__dirname, '../datasets/pdf.dcm')),
+      'fileIn.dcm': mockFs.load(path.resolve(__dirname, './../datasets/pdf.dcm')),
       'fileInEmpty.dcm': '',
     });
 
