@@ -47,6 +47,7 @@ class Scp extends Network {
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
+   * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
    * @param {function} [opts.securityOptions.SNICallback] - A function that will be called if the client supports SNI TLS extension.
    */
   constructor(socket, opts) {
@@ -306,6 +307,7 @@ class Server extends AsyncEventEmitter {
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
+   * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
    * @param {function} [opts.securityOptions.SNICallback] - A function that will be called if the client supports SNI TLS extension.
    */
   listen(port, opts) {
@@ -321,6 +323,7 @@ class Server extends AsyncEventEmitter {
         rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
         minVersion: opts.securityOptions.minVersion,
         maxVersion: opts.securityOptions.maxVersion,
+        ciphers: opts.securityOptions.ciphers,
         SNICallback: opts.securityOptions.SNICallback,
       };
     }

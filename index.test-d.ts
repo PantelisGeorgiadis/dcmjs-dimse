@@ -453,6 +453,7 @@ class TestScp extends Scp {
         rejectUnauthorized?: boolean;
         minVersion?: string;
         maxVersion?: string;
+        ciphers?: string;
         SNICallback?:
           | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
           | undefined;

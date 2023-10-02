@@ -109,6 +109,7 @@ class Client extends AsyncEventEmitter {
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
+   * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
    * @throws Error if there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
@@ -168,6 +169,7 @@ class Client extends AsyncEventEmitter {
         rejectUnauthorized: opts.securityOptions.rejectUnauthorized,
         minVersion: opts.securityOptions.minVersion,
         maxVersion: opts.securityOptions.maxVersion,
+        ciphers: opts.securityOptions.ciphers,
       };
     }
 
