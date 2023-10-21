@@ -347,6 +347,7 @@ class Server extends AsyncEventEmitter {
     });
     this.server.on('listening', () => {
       log.info(`DICOM server listening on port ${port} ${opts.securityOptions ? '(TLS)' : ''}`);
+      this.emit('listening');
     });
     this.server.on('error', (err) => {
       const error = `Server error: ${err.message}`;
