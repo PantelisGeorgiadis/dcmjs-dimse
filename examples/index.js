@@ -56,12 +56,14 @@ function performCFindMwl(host, port, callingAeTitle, calledAeTitle, opts) {
 function performCStore(host, port, callingAeTitle, calledAeTitle, opts) {
   const rootPath = process.cwd();
   const elePath = path.join(rootPath, 'datasets', 'ele.dcm');
+  const ebePath = path.join(rootPath, 'datasets', 'ebe.dcm');
   const j2kPath = path.join(rootPath, 'datasets', 'j2k.dcm');
   const srPath = path.join(rootPath, 'datasets', 'sr.dcm');
   const pdfPath = path.join(rootPath, 'datasets', 'pdf.dcm');
 
   const client = new Client();
   client.addRequest(new CStoreRequest(elePath));
+  client.addRequest(new CStoreRequest(ebePath));
   client.addRequest(new CStoreRequest(j2kPath));
   client.addRequest(new CStoreRequest(srPath));
   client.addRequest(new CStoreRequest(pdfPath));
@@ -122,7 +124,8 @@ class ExampleScp extends Scp {
         transferSyntaxes.forEach((transferSyntax) => {
           if (
             transferSyntax === TransferSyntax.ImplicitVRLittleEndian ||
-            transferSyntax === TransferSyntax.ExplicitVRLittleEndian
+            transferSyntax === TransferSyntax.ExplicitVRLittleEndian ||
+            transferSyntax === TransferSyntax.ExplicitVRBigEndian
           ) {
             context.setResult(PresentationContextResult.Accept, transferSyntax);
           } else {

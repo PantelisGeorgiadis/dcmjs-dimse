@@ -271,13 +271,15 @@ class Dataset {
     const stream = new ReadBufferStream(
       buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
     );
-    // Use the proper syntax length (based on transfer syntax UID)
+    // Use the proper encoding and endianness (based on transfer syntax UID)
     // since dcmjs doesn't do that internally.
-    let syntaxLengthTypeToDecode =
+    const syntaxTypeToDecode =
       transferSyntaxUid === TransferSyntax.ImplicitVRLittleEndian
         ? TransferSyntax.ImplicitVRLittleEndian
-        : TransferSyntax.ExplicitVRLittleEndian;
-    const denaturalizedDataset = DicomMessage._read(stream, syntaxLengthTypeToDecode, readOptions);
+        : transferSyntaxUid === TransferSyntax.ExplicitVRBigEndian
+          ? TransferSyntax.ExplicitVRBigEndian
+          : TransferSyntax.ExplicitVRLittleEndian;
+    const denaturalizedDataset = DicomMessage._read(stream, syntaxTypeToDecode, readOptions);
 
     return DicomMetaDictionary.naturalizeDataset(denaturalizedDataset);
   }
