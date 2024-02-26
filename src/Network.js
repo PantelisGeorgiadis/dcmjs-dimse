@@ -538,7 +538,10 @@ class Network extends AsyncEventEmitter {
           if (this.dimse.getCommandFieldType() === CommandFieldType.CStoreRequest) {
             if (!this.dimseStoreStream) {
               this.dimseStream = undefined;
-              this.dimseStoreStream = this.createStoreWritableStream(presentationContext);
+              this.dimseStoreStream = this.createStoreWritableStream(
+                presentationContext,
+                this.dimse
+              );
             }
           } else {
             if (!this.dimseStream) {
@@ -549,6 +552,8 @@ class Network extends AsyncEventEmitter {
         }
 
         const stream = this.dimseStream || this.dimseStoreStream;
+
+        // TODO: Add stream backpressure event handling
         stream.write(pdv.getValue());
 
         if (pdv.isLastFragment()) {
