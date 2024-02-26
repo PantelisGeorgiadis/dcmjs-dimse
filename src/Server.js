@@ -106,10 +106,11 @@ class Scp extends Network {
    * could cause out of memory situations.
    * @method
    * @param {PresentationContext} acceptedPresentationContext - The accepted presentation context.
+   * @param {CStoreRequest} request - C-STORE request.
    * @returns {Writable} The created store writable stream.
    */
   // eslint-disable-next-line no-unused-vars
-  createStoreWritableStream(acceptedPresentationContext) {
+  createStoreWritableStream(acceptedPresentationContext, request) {
     return super.createStoreWritableStream();
   }
 

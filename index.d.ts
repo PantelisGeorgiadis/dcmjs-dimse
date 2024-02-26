@@ -1427,7 +1427,10 @@ declare class Scp extends Network {
    * The default implementation creates a memory Writable stream that for, big instances,
    * could cause out of memory situations.
    */
-  createStoreWritableStream(acceptedPresentationContext: PresentationContext): Writable;
+  createStoreWritableStream(
+    acceptedPresentationContext: PresentationContext,
+    request: CStoreRequest
+  ): Writable;
 
   /**
    * Allows the caller to create a Dataset from the Writable stream used to
