@@ -486,7 +486,9 @@ describe('Network', () => {
     client.addRequest(request);
     client.on('closed', () => {
       expect(ret.getElement('PatientID')).to.be.eq(datasets[0].getElement('PatientID'));
-      expect(ret.getElement('PatientName')).to.be.eq(datasets[0].getElement('PatientName'));
+      expect(String(ret.getElement('PatientName'))).to.be.eq(
+        String(datasets[0].getElement('PatientName'))
+      );
       server.close();
     });
     client.send('127.0.0.1', 2105, 'CALLINGAET', 'CALLEDAET');
@@ -508,7 +510,9 @@ describe('Network', () => {
     client.addRequest(request);
     client.on('closed', () => {
       expect(ret.getElement('PatientID')).to.be.eq(datasets[1].getElement('PatientID'));
-      expect(ret.getElement('PatientName')).to.be.eq(datasets[1].getElement('PatientName'));
+      expect(String(ret.getElement('PatientName'))).to.be.eq(
+        String(datasets[1].getElement('PatientName'))
+      );
       server.close();
     });
     client.send('127.0.0.1', 2106, 'CALLINGAET', 'CALLEDAET');
@@ -539,7 +543,9 @@ describe('Network', () => {
     client.addRequest(findRequest);
     client.on('closed', () => {
       expect(ret.getElement('PatientID')).to.be.eq(datasets[2].getElement('PatientID'));
-      expect(ret.getElement('PatientName')).to.be.eq(datasets[2].getElement('PatientName'));
+      expect(String(ret.getElement('PatientName'))).to.be.eq(
+        String(datasets[2].getElement('PatientName'))
+      );
       server.close();
     });
     client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
@@ -573,7 +579,9 @@ describe('Network', () => {
     });
     client.on('closed', () => {
       expect(ret.getElement('PatientID')).to.be.eq(datasets[3].getElement('PatientID'));
-      expect(ret.getElement('PatientName')).to.be.eq(datasets[3].getElement('PatientName'));
+      expect(String(ret.getElement('PatientName'))).to.be.eq(
+        String(datasets[3].getElement('PatientName'))
+      );
       expect(ret.getElement('StudyInstanceUID')).to.be.eq(
         datasets[3].getElement('StudyInstanceUID')
       );

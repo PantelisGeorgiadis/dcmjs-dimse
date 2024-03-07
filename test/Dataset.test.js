@@ -26,7 +26,7 @@ describe('Dataset', () => {
     const dicomDataset1 = dataset1.getDenaturalizedDataset();
 
     const dataset2 = new Dataset(dicomDataset1, TransferSyntax.ImplicitVRLittleEndian);
-    expect(dataset2.getElement('PatientName')).to.be.eq(patientName);
+    expect(String(dataset2.getElement('PatientName'))).to.be.eq(patientName);
     expect(dataset2.getElement('PatientID')).to.be.eq(patientID);
     expect(dataset2.getElement('AccessionNumber')).to.be.eq(accessionNumber);
     expect(dataset2.getElement('StudyDescription')).to.be.eq(studyDescription);
@@ -37,7 +37,7 @@ describe('Dataset', () => {
     const dicomDataset2 = dataset2.getDenaturalizedDataset();
 
     const dataset3 = new Dataset(dicomDataset2, TransferSyntax.ExplicitVRLittleEndian);
-    expect(dataset3.getElement('PatientName')).to.be.eq(patientName);
+    expect(String(dataset3.getElement('PatientName'))).to.be.eq(patientName);
     expect(dataset3.getElement('PatientID')).to.be.eq(patientID);
     expect(dataset3.getElement('AccessionNumber')).to.be.eq(accessionNumber);
     expect(dataset3.getElement('StudyDescription')).to.be.eq(studyDescription);
@@ -108,7 +108,7 @@ describe('Dataset', () => {
     Object.keys(elements3).forEach((el1) => {
       const val1 = elements3[el1];
       const val2 = elements4[el1];
-      expect(val1).to.be.eq(val2);
+      expect(String(val1)).to.be.eq(String(val2));
     });
 
     expect(() => {
