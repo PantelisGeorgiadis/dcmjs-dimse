@@ -101,6 +101,37 @@ class Scp extends Network {
   }
 
   /**
+   * Allows the caller to create a Writable stream to accumulate the C-STORE dataset.
+   * The default implementation creates a memory Writable stream that for, big instances,
+   * could cause out of memory situations.
+   * @method
+   * @param {PresentationContext} acceptedPresentationContext - The accepted presentation context.
+   * @param {CStoreRequest} request - C-STORE request.
+   * @returns {Writable} The created store writable stream.
+   */
+  // eslint-disable-next-line no-unused-vars
+  createStoreWritableStream(acceptedPresentationContext, request) {
+    return super.createStoreWritableStream();
+  }
+
+  /**
+   * Allows the caller to create a Dataset from the Writable stream used to
+   * accumulate the C-STORE dataset. The created Dataset is passed to the
+   * Scp.cStoreRequest method for processing.
+   * @method
+   * @param {Writable} writable - The store writable stream.
+   * @param {PresentationContext} acceptedPresentationContext - The accepted presentation context.
+   * @param {function(Dataset)} callback - Created dataset callback function.
+   */
+  createDatasetFromStoreWritableStream(writable, acceptedPresentationContext, callback) {
+    return super.createDatasetFromStoreWritableStream(
+      writable,
+      acceptedPresentationContext,
+      callback
+    );
+  }
+
+  /**
    * Association request received.
    * @method
    * @param {Association} association - Association.
