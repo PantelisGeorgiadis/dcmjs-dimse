@@ -39,6 +39,10 @@ class Implementation {
    * @param {string} version - Implementation version.
    */
   static setImplementationVersion(version) {
+    if (typeof version !== 'string' || version.length > 16) {
+      throw new Error('Implementation version should be a string with less than 16 characters');
+    }
+
     this.implementationVersion = version;
   }
 
