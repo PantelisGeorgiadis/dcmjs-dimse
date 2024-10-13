@@ -179,8 +179,9 @@ class Request extends Mixin(Command, AsyncEventEmitter) {
    * @param {number} type - Command field type.
    * @param {string} affectedOrRequestedClassUid - Affected or requested SOP Class UID.
    * @param {boolean} hasDataset - Request has dataset.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(type, affectedOrRequestedClassUid, hasDataset) {
+  constructor(type, affectedOrRequestedClassUid, hasDataset, metaSopClassUid) {
     super(
       new Dataset({
         CommandField: type,
@@ -198,6 +199,7 @@ class Request extends Mixin(Command, AsyncEventEmitter) {
         this.setAffectedSopClassUid(affectedOrRequestedClassUid);
         break;
     }
+    this.metaSopClassUid = metaSopClassUid;
   }
 
   /**
@@ -238,6 +240,24 @@ class Request extends Mixin(Command, AsyncEventEmitter) {
   setRequestedSopClassUid(requestedSopClassUid) {
     const command = this.getCommandDataset();
     command.setElement('RequestedSOPClassUID', requestedSopClassUid);
+  }
+
+  /**
+   * Gets meta SOP class UID.
+   * @method
+   * @returns {string} Meta SOP class UID.
+   */
+  getMetaSopClassUid() {
+    return this.metaSopClassUid;
+  }
+
+  /**
+   * Sets meta SOP class UID.
+   * @method
+   * @param {string} metaSopClassUid - Meta SOP class UID.
+   */
+  setMetaSopClassUid(metaSopClassUid) {
+    this.metaSopClassUid = metaSopClassUid;
   }
 
   /**
@@ -1377,10 +1397,12 @@ class NCreateRequest extends Request {
    * @constructor
    * @param {string} affectedSopClassUid - Affected SOP Class UID.
    * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(affectedSopClassUid, affectedSopInstanceUid) {
+  constructor(affectedSopClassUid, affectedSopInstanceUid, metaSopClassUid) {
     super(CommandFieldType.NCreateRequest, affectedSopClassUid, false);
     this.setAffectedSopInstanceUid(affectedSopInstanceUid);
+    this.setMetaSopClassUid(metaSopClassUid);
   }
 }
 //#endregion
@@ -1432,11 +1454,13 @@ class NActionRequest extends Request {
    * @param {string} requestedSopClassUid - Requested SOP Class UID.
    * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
    * @param {number} actionTypeId - Action type ID.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(requestedSopClassUid, requestedSopInstanceUid, actionTypeId) {
+  constructor(requestedSopClassUid, requestedSopInstanceUid, actionTypeId, metaSopClassUid) {
     super(CommandFieldType.NActionRequest, requestedSopClassUid, false);
     this.setRequestedSopInstanceUid(requestedSopInstanceUid);
     this.setActionTypeId(actionTypeId);
+    this.setMetaSopClassUid(metaSopClassUid);
   }
 
   /**
@@ -1530,10 +1554,12 @@ class NDeleteRequest extends Request {
    * @constructor
    * @param {string} requestedSopClassUid - Requested SOP Class UID.
    * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(requestedSopClassUid, requestedSopInstanceUid) {
+  constructor(requestedSopClassUid, requestedSopInstanceUid, metaSopClassUid) {
     super(CommandFieldType.NDeleteRequest, requestedSopClassUid, false);
     this.setRequestedSopInstanceUid(requestedSopInstanceUid);
+    this.setMetaSopClassUid(metaSopClassUid);
   }
 }
 //#endregion
@@ -1585,11 +1611,13 @@ class NEventReportRequest extends Request {
    * @param {string} affectedSopClassUid - Affected SOP Class UID.
    * @param {string} affectedSopInstanceUid - Affected SOP Instance UID.
    * @param {number} eventTypeID - Event type ID.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(affectedSopClassUid, affectedSopInstanceUid, eventTypeID) {
+  constructor(affectedSopClassUid, affectedSopInstanceUid, eventTypeID, metaSopClassUid) {
     super(CommandFieldType.NEventReportRequest, affectedSopClassUid, false);
     this.setAffectedSopInstanceUid(affectedSopInstanceUid);
     this.setEventTypeId(eventTypeID);
+    this.setMetaSopClassUid(metaSopClassUid);
   }
 
   /**
@@ -1684,13 +1712,20 @@ class NGetRequest extends Request {
    * @param {string} requestedSopClassUid - Requested SOP Class UID.
    * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
    * @param {Array<string>} attributeIdentifierList - The requested attributes identifier list.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(requestedSopClassUid, requestedSopInstanceUid, attributeIdentifierList) {
+  constructor(
+    requestedSopClassUid,
+    requestedSopInstanceUid,
+    attributeIdentifierList,
+    metaSopClassUid
+  ) {
     super(CommandFieldType.NGetRequest, requestedSopClassUid, false);
     this.setRequestedSopInstanceUid(requestedSopInstanceUid);
     this.setAttributeIdentifierList(
       !Array.isArray(attributeIdentifierList) ? [attributeIdentifierList] : attributeIdentifierList
     );
+    this.setMetaSopClassUid(metaSopClassUid);
   }
 
   /**
@@ -1805,10 +1840,12 @@ class NSetRequest extends Request {
    * @constructor
    * @param {string} requestedSopClassUid - Requested SOP Class UID.
    * @param {string} requestedSopInstanceUid - Requested SOP Instance UID.
+   * @param {string} [metaSopClassUid] - Meta SOP Class UID.
    */
-  constructor(requestedSopClassUid, requestedSopInstanceUid) {
+  constructor(requestedSopClassUid, requestedSopInstanceUid, metaSopClassUid) {
     super(CommandFieldType.NSetRequest, requestedSopClassUid, false);
     this.setRequestedSopInstanceUid(requestedSopInstanceUid);
+    this.setMetaSopClassUid(metaSopClassUid);
   }
 }
 //#endregion

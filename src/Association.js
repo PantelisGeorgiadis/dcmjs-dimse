@@ -738,7 +738,6 @@ class Association {
           context.getAbstractSyntaxUid()
         }`
       );
-
       const syntaxes = context.getTransferSyntaxUids();
       syntaxes.forEach((tx) => {
         str.push(`      Transfer:  ${this._uidNameFromValue(TransferSyntax, tx) || tx}`);
@@ -776,15 +775,20 @@ class Association {
       case CommandFieldType.NSetRequest:
       case CommandFieldType.NActionRequest:
       case CommandFieldType.NDeleteRequest:
-        return request.getRequestedSopClassUid();
+        return request.getMetaSopClassUid() !== undefined
+          ? request.getMetaSopClassUid()
+          : request.getRequestedSopClassUid();
       case CommandFieldType.CStoreRequest:
       case CommandFieldType.CFindRequest:
       case CommandFieldType.CGetRequest:
       case CommandFieldType.CMoveRequest:
       case CommandFieldType.CEchoRequest:
+        return request.getAffectedSopClassUid();
       case CommandFieldType.NEventReportRequest:
       case CommandFieldType.NCreateRequest:
-        return request.getAffectedSopClassUid();
+        return request.getMetaSopClassUid() !== undefined
+          ? request.getMetaSopClassUid()
+          : request.getAffectedSopClassUid();
       default:
         return request.getAffectedSopClassUid();
     }

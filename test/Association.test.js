@@ -1,5 +1,11 @@
 const { Association } = require('./../src/Association');
-const { CGetRequest, CStoreRequest, Request } = require('./../src/Command');
+const {
+  CGetRequest,
+  CStoreRequest,
+  NCreateRequest,
+  NDeleteRequest,
+  Request,
+} = require('./../src/Command');
 const {
   CommandFieldType,
   PresentationContextResult,
@@ -270,5 +276,43 @@ describe('Association', () => {
       SopClass.StudyRootQueryRetrieveInformationModelGet,
       ...Object.values(StorageClass),
     ]);
+  });
+
+  it('should correctly add presentation contexts with meta SOP classes', () => {
+    const callingAet = 'CALLINGAET';
+    const calledAet = 'CALLEDAET';
+
+    const association = new Association(callingAet, calledAet);
+    association.addPresentationContext(SopClass.BasicGrayscalePrintManagementMeta);
+    let pcId = association.addPresentationContextFromRequest(
+      new NCreateRequest(
+        SopClass.BasicFilmSession,
+        Dataset.generateDerivedUid(),
+        SopClass.BasicGrayscalePrintManagementMeta
+      )
+    );
+    pcId = association.addPresentationContextFromRequest(
+      new NCreateRequest(
+        SopClass.BasicFilmBox,
+        Dataset.generateDerivedUid(),
+        SopClass.BasicGrayscalePrintManagementMeta
+      )
+    );
+    pcId = association.addPresentationContextFromRequest(
+      new NDeleteRequest(
+        SopClass.BasicFilmBox,
+        Dataset.generateDerivedUid(),
+        SopClass.BasicGrayscalePrintManagementMeta
+      )
+    );
+    pcId = association.addPresentationContextFromRequest(
+      new NDeleteRequest(
+        SopClass.BasicFilmSession,
+        Dataset.generateDerivedUid(),
+        SopClass.BasicGrayscalePrintManagementMeta
+      )
+    );
+
+    expect(association.getPresentationContexts().length).to.be.eq(1);
   });
 });

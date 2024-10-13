@@ -55,13 +55,24 @@ describe('Command', () => {
   });
 
   it('should correctly create a request', () => {
-    const uid = Dataset.generateDerivedUid();
-    const request = new Request(1, uid, 2, true);
-    const commandDataset = request.getCommandDataset();
+    const uid1 = Dataset.generateDerivedUid();
+    const request1 = new Request(1, uid1, true);
+    const commandDataset1 = request1.getCommandDataset();
 
-    expect(request.getAffectedSopClassUid()).to.be.eq(uid);
-    expect(request.hasDataset()).to.be.true;
-    expect(commandDataset.getElement('CommandField')).to.be.eq(1);
+    const uid2 = Dataset.generateDerivedUid();
+    const uid3 = Dataset.generateDerivedUid();
+    const request2 = new Request(2, uid2, false, uid3);
+    const commandDataset2 = request2.getCommandDataset();
+
+    expect(request1.getAffectedSopClassUid()).to.be.eq(uid1);
+    expect(request1.getMetaSopClassUid()).to.be.undefined;
+    expect(request1.hasDataset()).to.be.true;
+    expect(commandDataset1.getElement('CommandField')).to.be.eq(1);
+
+    expect(request2.getAffectedSopClassUid()).to.be.eq(uid2);
+    expect(request2.getMetaSopClassUid()).to.be.eq(uid3);
+    expect(request2.hasDataset()).to.be.false;
+    expect(commandDataset2.getElement('CommandField')).to.be.eq(2);
   });
 
   it('should correctly create a response', () => {
@@ -257,9 +268,11 @@ describe('Command', () => {
   it('should correctly create a N-CREATE request', () => {
     const sopClassUid = Dataset.generateDerivedUid();
     const sopInstanceUid = Dataset.generateDerivedUid();
-    const request = new NCreateRequest(sopClassUid, sopInstanceUid);
+    const metaSopClassUid = Dataset.generateDerivedUid();
+    const request = new NCreateRequest(sopClassUid, sopInstanceUid, metaSopClassUid);
 
     expect(request.getAffectedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getMetaSopClassUid()).to.be.eq(metaSopClassUid);
     expect(request.getAffectedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.NCreateRequest);
     expect(request.hasDataset()).to.be.false;
@@ -290,6 +303,7 @@ describe('Command', () => {
     const request = new NActionRequest(sopClassUid, sopInstanceUid, 0x0001);
 
     expect(request.getRequestedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getMetaSopClassUid()).to.be.undefined;
     expect(request.getRequestedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getActionTypeId()).to.be.eq(0x0001);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.NActionRequest);
@@ -324,9 +338,11 @@ describe('Command', () => {
   it('should correctly create a N-DELETE request', () => {
     const sopClassUid = Dataset.generateDerivedUid();
     const sopInstanceUid = Dataset.generateDerivedUid();
-    const request = new NDeleteRequest(sopClassUid, sopInstanceUid);
+    const metaSopClassUid = Dataset.generateDerivedUid();
+    const request = new NDeleteRequest(sopClassUid, sopInstanceUid, metaSopClassUid);
 
     expect(request.getRequestedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getMetaSopClassUid()).to.be.eq(metaSopClassUid);
     expect(request.getRequestedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.NDeleteRequest);
     expect(request.hasDataset()).to.be.false;
@@ -354,9 +370,11 @@ describe('Command', () => {
   it('should correctly create a N-EVENT-REPORT request', () => {
     const sopClassUid = Dataset.generateDerivedUid();
     const sopInstanceUid = Dataset.generateDerivedUid();
-    const request = new NEventReportRequest(sopClassUid, sopInstanceUid, 0x0001);
+    const metaSopClassUid = Dataset.generateDerivedUid();
+    const request = new NEventReportRequest(sopClassUid, sopInstanceUid, 0x0001, metaSopClassUid);
 
     expect(request.getAffectedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getMetaSopClassUid()).to.be.eq(metaSopClassUid);
     expect(request.getAffectedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getEventTypeId()).to.be.eq(0x0001);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.NEventReportRequest);
@@ -412,6 +430,7 @@ describe('Command', () => {
     const request = new NGetRequest(sopClassUid, sopInstanceUid, attributeIdentifierList);
 
     expect(request.getRequestedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getMetaSopClassUid()).to.be.undefined;
     expect(request.getRequestedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getAttributeIdentifierList()).to.have.members(attributeIdentifierList);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.NGetRequest);
@@ -442,9 +461,11 @@ describe('Command', () => {
   it('should correctly create a N-SET request', () => {
     const sopClassUid = Dataset.generateDerivedUid();
     const sopInstanceUid = Dataset.generateDerivedUid();
-    const request = new NSetRequest(sopClassUid, sopInstanceUid);
+    const metaSopClassUid = Dataset.generateDerivedUid();
+    const request = new NSetRequest(sopClassUid, sopInstanceUid, metaSopClassUid);
 
     expect(request.getRequestedSopClassUid()).to.be.eq(sopClassUid);
+    expect(request.getMetaSopClassUid()).to.be.eq(metaSopClassUid);
     expect(request.getRequestedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.NSetRequest);
     expect(request.hasDataset()).to.be.false;
