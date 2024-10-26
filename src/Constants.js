@@ -1,3 +1,20 @@
+//#region RawPduType
+/**
+ * Raw PDU types.
+ * @constant {Object}
+ */
+const RawPduType = {
+  AAbort: 0x07,
+  AAssociateAC: 0x02,
+  AAssociateRJ: 0x03,
+  AAssociateRQ: 0x01,
+  AReleaseRP: 0x06,
+  AReleaseRQ: 0x05,
+  PDataTF: 0x04,
+};
+Object.freeze(RawPduType);
+//#endregion
+
 //#region CommandFieldType
 /**
  * Command field types.
@@ -350,6 +367,7 @@ module.exports = {
   DefaultImplementation,
   PresentationContextResult,
   Priority,
+  RawPduType,
   RejectReason,
   RejectResult,
   RejectSource,

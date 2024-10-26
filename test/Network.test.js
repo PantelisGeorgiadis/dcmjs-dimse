@@ -30,6 +30,7 @@ const Client = require('./../src/Client');
 const Dataset = require('./../src/Dataset');
 const log = require('./../src/log');
 
+const http = require('http');
 const selfSigned = require('selfsigned');
 const chai = require('chai');
 const expect = chai.expect;
@@ -712,5 +713,20 @@ describe('Network', () => {
       server.close();
     });
     client.send('127.0.0.1', 2112, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should reject non-DIMSE communication (HTTP)', () => {
+    let error = false;
+
+    const server = new Server(AbortingScp);
+    server.on('networkError', () => {
+      error = true;
+      server.close();
+    });
+    server.listen(2113);
+
+    http.get('http://localhost:2113').on('error', () => {
+      expect(error).to.be.true;
+    });
   });
 });

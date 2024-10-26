@@ -1,6 +1,7 @@
 const {
   AbortReason,
   AbortSource,
+  RawPduType,
   RejectReason,
   RejectResult,
   RejectSource,
@@ -365,7 +366,7 @@ class AAssociateRQ {
    * @returns {RawPdu} PDU.
    */
   write() {
-    const pdu = new RawPdu(0x01);
+    const pdu = new RawPdu(RawPduType.AAssociateRQ);
 
     pdu.writeUInt16('Version', 0x0001);
     pdu.writeByteMultiple('Reserved', 0x00, 2);
@@ -608,7 +609,7 @@ class AAssociateAC {
    * @returns {RawPdu} PDU.
    */
   write() {
-    const pdu = new RawPdu(0x02);
+    const pdu = new RawPdu(RawPduType.AAssociateAC);
 
     pdu.writeUInt16('Version', 0x0001);
     pdu.writeByteMultiple('Reserved', 0x00, 2);
@@ -864,7 +865,7 @@ class AAssociateRJ {
    * @returns {RawPdu} PDU.
    */
   write() {
-    const pdu = new RawPdu(0x03);
+    const pdu = new RawPdu(RawPduType.AAssociateRJ);
 
     pdu.writeByte('Reserved', 0x00);
     pdu.writeByte('Result', this.result);
@@ -1001,7 +1002,7 @@ class AReleaseRQ {
    * @returns {RawPdu} PDU.
    */
   write() {
-    const pdu = new RawPdu(0x05);
+    const pdu = new RawPdu(RawPduType.AReleaseRQ);
 
     pdu.writeUInt32('Reserved', 0x00000000);
 
@@ -1041,7 +1042,7 @@ class AReleaseRP {
    * @returns {RawPdu} PDU buffer.
    */
   write() {
-    const pdu = new RawPdu(0x06);
+    const pdu = new RawPdu(RawPduType.AReleaseRP);
 
     pdu.writeUInt32('Reserved', 0x00000000);
 
@@ -1104,7 +1105,7 @@ class AAbort {
    * @returns {RawPdu} PDU.
    */
   write() {
-    const pdu = new RawPdu(0x07);
+    const pdu = new RawPdu(RawPduType.AAbort);
 
     pdu.writeByte('Reserved', 0x00);
     pdu.writeByte('Reserved', 0x00);
@@ -1356,7 +1357,7 @@ class PDataTF {
    * @returns {RawPdu} PDU.
    */
   write() {
-    const pdu = new RawPdu(0x04);
+    const pdu = new RawPdu(RawPduType.PDataTF);
     this.pdvs.forEach((pdv) => {
       pdv.write(pdu);
     });
