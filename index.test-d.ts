@@ -145,16 +145,19 @@ expectType<number>(Implementation.getMaxPduLength());
 expectError(Implementation.setMaxPduLength('1'));
 
 // Request
-expectError(new Request('1', 123, 'true'));
-expectType<requests.Request>(new Request(1, '1.2.3.4.5', false));
+expectError(new Request('1', 123, 'true', 1));
+expectType<requests.Request>(new Request(1, '1.2.3.4.5', false, '5.4.3.2.1'));
 
-const request = new Request(1, '1.2.3.4.5', false);
+const request = new Request(1, '1.2.3.4.5', false, '5.4.3.2.1');
 expectType<string>(request.getAffectedSopClassUid());
 expectError(request.setAffectedSopClassUid(1));
 expectType<void>(request.setAffectedSopClassUid('1.2.3.4'));
 expectType<string>(request.getRequestedSopClassUid());
 expectError(request.setRequestedSopClassUid(1));
 expectType<void>(request.setRequestedSopClassUid('1.2.3.4'));
+expectType<string | undefined>(request.getMetaSopClassUid());
+expectError(request.setMetaSopClassUid(1));
+expectType<void>(request.setRequestedSopClassUid('5.4.3.2.1'));
 expectType<string>(request.getAffectedSopInstanceUid());
 expectError(request.setAffectedSopInstanceUid(1));
 expectType<void>(request.setAffectedSopInstanceUid('1.2.3.4'));
@@ -305,7 +308,10 @@ expectType<number>(getResponse.getFailures());
 // NCreateRequest
 expectError(new NCreateRequest(1));
 expectError(new NCreateRequest('1', 2));
-expectType<requests.NCreateRequest>(new NCreateRequest(SopClass.BasicFilmBox, '1.2.3.4.5'));
+expectError(new NCreateRequest('1', 2, 3));
+expectType<requests.NCreateRequest>(
+  new NCreateRequest(SopClass.BasicFilmBox, '1.2.3.4.5', '5.4.3.2.1')
+);
 
 // NCreateResponse
 expectError(new NCreateResponse('1', 2, '3', 4));
@@ -315,13 +321,14 @@ expectType<responses.NCreateResponse>(
 
 // NActionRequest
 expectError(new NActionRequest(1));
-expectError(new NActionRequest('1', 2, '3'));
+expectError(new NActionRequest('1', 2, '3', 1));
 expectType<requests.NActionRequest>(
-  new NActionRequest(SopClass.BasicFilmSession, '1.2.3.4.5', 0x01)
+  new NActionRequest(SopClass.BasicFilmSession, '1.2.3.4.5', 0x01, '5.4.3.2.1')
 );
 
 const actionRequest = new NActionRequest(SopClass.PrintJob, '1.2.3.4.5', 0x01);
 expectType<number>(actionRequest.getActionTypeId());
+expectType<string | undefined>(actionRequest.getMetaSopClassUid());
 expectError(actionRequest.setActionTypeId('1'));
 
 // NActionResponse
@@ -345,7 +352,10 @@ expectError(actionResponse.setActionTypeId('1'));
 // NDeleteRequest
 expectError(new NDeleteRequest(1));
 expectError(new NDeleteRequest('1', 2));
-expectType<requests.NDeleteRequest>(new NDeleteRequest(SopClass.BasicFilmSession, '1.2.3.4.5'));
+expectError(new NDeleteRequest('1', 2, 3));
+expectType<requests.NDeleteRequest>(
+  new NDeleteRequest(SopClass.BasicFilmSession, '1.2.3.4.5', '5.4.3.2.1')
+);
 
 // NDeleteResponse
 expectError(new NDeleteResponse('1', 2, '3', 4));
@@ -356,8 +366,9 @@ expectType<responses.NDeleteResponse>(
 // NEventReportRequest
 expectError(new NEventReportRequest(1));
 expectError(new NEventReportRequest('1', 2, '3'));
+expectError(new NEventReportRequest('1', 2, '3', 4));
 expectType<requests.NEventReportRequest>(
-  new NEventReportRequest(SopClass.PrintJob, '1.2.3.4.5', 0x01)
+  new NEventReportRequest(SopClass.PrintJob, '1.2.3.4.5', 0x01, '5.4.3.2.1')
 );
 
 const eventReportRequest = new NEventReportRequest(SopClass.PrintJob, '1.2.3.4.5', 0x01);
@@ -385,14 +396,14 @@ expectError(eventReportResponse.setEventTypeId('1'));
 // NGetRequest
 expectError(new NGetRequest(1));
 expectError(new NGetRequest('1', 2));
-expectError(new NGetRequest('1', 2, '3'));
+expectError(new NGetRequest('1', 2, '3', 4));
 expectType<requests.NGetRequest>(
-  new NGetRequest(SopClass.BasicGrayscaleImageBox, '1.2.3.4.5', ['PatientID'])
+  new NGetRequest(SopClass.BasicGrayscaleImageBox, '1.2.3.4.5', ['PatientID'], '5.4.3.2.1')
 );
 
-const cGetRequest = new NGetRequest(SopClass.BasicGrayscaleImageBox, '1.2.3.4.5', ['PatientID']);
-expectType<Array<string>>(cGetRequest.getAttributeIdentifierList());
-expectError(cGetRequest.setAttributeIdentifierList('1'));
+const nGetRequest = new NGetRequest(SopClass.BasicGrayscaleImageBox, '1.2.3.4.5', ['PatientID']);
+expectType<Array<string>>(nGetRequest.getAttributeIdentifierList());
+expectError(nGetRequest.setAttributeIdentifierList('1'));
 
 // NGetResponse
 expectError(new NGetResponse('1', 2, '3', 4));
@@ -405,7 +416,10 @@ expectType<responses.NGetResponse>(
 // NSetRequest
 expectError(new NSetRequest(1));
 expectError(new NSetRequest('1', 2));
-expectType<requests.NSetRequest>(new NSetRequest(SopClass.BasicFilmSession, '1.2.3.4.5'));
+expectError(new NSetRequest('1', 2, 3));
+expectType<requests.NSetRequest>(
+  new NSetRequest(SopClass.BasicFilmSession, '1.2.3.4.5', undefined)
+);
 
 // NSetResponse
 expectError(new NSetResponse('1', 2, '3', 4));

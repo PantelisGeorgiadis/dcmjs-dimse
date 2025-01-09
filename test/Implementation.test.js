@@ -30,6 +30,15 @@ describe('Implementation', () => {
     expect(Implementation.getMaxPduLength()).to.be.eq(customMaxPdu);
   });
 
+  it('should throw for setting an invalid implementation version', () => {
+    expect(() => {
+      Implementation.setImplementationVersion(123456);
+    }).to.throw();
+    expect(() => {
+      Implementation.setImplementationVersion('12345678901234567');
+    }).to.throw();
+  });
+
   beforeEach(() => {
     Implementation.setImplementationClassUid(DefaultImplementation.ImplementationClassUid);
     Implementation.setImplementationVersion(DefaultImplementation.ImplementationVersion);

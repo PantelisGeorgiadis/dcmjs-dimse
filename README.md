@@ -1,4 +1,4 @@
-[![NPM version][npm-version-image]][npm-url] [![build][build-image]][build-url] [![MIT License][license-image]][license-url] 
+[![NPM version][npm-version-image]][npm-url] [![NPM downloads][npm-downloads-image]][npm-url] [![build][build-image]][build-url] [![MIT License][license-image]][license-url] 
 
 # dcmjs-dimse
 DICOM DIMSE implementation for Node.js using Steve Pieper's [dcmjs][dcmjs-url] library.
@@ -285,6 +285,7 @@ dcmjs-dimse is released under the MIT License.
 
 [npm-url]: https://npmjs.org/package/dcmjs-dimse
 [npm-version-image]: https://img.shields.io/npm/v/dcmjs-dimse.svg?style=flat
+[npm-downloads-image]: http://img.shields.io/npm/dm/dcmjs-dimse.svg?style=flat
 
 [build-url]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/actions/workflows/build.yml
 [build-image]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/actions/workflows/build.yml/badge.svg?branch=master

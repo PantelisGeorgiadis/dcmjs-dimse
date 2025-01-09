@@ -341,6 +341,10 @@ class Server extends AsyncEventEmitter {
       client.on('close', () => {
         this.statistics.addFromOtherStatistics(client.getStatistics());
       });
+      client.on('networkError', (err) => {
+        socket.end();
+        this.emit('networkError', err);
+      });
       this.clients.push(client);
 
       this.clients = this.clients.filter((item) => item.connected);

@@ -639,7 +639,12 @@ declare class Request extends Mixin(Command, AsyncEventEmitter) {
   /**
    * Creates an instance of Request.
    */
-  constructor(type: number, affectedOrRequestedClassUid: string, hasDataset: boolean);
+  constructor(
+    type: number,
+    affectedOrRequestedClassUid: string,
+    hasDataset: boolean,
+    metaSopClassUid?: string
+  );
 
   /**
    * Gets affected SOP class UID.
@@ -660,6 +665,16 @@ declare class Request extends Mixin(Command, AsyncEventEmitter) {
    * Sets requested SOP class UID.
    */
   setRequestedSopClassUid(requestedSopClassUid: string): void;
+
+  /**
+   * Gets meta SOP class UID.
+   */
+  getMetaSopClassUid(): string | undefined;
+
+  /**
+   * Sets meta SOP class UID.
+   */
+  setMetaSopClassUid(metaSopClassUid: string): void;
 
   /**
    * Gets affected SOP instance UID.
@@ -1071,7 +1086,11 @@ declare class NCreateRequest extends Request {
   /**
    * Creates an instance of NCreateRequest.
    */
-  constructor(affectedSopClassUid: string, affectedSopInstanceUid: string);
+  constructor(
+    affectedSopClassUid: string,
+    affectedSopInstanceUid: string,
+    metaSopClassUid?: string
+  );
 }
 
 declare class NCreateResponse extends Response {
@@ -1095,7 +1114,12 @@ declare class NActionRequest extends Request {
   /**
    * Creates an instance of NActionRequest.
    */
-  constructor(requestedSopClassUid: string, requestedSopInstanceUid: string, actionTypeId: number);
+  constructor(
+    requestedSopClassUid: string,
+    requestedSopInstanceUid: string,
+    actionTypeId: number,
+    metaSopClassUid?: string
+  );
 
   /**
    * Gets action type ID.
@@ -1140,7 +1164,11 @@ declare class NDeleteRequest extends Request {
   /**
    * Creates an instance of NDeleteRequest.
    */
-  constructor(requestedSopClassUid: string, requestedSopInstanceUid: string);
+  constructor(
+    requestedSopClassUid: string,
+    requestedSopInstanceUid: string,
+    metaSopClassUid?: string
+  );
 }
 
 declare class NDeleteResponse extends Response {
@@ -1164,7 +1192,12 @@ declare class NEventReportRequest extends Request {
   /**
    * Creates an instance of NEventReportRequest.
    */
-  constructor(affectedSopClassUid: string, affectedSopInstanceUid: string, eventTypeID: number);
+  constructor(
+    affectedSopClassUid: string,
+    affectedSopInstanceUid: string,
+    eventTypeID: number,
+    metaSopClassUid?: string
+  );
 
   /**
    * Gets event type ID.
@@ -1212,7 +1245,8 @@ declare class NGetRequest extends Request {
   constructor(
     requestedSopClassUid: string,
     requestedSopInstanceUid: string,
-    attributeIdentifierList: Array<string>
+    attributeIdentifierList: Array<string>,
+    metaSopClassUid?: string
   );
 
   /**
@@ -1247,7 +1281,11 @@ declare class NSetRequest extends Request {
   /**
    * Creates an instance of NSetRequest.
    */
-  constructor(requestedSopClassUid: string, requestedSopInstanceUid: string);
+  constructor(
+    requestedSopClassUid: string,
+    requestedSopInstanceUid: string,
+    metaSopClassUid?: string
+  );
 }
 
 declare class NSetResponse extends Response {

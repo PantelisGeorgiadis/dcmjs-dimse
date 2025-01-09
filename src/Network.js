@@ -10,7 +10,12 @@ const {
   Pdv,
   RawPdu,
 } = require('./Pdu');
-const { CommandFieldType, Status, TranscodableTransferSyntaxes } = require('./Constants');
+const {
+  CommandFieldType,
+  RawPduType,
+  Status,
+  TranscodableTransferSyntaxes,
+} = require('./Constants');
 const {
   CCancelRequest,
   CEchoRequest,
@@ -406,7 +411,7 @@ class Network extends AsyncEventEmitter {
       raw.readPdu();
 
       switch (raw.getType()) {
-        case 0x01: {
+        case RawPduType.AAssociateRQ: {
           this.association = new Association();
           const pdu = new AAssociateRQ(this.association);
           pdu.read(raw);
@@ -415,7 +420,7 @@ class Network extends AsyncEventEmitter {
           this.emit('associationRequested', this.association);
           break;
         }
-        case 0x02: {
+        case RawPduType.AAssociateAC: {
           const pdu = new AAssociateAC(this.association);
           pdu.read(raw);
           this.logId = this.association.getCalledAeTitle();
@@ -423,7 +428,7 @@ class Network extends AsyncEventEmitter {
           this.emit('associationAccepted', this.association);
           break;
         }
-        case 0x03: {
+        case RawPduType.AAssociateRJ: {
           const pdu = new AAssociateRJ();
           pdu.read(raw);
           log.info(`${this.logId} <- Association reject ${pdu.toString()}`);
@@ -434,27 +439,27 @@ class Network extends AsyncEventEmitter {
           });
           break;
         }
-        case 0x04: {
+        case RawPduType.PDataTF: {
           const pdu = new PDataTF();
           pdu.read(raw);
           this._processPDataTf(pdu);
           break;
         }
-        case 0x05: {
+        case RawPduType.AReleaseRQ: {
           const pdu = new AReleaseRQ();
           pdu.read(raw);
           log.info(`${this.logId} <- Association release request`);
           this.emit('associationReleaseRequested');
           break;
         }
-        case 0x06: {
+        case RawPduType.AReleaseRP: {
           const pdu = new AReleaseRP();
           pdu.read(raw);
           log.info(`${this.logId} <- Association release response`);
           this.emit('associationReleaseResponse');
           break;
         }
-        case 0x07: {
+        case RawPduType.AAbort: {
           const pdu = new AAbort();
           pdu.read(raw);
           log.info(`${this.logId} <- Association abort ${pdu.toString()}`);
@@ -704,6 +709,12 @@ class Network extends AsyncEventEmitter {
       this.lastPduTime = Date.now();
       this._processPdu(data);
     });
+    pduAccumulator.on('error', (err) => {
+      this._reset();
+      const error = `${this.logId} -> Connection error: ${err.message}`;
+      log.error(error);
+      this.emit('networkError', new Error(error));
+    });
     this.socket.on('data', (data) => {
       pduAccumulator.accumulate(data);
       this.statistics.addBytesReceived(data.length);
@@ -816,7 +827,21 @@ class PduAccumulator extends AsyncEventEmitter {
       }
 
       const buffer = SmartBuffer.fromBuffer(data, 'ascii');
-      buffer.readUInt8();
+      const pduType = buffer.readUInt8();
+      if (
+        pduType !== RawPduType.AAssociateRQ &&
+        pduType !== RawPduType.AAssociateAC &&
+        pduType !== RawPduType.AAssociateRJ &&
+        pduType !== RawPduType.PDataTF &&
+        pduType !== RawPduType.AReleaseRQ &&
+        pduType !== RawPduType.AReleaseRP &&
+        pduType !== RawPduType.AAbort
+      ) {
+        this.emit('error', new Error(`Unknown PDU type: ${pduType}`));
+
+        return undefined;
+      }
+
       buffer.readUInt8();
       const pduLength = buffer.readUInt32BE();
       let dataNeeded = data.length - 6;

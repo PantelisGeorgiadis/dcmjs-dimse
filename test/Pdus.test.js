@@ -10,6 +10,7 @@ const {
 } = require('../src/Pdu');
 const {
   PresentationContextResult,
+  RawPduType,
   SopClass,
   TransferSyntax,
   UserIdentityType,
@@ -149,7 +150,7 @@ describe('PDU', () => {
     const command = false;
     const last = true;
 
-    const pdu = new RawPdu(0x01);
+    const pdu = new RawPdu(RawPduType.AAssociateRQ);
     const pdv1 = new Pdv(pcId, data, command, last);
     pdv1.write(pdu);
 
