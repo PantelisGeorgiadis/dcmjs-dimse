@@ -20,8 +20,25 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 ### Features
 - Implements C-ECHO, C-FIND, C-STORE, C-MOVE, C-GET, C-CANCEL, N-CREATE, N-ACTION, N-DELETE, N-EVENT-REPORT, N-GET and N-SET services as SCU and SCP.
 - Supports secure DICOM TLS connections and user identity negotiation.
+- Transcodes sent and received datasets among all major accepted transfer syntaxes (using the [dcmjs-codecs][dcmjs-codecs-url] library).
 - Allows custom DICOM implementations (Implementation Class UID and Implementation Version).
 - Provides asynchronous event handlers for incoming SCP requests.
+
+
+#### Supported Transfer Syntaxes
+- Implicit VR Little Endian (1.2.840.10008.1.2)
+- Explicit VR Little Endian (1.2.840.10008.1.2.1)
+- Explicit VR Big Endian (1.2.840.10008.1.2.2)
+- RLE Lossless (1.2.840.10008.1.2.5)
+- JPEG Baseline - Process 1 (1.2.840.10008.1.2.4.50)
+- JPEG Lossless, Nonhierarchical, First-Order Prediction - Processes 14 [Selection Value 1] (1.2.840.10008.1.2.4.70)
+- JPEG-LS Lossless Image Compression (1.2.840.10008.1.2.4.80)
+- JPEG-LS Lossy Image Compression - Near-Lossless (1.2.840.10008.1.2.4.81)
+- JPEG 2000 Image Compression - Lossless Only (1.2.840.10008.1.2.4.90)
+- JPEG 2000 Image Compression (1.2.840.10008.1.2.4.91)
+- High Throughput JPEG 2000 Image Compression - Lossless Only (1.2.840.10008.1.2.4.201)
+- High Throughput JPEG 2000 with RPCL Options Image Compression - Lossless Only (1.2.840.10008.1.2.4.202)
+- High Throughput JPEG 2000 Image Compression (1.2.840.10008.1.2.4.203)
 
 ### Examples
 
@@ -70,11 +87,18 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 #### C-Store SCU
 ```js
 const dcmjsDimse = require('dcmjs-dimse');
-const { Client } = dcmjsDimse;
+const { Client, Transcoding } = dcmjsDimse;
 const { CStoreRequest } = dcmjsDimse.requests;
+const { TransferSyntax } = dcmjsDimse.constants;
+
+// Optionally initialize encapsulated syntaxes transcoding.
+// If transcoding is not initialized, only uncompressed
+// syntaxes would be able to be transcoded.
+await Transcoding.initializeAsync();
 
 const client = new Client();
 const request = new CStoreRequest('test.dcm');
+request.setAdditionalTransferSyntaxes([TransferSyntax.Jpeg2000Lossless]);
 client.addRequest(request);
 client.on('networkError', (e) => {
   console.log('Network error: ', e);
@@ -141,7 +165,7 @@ client.send('127.0.0.1', 12345, 'SCU', 'ANY-SCP');
 #### SCP
 ```js
 const dcmjsDimse = require('dcmjs-dimse');
-const { Dataset, Server, Scp } = dcmjsDimse;
+const { Dataset, Server, Scp, Transcoding } = dcmjsDimse;
 const { CEchoResponse, CFindResponse, CStoreResponse } = dcmjsDimse.responses;
 const {
   Status,
@@ -265,6 +289,11 @@ class DcmjsDimseScp extends Scp {
   }
 }
 
+// Optionally initialize encapsulated syntaxes transcoding.
+// If transcoding is not initialized, only uncompressed
+// syntaxes would be able to be transcoded.
+await Transcoding.initializeAsync();
+
 const server = new Server(DcmjsDimseScp);
 server.on('networkError', (e) => {
   console.log('Network error: ', e);
@@ -278,6 +307,7 @@ Please check the respecting [Wiki][dcmjs-dimse-wiki-examples-url] section for mo
 
 ### Related libraries
 * [dcmjs-imaging][dcmjs-imaging-url] - DICOM image and overlay rendering for Node.js and browser using dcmjs.
+* [dcmjs-codecs][dcmjs-codecs-url] - DICOM file and dataset transcoding for Node.js and browser using dcmjs.
 * [dcmjs-ecg][dcmjs-ecg-url] - DICOM electrocardiography (ECG) rendering for Node.js and browser using dcmjs.
 
 ### License
@@ -298,6 +328,7 @@ dcmjs-dimse is released under the MIT License.
 [mdcm-url]: https://github.com/fo-dicom/mdcm
 [dicom-dimse-url]: https://github.com/OHIF/dicom-dimse
 [dcmjs-imaging-url]: https://github.com/PantelisGeorgiadis/dcmjs-imaging
+[dcmjs-codecs-url]: https://github.com/PantelisGeorgiadis/dcmjs-codecs
 [dcmjs-ecg-url]: https://github.com/PantelisGeorgiadis/dcmjs-ecg
 
 [dcmjs-dimse-wiki-examples-url]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/wiki/Examples

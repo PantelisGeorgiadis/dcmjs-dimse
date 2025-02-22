@@ -1,6 +1,6 @@
 const dcmjsDimse = require('./../src');
 
-const { Client, Dataset, Scp, Server } = dcmjsDimse;
+const { Client, Dataset, Scp, Server, Transcoding } = dcmjsDimse;
 const { CEchoRequest, CFindRequest, CStoreRequest } = dcmjsDimse.requests;
 const { CEchoResponse, CFindResponse, CStoreResponse } = dcmjsDimse.responses;
 const {
@@ -171,30 +171,34 @@ class ExampleScp extends Scp {
   }
 }
 
-const host = '127.0.0.1';
-const port = 2104;
-const callingAeTitle = 'SCU';
-const calledAeTitle = 'ANY-SCP';
+(async () => {
+  const host = '127.0.0.1';
+  const port = 2104;
+  const callingAeTitle = 'SCU';
+  const calledAeTitle = 'ANY-SCP';
 
-const server = new Server(ExampleScp);
-server.listen(port);
+  await Transcoding.initializeAsync();
 
-const opts = {
-  userIdentity: {
-    type: UserIdentityType.UsernameAndPasscode,
-    positiveResponseRequested: true,
-    primaryField: 'Username',
-    secondaryField: 'Password',
-  },
-};
+  const server = new Server(ExampleScp);
+  server.listen(port);
 
-const operations = [performCEcho, performCFindStudy, performCFindMwl, performCStore];
-operations.forEach((o) => {
-  Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle, opts]);
-});
+  const opts = {
+    userIdentity: {
+      type: UserIdentityType.UsernameAndPasscode,
+      positiveResponseRequested: true,
+      primaryField: 'Username',
+      secondaryField: 'Password',
+    },
+  };
 
-setTimeout(() => {
-  server.close();
-  const statistics = server.getStatistics();
-  console.log('Server statistics:', statistics.toString());
-}, 3000);
+  const operations = [performCEcho, performCFindStudy, performCFindMwl, performCStore];
+  operations.forEach((o) => {
+    Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle, opts]);
+  });
+
+  setTimeout(() => {
+    server.close();
+    const statistics = server.getStatistics();
+    console.log('Server statistics:', statistics.toString());
+  }, 3000);
+})();

@@ -11,5 +11,6 @@ documentation/
 .eslintrc.json
 .gitignore
 .jsdocrc.json
+.prettierrc.json
 index.test-d.ts
 webpack.config.js

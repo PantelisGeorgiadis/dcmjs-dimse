@@ -99,7 +99,7 @@ class RawPdu {
    * @method
    * @param {number} bytes - Number of bytes to read.
    * @param {string} name - Field name to read.
-   * @throws Error if bytes to read are exceeding buffer length.
+   * @throws {Error} If bytes to read are exceeding buffer length.
    */
   checkOffset(bytes, name) {
     const offset = this.buffer.readOffset;

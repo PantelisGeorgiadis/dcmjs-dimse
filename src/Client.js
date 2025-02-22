@@ -27,7 +27,7 @@ class Client extends AsyncEventEmitter {
    * Adds a request.
    * @method
    * @param {Request} request - DICOM request.
-   * @throws Error if request is not an instance of the Request class.
+   * @throws {Error} If request is not an instance of the Request class.
    */
   addRequest(request) {
     // Check if request is actually a request!
@@ -56,7 +56,7 @@ class Client extends AsyncEventEmitter {
    * @param {PresentationContext} context - Presentation context.
    * @param {boolean} [addAsNew] - Flag to indicate whether to add the provided context
    * as a new one, irrespectively if the respected SOP class already exists in the association.
-   * @throws Error if request is not an instance of the Request class.
+   * @throws {Error} If request is not an instance of the Request class.
    */
   addAdditionalPresentationContext(context, addAsNew) {
     addAsNew = addAsNew || false;
@@ -89,6 +89,7 @@ class Client extends AsyncEventEmitter {
    * @param {Object} [opts.datasetReadOptions] - The read options to pass through to `DicomMessage._read()`.
    * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
    * @param {Object} [opts.datasetNameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
+   * @param {Object} [opts.datasetTranscodeOptions] - Additional transcoding option to pass to `Transcoder`.
    * @param {Object} [opts.asyncOps] - Asynchronous operations options.
    * @param {number} [opts.asyncOps.maxAsyncOpsInvoked] - Supported maximum number of asynchronous operations invoked.
    * @param {number} [opts.asyncOps.maxAsyncOpsPerformed] - Supported maximum number of asynchronous operations performed.
@@ -110,7 +111,7 @@ class Client extends AsyncEventEmitter {
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
-   * @throws Error if there are zero requests to perform.
+   * @throws {Error} If there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
     opts = opts || {};
@@ -230,7 +231,7 @@ class Client extends AsyncEventEmitter {
    * @method
    * @param {AbortSource} [source] - Abortion source.
    * @param {AbortReason} [reason] - Abortion reason.
-   * @throws Error if the network has not been initialized.
+   * @throws {Error} If the network has not been initialized.
    */
   abort(source, reason) {
     if (!this.network) {
@@ -244,7 +245,7 @@ class Client extends AsyncEventEmitter {
    * Cancels a C-FIND, C-MOVE or C-GET request.
    * @method
    * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
-   * @throws Error if request is not an instance of CFindRequest, CMoveRequest or CGetRequest
+   * @throws {Error} If request is not an instance of CFindRequest, CMoveRequest or CGetRequest
    * or the network has not been initialized.
    */
   cancel(request) {

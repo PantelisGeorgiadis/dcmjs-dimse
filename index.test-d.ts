@@ -1,20 +1,23 @@
-import { expectType, expectError } from 'tsd';
 import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
+import { expectError, expectType } from 'tsd';
+
 import {
-  association,
   Client,
-  constants,
   Dataset,
   Implementation,
-  log,
-  requests,
-  responses,
   Scp,
   Server,
   Statistics,
+  Transcoding,
+  association,
+  constants,
+  log,
+  requests,
+  responses,
   version,
 } from '.';
+
 const { Association, PresentationContext } = association;
 const {
   CCancelRequest,
@@ -242,6 +245,9 @@ const storeRequest = new CStoreRequest(
 );
 expectType<number>(storeRequest.getPriority());
 expectError(storeRequest.setPriority('1'));
+expectType<Array<string>>(storeRequest.getAdditionalTransferSyntaxes());
+expectError(storeRequest.setAdditionalTransferSyntaxes([1]));
+expectError(storeRequest.setAdditionalTransferSyntaxes(1));
 
 // CStoreResponse
 expectError(new CStoreResponse('1', 2));
@@ -459,6 +465,7 @@ class TestScp extends Scp {
       datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
       datasetNameMap?: Record<string, unknown>;
+      datasetTranscodeOptions?: Record<string, unknown>;
       securityOptions?: {
         key?: Buffer;
         cert?: Buffer;
@@ -563,3 +570,23 @@ expectError(client.send('1', '2', 3, 4));
 expectError(client.send('1', '2', 3, 4, '5'));
 expectError(client.abort('1', '2'));
 expectError(client.cancel('1'));
+
+// Transcoding
+expectError(Transcoding.initializeAsync('string'));
+expectType<Promise<void>>(
+  Transcoding.initializeAsync({
+    logCodecsInfo: true,
+    logCodecsTrace: true,
+    webAssemblyModulePathOrUrl: '',
+  })
+);
+expectType<Promise<void>>(Transcoding.initializeAsync());
+expectType<void>(Transcoding.release());
+expectError(Transcoding.transcodeDataset('string', 1, 1));
+expectError(Transcoding.transcodeDataset(1, '2', 3));
+expectType<Dataset>(
+  Transcoding.transcodeDataset(
+    new Dataset({}, TransferSyntax.ExplicitVRLittleEndian),
+    TransferSyntax.Jpeg2000Lossless
+  )
+);

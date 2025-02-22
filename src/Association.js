@@ -574,7 +574,7 @@ class Association {
    * @method
    * @param {number} pcId - Presentation context ID.
    * @returns {PresentationContext} Presentation context.
-   * @throws Error if presentation context ID is not found within the presentation contexts collection.
+   * @throws {Error} If presentation context ID is not found within the presentation contexts collection.
    */
   getPresentationContext(pcId) {
     const presentationContext = this.presentationContexts.find((p) => p.id === pcId);
@@ -619,6 +619,10 @@ class Association {
     if (request instanceof CStoreRequest) {
       pcId = this.addOrGetPresentationContext(sopClassUid);
       syntaxes.forEach((syntax) => {
+        this.addTransferSyntaxToPresentationContext(pcId, syntax);
+      });
+      const additionalTransferSyntaxes = request.getAdditionalTransferSyntaxes();
+      additionalTransferSyntaxes.forEach((syntax) => {
         this.addTransferSyntaxToPresentationContext(pcId, syntax);
       });
 

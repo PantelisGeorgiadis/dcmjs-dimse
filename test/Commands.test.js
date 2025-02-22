@@ -52,6 +52,7 @@ describe('Command', () => {
     expect(command.hasDataset()).to.be.false;
     expect(commandDataset.getElement('CommandField')).to.be.eq(1);
     expect(commandDataset.getElement('CommandDataSetType')).to.be.eq(0x0101);
+    expect(commandDataset.toString()).to.be.a('string');
   });
 
   it('should correctly create a request', () => {
@@ -64,6 +65,7 @@ describe('Command', () => {
     const request2 = new Request(2, uid2, false, uid3);
     const commandDataset2 = request2.getCommandDataset();
 
+    expect(request1.toString()).to.be.a('string');
     expect(request1.getAffectedSopClassUid()).to.be.eq(uid1);
     expect(request1.getMetaSopClassUid()).to.be.undefined;
     expect(request1.hasDataset()).to.be.true;
@@ -80,6 +82,7 @@ describe('Command', () => {
     const response = new Response(7, uid, false, 5, 'This is an error');
     const commandDataset = response.getCommandDataset();
 
+    expect(response.toString()).to.be.a('string');
     expect(response.getStatus()).to.be.eq(5);
     expect(response.getErrorComment()).to.be.eq('This is an error');
     expect(response.hasDataset()).to.be.false;
@@ -172,12 +175,18 @@ describe('Command', () => {
     );
 
     const request = new CStoreRequest(dataset, Priority.High);
+    request.setAdditionalTransferSyntaxes(TransferSyntax.Jpeg2000Lossless);
+    request.setAdditionalTransferSyntaxes([
+      TransferSyntax.Jpeg2000Lossy,
+      TransferSyntax.JpegLsLossy,
+    ]);
 
     expect(request.getAffectedSopClassUid()).to.be.eq(sopClassUid);
     expect(request.getAffectedSopInstanceUid()).to.be.eq(sopInstanceUid);
     expect(request.getCommandFieldType()).to.be.eq(CommandFieldType.CStoreRequest);
     expect(request.getPriority()).to.be.eq(Priority.High);
     expect(request.hasDataset()).to.be.true;
+    expect(request.getAdditionalTransferSyntaxes().length).to.be.eq(3);
   });
 
   it('should correctly create a C-STORE response', () => {

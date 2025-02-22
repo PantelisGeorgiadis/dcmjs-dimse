@@ -1,8 +1,8 @@
-import { Mixin } from 'ts-mixer';
-import { Logger } from 'winston';
+import AsyncEventEmitter from 'async-eventemitter';
 import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
-import AsyncEventEmitter from 'async-eventemitter';
+import { Mixin } from 'ts-mixer';
+import { Logger } from 'winston';
 
 declare namespace PresentationContextResult {
   const Proposed: number;
@@ -904,6 +904,17 @@ declare class CStoreRequest extends Request {
    * Sets request priority.
    */
   setPriority(priority: number): void;
+
+  /**
+   * Gets additional transfer syntaxes to propose in the association request.
+   */
+  getAdditionalTransferSyntaxes(): Array<string>;
+
+  /**
+   * Sets additional transfer syntaxes to propose in the association request.
+   * Dataset will be transcoded on the fly, if necessary.
+   */
+  setAdditionalTransferSyntaxes(transferSyntaxUids: string | Array<string>): void;
 }
 
 declare class CStoreResponse extends Response {
@@ -1342,6 +1353,7 @@ declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
       datasetNameMap?: Record<string, unknown>;
+      datasetTranscodeOptions?: Record<string, unknown>;
     }
   );
 
@@ -1443,6 +1455,7 @@ declare class Scp extends Network {
       datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
       datasetNameMap?: Record<string, unknown>;
+      datasetTranscodeOptions?: Record<string, unknown>;
       securityOptions?: {
         key?: string | Array<string> | Buffer | Array<Buffer>;
         cert?: string | Array<string> | Buffer | Array<Buffer>;
@@ -1558,6 +1571,7 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
       datasetNameMap?: Record<string, unknown>;
+      datasetTranscodeOptions?: Record<string, unknown>;
       securityOptions?: {
         key?: string | Array<string> | Buffer | Array<Buffer>;
         cert?: string | Array<string> | Buffer | Array<Buffer>;
@@ -1624,6 +1638,7 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
       datasetReadOptions?: Record<string, unknown>;
       datasetWriteOptions?: Record<string, unknown>;
       datasetNameMap?: Record<string, unknown>;
+      datasetTranscodeOptions?: Record<string, unknown>;
       asyncOps?: {
         maxAsyncOpsInvoked?: number;
         maxAsyncOpsPerformed?: number;
@@ -1661,6 +1676,31 @@ declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
    * Cancels a C-FIND, C-MOVE or C-GET request.
    */
   cancel(request: CFindRequest | CMoveRequest | CGetRequest): void;
+}
+
+declare class Transcoding {
+  /**
+   * Initializes transcoding using dcmjs-codecs native codecs webassembly.
+   */
+  static initializeAsync(opts?: {
+    webAssemblyModulePathOrUrl?: string;
+    logCodecsInfo?: boolean;
+    logCodecsTrace?: boolean;
+  }): Promise<void>;
+
+  /**
+   * Releases dcmjs-codecs native codecs webassembly.
+   */
+  static release(): void;
+
+  /**
+   * Transcodes a dataset to a different transfer syntax.
+   */
+  static transcodeDataset(
+    dataset: Dataset,
+    transferSyntax: string,
+    opts?: Record<string, unknown>
+  ): Dataset;
 }
 
 /**
@@ -1724,4 +1764,4 @@ export namespace responses {
   export { NSetResponse };
 }
 
-export { Dataset, Implementation, Client, Server, Scp, Statistics, log, version };
+export { Dataset, Implementation, Client, Server, Scp, Statistics, Transcoding, log, version };

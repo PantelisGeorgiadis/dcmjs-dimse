@@ -24,6 +24,7 @@ describe('Dataset', () => {
     );
     dataset1.setElement('StudyDescription', studyDescription);
     const dicomDataset1 = dataset1.getDenaturalizedDataset();
+    expect(dicomDataset1.toString()).to.be.a('string');
 
     const dataset2 = new Dataset(dicomDataset1, TransferSyntax.ImplicitVRLittleEndian);
     expect(String(dataset2.getElement('PatientName'))).to.be.eq(patientName);

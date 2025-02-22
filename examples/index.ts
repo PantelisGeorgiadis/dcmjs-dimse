@@ -1,6 +1,17 @@
-import { association, Client, constants, Dataset, requests, responses, Scp, Server } from './..';
 import { Socket } from 'net';
 import path from 'path';
+
+import {
+  Client,
+  Dataset,
+  Scp,
+  Server,
+  Transcoding,
+  association,
+  constants,
+  requests,
+  responses,
+} from './..';
 
 const { CEchoRequest, CFindRequest, CStoreRequest } = requests;
 const { CEchoResponse, CFindResponse, CStoreResponse } = responses;
@@ -233,30 +244,34 @@ class ExampleScp extends Scp {
   }
 }
 
-const host = '127.0.0.1';
-const port = 2104;
-const callingAeTitle = 'SCU';
-const calledAeTitle = 'ANY-SCP';
+(async () => {
+  const host = '127.0.0.1';
+  const port = 2104;
+  const callingAeTitle = 'SCU';
+  const calledAeTitle = 'ANY-SCP';
 
-const server = new Server(ExampleScp);
-server.listen(port);
+  await Transcoding.initializeAsync();
 
-const opts = {
-  userIdentity: {
-    type: UserIdentityType.UsernameAndPasscode,
-    positiveResponseRequested: true,
-    primaryField: 'Username',
-    secondaryField: 'Password',
-  },
-};
+  const server = new Server(ExampleScp);
+  server.listen(port);
 
-const operations = [performCEcho, performCFindStudy, performCFindMwl, performCStore];
-operations.forEach((o) => {
-  Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle, opts]);
-});
+  const opts = {
+    userIdentity: {
+      type: UserIdentityType.UsernameAndPasscode,
+      positiveResponseRequested: true,
+      primaryField: 'Username',
+      secondaryField: 'Password',
+    },
+  };
 
-setTimeout(() => {
-  server.close();
-  const statistics = server.getStatistics();
-  console.log('Server statistics:', statistics.toString());
-}, 3000);
+  const operations = [performCEcho, performCFindStudy, performCFindMwl, performCStore];
+  operations.forEach((o) => {
+    Reflect.apply(o, null, [host, port, callingAeTitle, calledAeTitle, opts]);
+  });
+
+  setTimeout(() => {
+    server.close();
+    const statistics = server.getStatistics();
+    console.log('Server statistics:', statistics.toString());
+  }, 3000);
+})();

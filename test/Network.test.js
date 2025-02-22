@@ -28,6 +28,7 @@ const {
 } = require('./../src/Constants');
 const Client = require('./../src/Client');
 const Dataset = require('./../src/Dataset');
+const Transcoding = require('./../src/Transcoding');
 const log = require('./../src/log');
 
 const http = require('http');
@@ -327,8 +328,12 @@ class AbortingScp extends Scp {
 }
 
 describe('Network', () => {
-  before(() => {
+  before(async () => {
+    await Transcoding.initializeAsync();
     log.level = 'error';
+  });
+  after(() => {
+    Transcoding.release();
   });
 
   it('should be able to reject an association', () => {
@@ -552,9 +557,45 @@ describe('Network', () => {
     client.send('127.0.0.1', 2107, 'CALLINGAET', 'CALLEDAET');
   });
 
-  it('should correctly perform and serve a C-GET operation', () => {
+  it('should correctly perform and serve a C-STORE operation [transcoding]', () => {
     const server = new Server(AcceptingScp);
     server.listen(2108);
+
+    let ret = undefined;
+
+    const client = new Client();
+    const storeRequest = new CStoreRequest(
+      new Dataset(
+        {
+          SOPClassUID: StorageClass.MrImageStorage,
+          StudyInstanceUID: Dataset.generateDerivedUid(),
+          PatientID: '76543',
+          PatientName: 'JOHN^ROE',
+        },
+        TransferSyntax.Jpeg2000Lossless
+      )
+    );
+    client.addRequest(storeRequest);
+    const findRequest = CFindRequest.createStudyFindRequest({ PatientID: '76543' });
+    findRequest.on('response', (response) => {
+      if (response.getStatus() === Status.Pending) {
+        ret = response.getDataset();
+      }
+    });
+    client.addRequest(findRequest);
+    client.on('closed', () => {
+      expect(ret.getElement('PatientID')).to.be.eq(datasets[3].getElement('PatientID'));
+      expect(String(ret.getElement('PatientName'))).to.be.eq(
+        String(datasets[3].getElement('PatientName'))
+      );
+      server.close();
+    });
+    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should correctly perform and serve a C-GET operation', () => {
+    const server = new Server(AcceptingScp);
+    server.listen(2109);
 
     let ret = undefined;
     const studyInstanceUid = Dataset.generateDerivedUid();
@@ -579,21 +620,21 @@ describe('Network', () => {
       callback(response);
     });
     client.on('closed', () => {
-      expect(ret.getElement('PatientID')).to.be.eq(datasets[3].getElement('PatientID'));
+      expect(ret.getElement('PatientID')).to.be.eq(datasets[4].getElement('PatientID'));
       expect(String(ret.getElement('PatientName'))).to.be.eq(
-        String(datasets[3].getElement('PatientName'))
+        String(datasets[4].getElement('PatientName'))
       );
       expect(ret.getElement('StudyInstanceUID')).to.be.eq(
-        datasets[3].getElement('StudyInstanceUID')
+        datasets[4].getElement('StudyInstanceUID')
       );
       server.close();
     });
-    client.send('127.0.0.1', 2108, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-ACTION operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2109);
+    server.listen(2110);
 
     let ret = undefined;
     const sopInstanceUid = Dataset.generateDerivedUid();
@@ -630,12 +671,12 @@ describe('Network', () => {
       expect(failedSOPSequenceItem.FailureReason).to.be.eq(0x0112);
       server.close();
     });
-    client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2110, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a N-GET operation', () => {
     const server = new Server(AcceptingScp);
-    server.listen(2110);
+    server.listen(2111);
 
     let ret = undefined;
 
@@ -658,12 +699,12 @@ describe('Network', () => {
       expect(ret.getElement('Manufacturer')).to.be.eq('Manufacturer');
       server.close();
     });
-    client.send('127.0.0.1', 2110, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2111, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve a C-CANCEL operation', () => {
     const server = new Server(CancelingScp);
-    server.listen(2111);
+    server.listen(2112);
 
     let canceled = false;
 
@@ -685,12 +726,12 @@ describe('Network', () => {
       expect(canceled).to.be.true;
       server.close();
     });
-    client.send('127.0.0.1', 2111, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2112, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should correctly perform and serve an A-ABORT operation', () => {
     const server = new Server(AbortingScp);
-    server.listen(2112);
+    server.listen(2113);
 
     let aborted = false;
 
@@ -712,7 +753,7 @@ describe('Network', () => {
       expect(aborted).to.be.true;
       server.close();
     });
-    client.send('127.0.0.1', 2112, 'CALLINGAET', 'CALLEDAET');
+    client.send('127.0.0.1', 2113, 'CALLINGAET', 'CALLEDAET');
   });
 
   it('should reject non-DIMSE communication (HTTP)', () => {
@@ -723,9 +764,9 @@ describe('Network', () => {
       error = true;
       server.close();
     });
-    server.listen(2113);
+    server.listen(2114);
 
-    http.get('http://localhost:2113').on('error', () => {
+    http.get('http://localhost:2114').on('error', () => {
       expect(error).to.be.true;
     });
   });

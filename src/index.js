@@ -46,6 +46,7 @@ const Client = require('./Client');
 const Dataset = require('./Dataset');
 const Implementation = require('./Implementation');
 const Statistics = require('./Statistics');
+const Transcoding = require('./Transcoding');
 const log = require('./log');
 const version = require('./version');
 
@@ -121,6 +122,7 @@ const DcmjsDimse = {
   Scp,
   Server,
   Statistics,
+  Transcoding,
   version,
 };
 

@@ -10,12 +10,7 @@ const {
   Pdv,
   RawPdu,
 } = require('./Pdu');
-const {
-  CommandFieldType,
-  RawPduType,
-  Status,
-  TranscodableTransferSyntaxes,
-} = require('./Constants');
+const { CommandFieldType, RawPduType, Status } = require('./Constants');
 const {
   CCancelRequest,
   CEchoRequest,
@@ -46,6 +41,7 @@ const {
 const Dataset = require('./Dataset');
 const Implementation = require('./Implementation');
 const Statistics = require('./Statistics');
+const Transcoding = require('./Transcoding');
 const log = require('./log');
 
 const { SmartBuffer } = require('smart-buffer');
@@ -67,6 +63,7 @@ class Network extends AsyncEventEmitter {
    * @param {Object} [opts.datasetReadOptions] - The read options to pass through to `DicomMessage._read()`.
    * @param {Object} [opts.datasetWriteOptions] - The write options to pass through to `DicomMessage.write()`.
    * @param {Object} [opts.datasetNameMap] - Additional DICOM tags to recognize when denaturalizing the dataset.
+   * @param {Object} [opts.datasetTranscodeOptions] - Additional transcoding option to pass to `Transcoder`.
    */
   constructor(socket, opts) {
     super();
@@ -87,6 +84,7 @@ class Network extends AsyncEventEmitter {
     this.datasetReadOptions = opts.datasetReadOptions || {};
     this.datasetWriteOptions = opts.datasetWriteOptions || {};
     this.datasetNameMap = opts.datasetNameMap || {};
+    this.datasetTranscodeOptions = opts.datasetTranscodeOptions || {};
     this.logId = '';
     this.connected = false;
     this.connectedTime = undefined;
@@ -184,7 +182,7 @@ class Network extends AsyncEventEmitter {
    * Sends cancel request.
    * @method
    * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
-   * @throws Error if request is not an instance of CFindRequest, CMoveRequest or CGetRequest.
+   * @throws {Error} If request is not an instance of CFindRequest, CMoveRequest or CGetRequest.
    */
   sendCancel(request) {
     if (!this.association) {
@@ -314,16 +312,17 @@ class Network extends AsyncEventEmitter {
       );
       const acceptedTransferSyntaxUid = presentationContext.getAcceptedTransferSyntaxUid();
       if (dataset && acceptedTransferSyntaxUid !== dataset.getTransferSyntaxUid()) {
-        if (
-          TranscodableTransferSyntaxes.includes(acceptedTransferSyntaxUid) &&
-          TranscodableTransferSyntaxes.includes(dataset.getTransferSyntaxUid())
-        ) {
-          dataset.setTransferSyntaxUid(acceptedTransferSyntaxUid);
-        } else {
-          log.error(
-            `A transfer syntax transcoding from ${dataset.getTransferSyntaxUid()} to ${acceptedTransferSyntaxUid} is currently not supported. Skipping...`
+        try {
+          const transcodedDataset = Transcoding.transcodeDataset(
+            dataset,
+            acceptedTransferSyntaxUid,
+            this.datasetTranscodeOptions
           );
+          dimse.command.setDataset(transcodedDataset);
+        } catch (err) {
+          log.error(err.message);
           dimse.command.raiseDoneEvent();
+
           return;
         }
       }
@@ -402,7 +401,7 @@ class Network extends AsyncEventEmitter {
    * @method
    * @private
    * @param {Buffer} data - Accumulated PDU data.
-   * @throws Error in case of an unknown PDU type.
+   * @throws {Error} In case of an unknown PDU type.
    */
   _processPdu(data) {
     const raw = new RawPdu(data);

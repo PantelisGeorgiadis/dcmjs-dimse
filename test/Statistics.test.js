@@ -9,6 +9,7 @@ describe('Statistics', () => {
 
     expect(statistics.getBytesReceived()).to.be.eq(0);
     expect(statistics.getBytesSent()).to.be.eq(0);
+    expect(statistics.toString()).to.be.a('string');
   });
 
   it('should correctly add and reset statistics values', () => {

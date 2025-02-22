@@ -639,7 +639,7 @@ class CEchoResponse extends Response {
    * @static
    * @param {CEchoRequest} request - C-ECHO request.
    * @returns {CEchoResponse} C-ECHO response.
-   * @throws Error if request is not an instance of CEchoRequest.
+   * @throws {Error} If request is not an instance of CEchoRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof CEchoRequest)) {
@@ -873,7 +873,7 @@ class CFindResponse extends Response {
    * @static
    * @param {CFindRequest} request - C-FIND request.
    * @returns {CFindResponse} C-FIND response.
-   * @throws Error if request is not an instance of CFindRequest.
+   * @throws {Error} If request is not an instance of CFindRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof CFindRequest)) {
@@ -898,6 +898,7 @@ class CStoreRequest extends Request {
   constructor(datasetOrFile, priority) {
     super(CommandFieldType.CStoreRequest, '', false);
     this.setPriority(priority || Priority.Medium);
+    this.additionalTransferSyntaxes = [];
 
     if (datasetOrFile instanceof Dataset) {
       this.setAffectedSopClassUid(datasetOrFile.getElement('SOPClassUID'));
@@ -940,6 +941,26 @@ class CStoreRequest extends Request {
   }
 
   /**
+   * Gets additional transfer syntaxes to propose in the association request.
+   * @method
+   * @return {Array<string>} Additional transfer syntaxes to propose in the association request.
+   */
+  getAdditionalTransferSyntaxes() {
+    return this.additionalTransferSyntaxes;
+  }
+
+  /**
+   * Sets additional transfer syntaxes to propose in the association request.
+   * Dataset will be transcoded on the fly, if necessary.
+   * @method
+   * @param {string|Array<string>} priority - Additional transfer syntaxes to propose in the association request.
+   */
+  setAdditionalTransferSyntaxes(transferSyntaxUids) {
+    const syntaxes = Array.isArray(transferSyntaxUids) ? transferSyntaxUids : [transferSyntaxUids];
+    this.additionalTransferSyntaxes.push(...syntaxes);
+  }
+
+  /**
    * Loads the full dataset when, during the command construction,
    * only the minimum necessary tags were loaded (e.g. loaded from file).
    * @method
@@ -975,7 +996,7 @@ class CStoreResponse extends Response {
    * @static
    * @param {CStoreRequest} request - C-STORE request.
    * @returns {CStoreResponse} C-STORE response.
-   * @throws Error if request is not an instance of CStoreRequest.
+   * @throws {Error} If request is not an instance of CStoreRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof CStoreRequest)) {
@@ -1177,7 +1198,7 @@ class CMoveResponse extends Response {
    * @static
    * @param {CMoveRequest} request - C-MOVE request.
    * @returns {CMoveResponse} C-MOVE response.
-   * @throws Error if request is not an instance of CMoveRequest.
+   * @throws {Error} If request is not an instance of CMoveRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof CMoveRequest)) {
@@ -1376,7 +1397,7 @@ class CGetResponse extends Response {
    * @static
    * @param {CGetRequest} request - C-GET request.
    * @returns {CGetResponse} C-GET response.
-   * @throws Error if request is not an instance of CGetRequest.
+   * @throws {Error} If request is not an instance of CGetRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof CGetRequest)) {
@@ -1428,7 +1449,7 @@ class NCreateResponse extends Response {
    * @static
    * @param {NCreateRequest} request - N-CREATE request.
    * @returns {NCreateResponse} N-CREATE response.
-   * @throws Error if request is not an instance of NCreateRequest.
+   * @throws {Error} If request is not an instance of NCreateRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof NCreateRequest)) {
@@ -1528,7 +1549,7 @@ class NActionResponse extends Response {
    * @static
    * @param {NActionRequest} request - N-ACTION request.
    * @returns {NActionResponse} N-ACTION response.
-   * @throws Error if request is not an instance of NActionRequest.
+   * @throws {Error} If request is not an instance of NActionRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof NActionRequest)) {
@@ -1585,7 +1606,7 @@ class NDeleteResponse extends Response {
    * @static
    * @param {NDeleteRequest} request - N-DELETE request.
    * @returns {NDeleteResponse} N-DELETE response.
-   * @throws Error if request is not an instance of NDeleteRequest.
+   * @throws {Error} If request is not an instance of NDeleteRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof NDeleteRequest)) {
@@ -1685,7 +1706,7 @@ class NEventReportResponse extends Response {
    * @static
    * @param {NEventReportRequest} request - N-EVENT-REPORT request.
    * @returns {NEventReportResponse} N-EVENT-REPORT response.
-   * @throws Error if request is not an instance of NEventReportRequest.
+   * @throws {Error} If request is not an instance of NEventReportRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof NEventReportRequest)) {
@@ -1815,7 +1836,7 @@ class NGetResponse extends Response {
    * @static
    * @param {NGetRequest} request - N-GET request.
    * @returns {NGetResponse} N-GET response.
-   * @throws Error if request is not an instance of NGetRequest.
+   * @throws {Error} If request is not an instance of NGetRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof NGetRequest)) {
@@ -1871,7 +1892,7 @@ class NSetResponse extends Response {
    * @static
    * @param {NSetRequest} request - N-SET request.
    * @returns {NSetResponse} N-SET response.
-   * @throws Error if request is not an instance of NSetRequest.
+   * @throws {Error} If request is not an instance of NSetRequest.
    */
   static fromRequest(request) {
     if (!(request instanceof NSetRequest)) {
@@ -1928,7 +1949,7 @@ class CCancelRequest extends Request {
    * @static
    * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.
    * @returns {CCancelRequest} C-CANCEL request.
-   * @throws Error if request is not an instance of CFindRequest, CMoveRequest or CGetRequest.
+   * @throws {Error} If request is not an instance of CFindRequest, CMoveRequest or CGetRequest.
    */
   static fromRequest(request) {
     if (

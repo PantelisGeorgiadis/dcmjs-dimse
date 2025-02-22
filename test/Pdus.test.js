@@ -161,6 +161,7 @@ describe('PDU', () => {
     expect(data).to.be.deep.eq(pdv2.getValue());
     expect(command).to.be.eq(pdv2.isCommand());
     expect(last).to.be.eq(pdv2.isLastFragment());
+    expect(pdu.toString()).to.be.a('string');
   });
 
   it('should correctly write and read a P-DATA-TF PDU', () => {

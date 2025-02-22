@@ -28,6 +28,7 @@ describe('Association', () => {
 
     expect(association.getCallingAeTitle()).to.be.eq(callingAet);
     expect(association.getCalledAeTitle()).to.be.eq(calledAet);
+    expect(association.toString()).to.be.a('string');
   });
 
   it('should correctly handle user identity and async ops', () => {
@@ -240,11 +241,18 @@ describe('Association', () => {
 
     const association3 = new Association(callingAet, calledAet);
     const request7 = new CStoreRequest(
-      new Dataset({
-        SOPClassUID: StorageClass.CtImageStorage,
-        SOPInstanceUID: Dataset.generateDerivedUid(),
-      })
+      new Dataset(
+        {
+          SOPClassUID: StorageClass.CtImageStorage,
+          SOPInstanceUID: Dataset.generateDerivedUid(),
+        },
+        TransferSyntax.Jpeg2000Lossless
+      )
     );
+    request7.setAdditionalTransferSyntaxes([
+      TransferSyntax.Jpeg2000Lossless,
+      TransferSyntax.JpegLossless,
+    ]);
     const pcId7 = association3.addPresentationContextFromRequest(request7);
     const request8 = new CStoreRequest(
       new Dataset({
@@ -255,6 +263,7 @@ describe('Association', () => {
     const pcId8 = association3.addPresentationContextFromRequest(request8);
     expect(pcId7).not.to.be.eq(pcId8);
     expect(association3.getPresentationContexts().length).to.be.eq(2);
+    expect(association3.getPresentationContext(pcId7).getTransferSyntaxUids().length).to.be.eq(3);
   });
 
   it('should correctly add presentation contexts from a C-GET request', () => {

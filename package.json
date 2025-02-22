@@ -1,29 +1,29 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.1.31",
+  "version": "0.2.0",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",
   "types": "index.d.ts",
   "scripts": {
+    "build": "npm run version && npm run lint && npm run test && npm run coverage && npm run webpack",
     "clean": "npm run clean:build && npm run clean:coverage && npm run clean:docs",
     "clean:build": "shx rm -rf build",
     "clean:coverage": "shx rm -rf coverage",
     "clean:docs": "shx rm -rf documentation",
     "coverage": "c8 --check-coverage --lines 80 --functions 80 --branches 80 --statements 80 --clean --reporter=text --reporter=html --include=src/*.js --exclude=src/index.js --exclude=src/version.js --exclude=src/log.js mocha test/**/*.test.js",
+    "dev:examples:js": "nodemon examples/index.js",
     "doc": "npm run doc:generate && open-cli documentation/index.html",
     "doc:generate": "npm run clean:docs && jsdoc -c .jsdocrc.json",
-    "dev:examples:js": "nodemon examples/index.js",
+    "lint": "eslint -c .eslintrc.json --fix src && prettier --config .prettierrc.json --write src/**/*.js test/**/*.js examples/**/*.{js,ts} *.ts",
+    "start": "npm run webpack",
     "start:examples:js": "node examples/index.js",
     "start:examples:ts": "ts-node examples/index.ts",
-    "build": "npm run version && npm run lint && npm run test && npm run coverage && npm run webpack",
-    "start": "npm run webpack",
-    "version": "node -p -e \"'module.exports = \\'' + require('./package.json').version + '\\';'\" > src/version.js",
-    "webpack": "webpack --progress --config webpack.config.js",
+    "test": "npm run test:types && npm run test:node",
     "test:node": "mocha test/**/*.test.js",
     "test:types": "tsd",
-    "test": "npm run test:types && npm run test:node",
-    "lint": "eslint -c .eslintrc.json --fix src && prettier --tab-width 2 --single-quote true --print-width 100 --use-tabs false --trailing-comma es5 --write src/**/*.js test/**/*.js examples/**/*.{js,ts} *.ts"
+    "version": "node -p -e \"'module.exports = \\'' + require('./package.json').version + '\\';'\" > src/version.js",
+    "webpack": "webpack --progress --config webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -45,6 +45,7 @@
   "dependencies": {
     "async-eventemitter": "^0.2.4",
     "dcmjs": "^0.38.1",
+    "dcmjs-codecs": "^0.0.5",
     "smart-buffer": "^4.2.0",
     "ts-mixer": "^6.0.4",
     "winston": "^3.17.0"
