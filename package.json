@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@types/async-eventemitter": "^0.2.4",
-    "@types/node": "^22.13.4",
+    "@types/node": "^22.13.10",
     "c8": "^9.1.0",
     "chai": "^4.3.10",
     "docdash": "^2.0.2",

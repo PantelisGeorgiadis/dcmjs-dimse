@@ -156,7 +156,7 @@ describe('Dataset', () => {
     mockFs.restore();
   });
 
-  it('should correctly read and write DICOM part10 files asynchronously', () => {
+  it('should correctly read and write DICOM part10 files asynchronously', (done) => {
     mockFs({
       'fileIn.dcm': mockFs.load(path.resolve(__dirname, './../datasets/pdf.dcm')),
       'fileInEmpty.dcm': '',
@@ -176,8 +176,8 @@ describe('Dataset', () => {
           Dataset.fromFile('fileInEmpty.dcm', (err4, dataset3) => {
             expect(err4).not.to.be.undefined;
             expect(dataset3).to.be.undefined;
-
             mockFs.restore();
+            done();
           });
         });
       });

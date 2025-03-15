@@ -6,6 +6,18 @@ const chai = require('chai');
 const expect = chai.expect;
 
 describe('Implementation', () => {
+  beforeEach(() => {
+    Implementation.setImplementationClassUid(DefaultImplementation.ImplementationClassUid);
+    Implementation.setImplementationVersion(DefaultImplementation.ImplementationVersion);
+    Implementation.setMaxPduLength(DefaultImplementation.MaxPduLength);
+  });
+
+  afterEach(() => {
+    Implementation.setImplementationClassUid(DefaultImplementation.ImplementationClassUid);
+    Implementation.setImplementationVersion(DefaultImplementation.ImplementationVersion);
+    Implementation.setMaxPduLength(DefaultImplementation.MaxPduLength);
+  });
+
   it('should correctly get the default implementation', () => {
     expect(Implementation.getImplementationClassUid()).to.be.eq(
       DefaultImplementation.ImplementationClassUid
@@ -37,17 +49,5 @@ describe('Implementation', () => {
     expect(() => {
       Implementation.setImplementationVersion('12345678901234567');
     }).to.throw();
-  });
-
-  beforeEach(() => {
-    Implementation.setImplementationClassUid(DefaultImplementation.ImplementationClassUid);
-    Implementation.setImplementationVersion(DefaultImplementation.ImplementationVersion);
-    Implementation.setMaxPduLength(DefaultImplementation.MaxPduLength);
-  });
-
-  afterEach(() => {
-    Implementation.setImplementationClassUid(DefaultImplementation.ImplementationClassUid);
-    Implementation.setImplementationVersion(DefaultImplementation.ImplementationVersion);
-    Implementation.setMaxPduLength(DefaultImplementation.MaxPduLength);
   });
 });

@@ -110,9 +110,8 @@ class Scp extends Network {
    * @param {CStoreRequest} request - C-STORE request.
    * @returns {Writable} The created store writable stream.
    */
-  // eslint-disable-next-line no-unused-vars
   createStoreWritableStream(acceptedPresentationContext, request) {
-    return super.createStoreWritableStream();
+    return super.createStoreWritableStream(acceptedPresentationContext, request);
   }
 
   /**
