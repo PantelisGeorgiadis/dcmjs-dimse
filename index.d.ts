@@ -3,6 +3,7 @@ import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
 import { Mixin } from 'ts-mixer';
 import { Logger } from 'winston';
+import { Writable } from 'stream';
 
 declare namespace PresentationContextResult {
   const Proposed: number;
@@ -1471,6 +1472,27 @@ declare class Scp extends Network {
       };
     }
   );
+
+  /**
+   * Allows the caller to create a Writable stream to accumulate the C-STORE dataset.
+   * The default implementation creates a memory Writable stream that for, big instances,
+   * could cause out of memory situations.
+   */
+  createStoreWritableStream(
+    acceptedPresentationContext: PresentationContext,
+    request: CStoreRequest
+  ): Writable;
+
+  /**
+   * Allows the caller to create a Dataset from the Writable stream used to
+   * accumulate the C-STORE dataset. The created Dataset is passed to the
+   * Scp.cStoreRequest method for processing.
+   */
+  createDatasetFromStoreWritableStream(
+    writable: Writable,
+    acceptedPresentationContext: PresentationContext,
+    callback: (dataset: Dataset) => void
+  ): void;
 
   /**
    * Association request received.

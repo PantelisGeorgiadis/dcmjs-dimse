@@ -1,6 +1,7 @@
 import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
 import { expectError, expectType } from 'tsd';
+import { Writable } from 'stream';
 
 import {
   Client,
@@ -482,6 +483,19 @@ class TestScp extends Scp {
     }
   ) {
     super(socket, opts);
+  }
+  createStoreWritableStream(
+    acceptedPresentationContext: association.PresentationContext,
+    request: requests.CStoreRequest
+  ): Writable {
+    return new Writable();
+  }
+  createDatasetFromStoreWritableStream(
+    writable: Writable,
+    acceptedPresentationContext: association.PresentationContext,
+    callback: (dataset: Dataset) => void
+  ): void {
+    callback(new Dataset({}, TransferSyntax.ImplicitVRLittleEndian));
   }
   associationRequested(association: association.Association) {}
   associationReleaseRequested() {}

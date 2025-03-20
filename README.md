@@ -22,7 +22,7 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 - Supports secure DICOM TLS connections and user identity negotiation.
 - Transcodes sent and received datasets among all major accepted transfer syntaxes (using the [dcmjs-codecs][dcmjs-codecs-url] library).
 - Allows custom DICOM implementations (Implementation Class UID and Implementation Version).
-- Provides asynchronous event handlers for incoming SCP requests.
+- Provides asynchronous event handlers and streaming support for incoming SCP requests.
 
 
 #### Supported Transfer Syntaxes
@@ -313,6 +313,10 @@ Please check the respecting [Wiki][dcmjs-dimse-wiki-examples-url] section for mo
 ### License
 dcmjs-dimse is released under the MIT License.
 
+### Sponsors
+The following organizations supported the dcmjs-dimse development.
+* [HeartLab][sponsors-heartlab-url] - A Cardiology Imaging Platform That Lets You Work Smarter.
+
 [npm-url]: https://npmjs.org/package/dcmjs-dimse
 [npm-version-image]: https://img.shields.io/npm/v/dcmjs-dimse.svg?style=flat
 [npm-downloads-image]: http://img.shields.io/npm/dm/dcmjs-dimse.svg?style=flat
@@ -332,3 +336,5 @@ dcmjs-dimse is released under the MIT License.
 [dcmjs-ecg-url]: https://github.com/PantelisGeorgiadis/dcmjs-ecg
 
 [dcmjs-dimse-wiki-examples-url]: https://github.com/PantelisGeorgiadis/dcmjs-dimse/wiki/Examples
+
+[sponsors-heartlab-url]: https://heartlab.com

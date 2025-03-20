@@ -47,6 +47,7 @@ const log = require('./log');
 const { SmartBuffer } = require('smart-buffer');
 const { EOL } = require('os');
 const AsyncEventEmitter = require('async-eventemitter');
+const MemoryStream = require('memorystream');
 
 //#region Network
 class Network extends AsyncEventEmitter {
@@ -72,7 +73,8 @@ class Network extends AsyncEventEmitter {
     this.requests = [];
     this.pending = [];
 
-    this.dimseBuffer = undefined;
+    this.dimseStream = undefined;
+    this.dimseStoreStream = undefined;
     this.dimse = undefined;
 
     opts = opts || {};
@@ -230,6 +232,37 @@ class Network extends AsyncEventEmitter {
    */
   getStatistics() {
     return this.statistics;
+  }
+
+  /**
+   * Allows the caller to create a Writable stream to accumulate the C-STORE dataset.
+   * The default implementation creates a memory Writable stream that for, big instances,
+   * could cause out of memory situations.
+   * @method
+   * @param {PresentationContext} acceptedPresentationContext - The accepted presentation context.
+   * @param {CStoreRequest} request - C-STORE request.
+   * @returns {Writable} The created store writable stream.
+   */
+  // eslint-disable-next-line no-unused-vars
+  createStoreWritableStream(acceptedPresentationContext, request) {
+    return MemoryStream.createWriteStream();
+  }
+
+  /**
+   * Allows the caller to create a Dataset from the Writable stream used to
+   * accumulate the C-STORE dataset. The created Dataset is passed to the
+   * Scp.cStoreRequest method for processing.
+   * @method
+   * @param {Writable} writable - The store writable stream.
+   * @param {PresentationContext} acceptedPresentationContext - The accepted presentation context.
+   * @param {function(Dataset)} callback - Created dataset callback function.
+   */
+  createDatasetFromStoreWritableStream(writable, acceptedPresentationContext, callback) {
+    const dataset = new Dataset(
+      writable.toBuffer(),
+      acceptedPresentationContext.getAcceptedTransferSyntaxUid()
+    );
+    callback(dataset);
   }
 
   //#region Private Methods
@@ -403,7 +436,7 @@ class Network extends AsyncEventEmitter {
    * @param {Buffer} data - Accumulated PDU data.
    * @throws {Error} In case of an unknown PDU type.
    */
-  _processPdu(data) {
+  async _processPdu(data) {
     const raw = new RawPdu(data);
 
     try {
@@ -441,7 +474,7 @@ class Network extends AsyncEventEmitter {
         case RawPduType.PDataTF: {
           const pdu = new PDataTF();
           pdu.read(raw);
-          this._processPDataTf(pdu);
+          await this._processPDataTf(pdu);
           break;
         }
         case RawPduType.AReleaseRQ: {
@@ -487,22 +520,49 @@ class Network extends AsyncEventEmitter {
    * @private
    * @param {PDataTF} pdu - PDU.
    */
-  _processPDataTf(pdu) {
+  async _processPDataTf(pdu) {
     try {
+      let drainPromise = undefined;
       const pdvs = pdu.getPdvs();
-      pdvs.forEach((pdv) => {
-        if (!this.dimseBuffer) {
-          this.dimseBuffer = SmartBuffer.fromOptions({
-            encoding: 'ascii',
-          });
-        }
-        this.dimseBuffer.writeBuffer(pdv.getValue());
+      for (let i = 0; i < pdvs.length; i++) {
+        const pdv = pdvs[i];
         const presentationContext = this.association.getPresentationContext(
           pdv.getPresentationContextId()
         );
+
+        if (!this.dimse) {
+          // Create stream to receive command
+          if (!this.dimseStream) {
+            this.dimseStream = MemoryStream.createWriteStream();
+            this.dimseStoreStream = undefined;
+          }
+        } else {
+          // Create stream to receive dataset
+          if (this.dimse.getCommandFieldType() === CommandFieldType.CStoreRequest) {
+            if (!this.dimseStoreStream) {
+              this.dimseStream = undefined;
+              this.dimseStoreStream = this.createStoreWritableStream(
+                presentationContext,
+                this.dimse
+              );
+              drainPromise = new Promise((resolve) => this.dimseStoreStream.once('drain', resolve));
+            }
+          } else {
+            if (!this.dimseStream) {
+              this.dimseStream = MemoryStream.createWriteStream();
+              this.dimseStoreStream = undefined;
+            }
+          }
+        }
+
+        const stream = this.dimseStream || this.dimseStoreStream;
+        if (!stream.write(pdv.getValue()) && drainPromise) {
+          await drainPromise;
+        }
+
         if (pdv.isLastFragment()) {
           if (pdv.isCommand()) {
-            const command = new Command(new Dataset(this.dimseBuffer.toBuffer()));
+            const command = new Command(new Dataset(this.dimseStream.toBuffer()));
             const type = command.getCommandFieldType();
             switch (type) {
               case CommandFieldType.CEchoRequest:
@@ -591,20 +651,38 @@ class Network extends AsyncEventEmitter {
               this.dimse = undefined;
               return;
             }
-            this.dimseBuffer = undefined;
+            this.dimseStream = undefined;
+            this.dimseStoreStream = undefined;
           } else {
-            const dataset = new Dataset(
-              this.dimseBuffer.toBuffer(),
-              presentationContext.getAcceptedTransferSyntaxUid(),
-              this.datasetReadOptions
-            );
-            this.dimse.setDataset(dataset);
-            this._performDimse(presentationContext, this.dimse);
-            this.dimseBuffer = undefined;
-            this.dimse = undefined;
+            if (this.dimse.getCommandFieldType() === CommandFieldType.CStoreRequest) {
+              this.dimseStoreStream.end();
+              this.createDatasetFromStoreWritableStream(
+                this.dimseStoreStream,
+                presentationContext,
+                (dataset) => {
+                  this.dimse.setDataset(dataset);
+                  this._performDimse(presentationContext, this.dimse);
+                  this.dimseStream = undefined;
+                  this.dimseStoreStream = undefined;
+                  this.dimse = undefined;
+                }
+              );
+            } else {
+              this.dimseStream.end();
+              const dataset = new Dataset(
+                this.dimseStream.toBuffer(),
+                presentationContext.getAcceptedTransferSyntaxUid(),
+                this.datasetReadOptions
+              );
+              this.dimse.setDataset(dataset);
+              this._performDimse(presentationContext, this.dimse);
+              this.dimseStream = undefined;
+              this.dimseStoreStream = undefined;
+              this.dimse = undefined;
+            }
           }
         }
-      });
+      }
     } catch (err) {
       log.error(`${this.logId} -> Error reading DIMSE: ${err.message}`);
       this.emit('networkError', err);
@@ -704,9 +782,9 @@ class Network extends AsyncEventEmitter {
       this.emit('connect');
     });
     const pduAccumulator = new PduAccumulator();
-    pduAccumulator.on('pdu', (data) => {
+    pduAccumulator.on('pdu', async (data) => {
       this.lastPduTime = Date.now();
-      this._processPdu(data);
+      await this._processPdu(data);
     });
     pduAccumulator.on('error', (err) => {
       this._reset();
