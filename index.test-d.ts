@@ -278,6 +278,10 @@ expectError(new CMoveResponse('1', 2));
 expectType<responses.CMoveResponse>(CMoveResponse.fromRequest(new CMoveRequest()));
 
 const moveResponse = new CMoveResponse(Status.Success, '');
+expectError(moveResponse.setRemaining('1'));
+expectError(moveResponse.setCompleted('2'));
+expectError(moveResponse.setWarnings('3'));
+expectError(moveResponse.setFailures('4'));
 expectType<number>(moveResponse.getRemaining());
 expectType<number>(moveResponse.getCompleted());
 expectType<number>(moveResponse.getWarnings());
@@ -307,6 +311,10 @@ expectError(new CGetResponse('1', 2));
 expectType<responses.CGetResponse>(CGetResponse.fromRequest(new CGetRequest()));
 
 const getResponse = new CGetResponse(Status.Success, '');
+expectError(getResponse.setRemaining('1'));
+expectError(getResponse.setCompleted('2'));
+expectError(getResponse.setWarnings('3'));
+expectError(getResponse.setFailures('4'));
 expectType<number>(getResponse.getRemaining());
 expectType<number>(getResponse.getCompleted());
 expectType<number>(getResponse.getWarnings());

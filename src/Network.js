@@ -181,6 +181,25 @@ class Network extends AsyncEventEmitter {
   }
 
   /**
+   * Sends a response for a specific request.
+   * @method
+   * @param {Request} requests - Request for which to send response.
+   * @param {Response} response - Response to send.
+   */
+  sendResponse(request, response) {
+    const context = this.association.getAcceptedPresentationContextFromRequest(request);
+    if (!context) {
+      log.error(
+        `Could not find an accepted presentation context for request ${request.toString()}. Skipping...`
+      );
+      return;
+    }
+
+    const dimse = { context, command: response };
+    this._sendDimse(dimse);
+  }
+
+  /**
    * Sends cancel request.
    * @method
    * @param {CFindRequest|CMoveRequest|CGetRequest} request - C-FIND, C-MOVE or C-GET request.

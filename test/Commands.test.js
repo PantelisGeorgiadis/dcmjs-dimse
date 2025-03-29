@@ -224,6 +224,10 @@ describe('Command', () => {
 
   it('should correctly create a C-MOVE response', () => {
     const response = new CMoveResponse(Status.ProcessingFailure);
+    response.setRemaining(1);
+    response.setCompleted(2);
+    response.setWarnings(3);
+    response.setFailures(4);
 
     expect(response.getAffectedSopClassUid()).to.be.eq(
       SopClass.StudyRootQueryRetrieveInformationModelMove
@@ -231,6 +235,10 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CMoveResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+    expect(response.getRemaining()).to.be.eq(1);
+    expect(response.getCompleted()).to.be.eq(2);
+    expect(response.getWarnings()).to.be.eq(3);
+    expect(response.getFailures()).to.be.eq(4);
 
     expect(() => {
       CMoveResponse.fromRequest(new CEchoRequest());
@@ -258,6 +266,10 @@ describe('Command', () => {
 
   it('should correctly create a C-GET response', () => {
     const response = new CGetResponse(Status.ProcessingFailure);
+    response.setRemaining(1);
+    response.setCompleted(2);
+    response.setWarnings(3);
+    response.setFailures(4);
 
     expect(response.getAffectedSopClassUid()).to.be.eq(
       SopClass.StudyRootQueryRetrieveInformationModelGet
@@ -265,6 +277,10 @@ describe('Command', () => {
     expect(response.getCommandFieldType()).to.be.eq(CommandFieldType.CGetResponse);
     expect(response.getStatus()).to.be.eq(Status.ProcessingFailure);
     expect(response.hasDataset()).to.be.false;
+    expect(response.getRemaining()).to.be.eq(1);
+    expect(response.getCompleted()).to.be.eq(2);
+    expect(response.getWarnings()).to.be.eq(3);
+    expect(response.getFailures()).to.be.eq(4);
 
     expect(() => {
       CGetResponse.fromRequest(new CEchoRequest());

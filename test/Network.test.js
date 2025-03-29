@@ -176,13 +176,38 @@ class AcceptingScp extends Scp {
     );
 
     if (foundDataset) {
+      let remaining = 1;
+      let completed = 0;
+
       const cStoreRequest = new CStoreRequest(foundDataset);
+      cStoreRequest.on('response', (cStoreResponse) => {
+        remaining--;
+        completed++;
+
+        const response1 = CGetResponse.fromRequest(request);
+        response1.setStatus(Status.Pending);
+        response1.setRemaining(remaining);
+        response1.setCompleted(completed);
+        response1.setWarnings(0);
+        response1.setFailures(0);
+        this.sendResponse(request, response1);
+
+        if (remaining === 0) {
+          response1.setStatus(Status.Success);
+          callback(response1);
+        }
+      });
       this.sendRequests(cStoreRequest);
+      return;
     }
 
-    const response = CGetResponse.fromRequest(request);
-    response.setStatus(Status.Success);
-    callback(response);
+    const response2 = CGetResponse.fromRequest(request);
+    response2.setStatus(Status.NoSuchObjectInstance);
+    response2.setRemaining(1);
+    response2.setCompleted(0);
+    response2.setWarnings(0);
+    response2.setFailures(1);
+    callback(response2);
   }
   nActionRequest(request, callback) {
     const nEventRequest = new NEventReportRequest(
@@ -372,12 +397,28 @@ class StreamingScp extends Scp {
   }
   cGetRequest(request, callback) {
     const dataset = Dataset.fromFile(StreamingPart10File);
-    const cStoreRequest = new CStoreRequest(dataset);
-    this.sendRequests(cStoreRequest);
+    let remaining = 1;
+    let completed = 0;
 
-    const response = CGetResponse.fromRequest(request);
-    response.setStatus(Status.Success);
-    callback(response);
+    const cStoreRequest = new CStoreRequest(dataset);
+    cStoreRequest.on('response', (cStoreResponse) => {
+      remaining--;
+      completed++;
+
+      const response = CGetResponse.fromRequest(request);
+      response.setStatus(Status.Pending);
+      response.setRemaining(remaining);
+      response.setCompleted(completed);
+      response.setWarnings(0);
+      response.setFailures(0);
+      this.sendResponse(request, response);
+
+      if (remaining === 0) {
+        response.setStatus(Status.Success);
+        callback(response);
+      }
+    });
+    this.sendRequests(cStoreRequest);
   }
   cStoreRequest(request, callback) {
     const response = CStoreResponse.fromRequest(request);
@@ -581,7 +622,9 @@ describe('Network (Client, Server)', () => {
     let ret = undefined;
 
     const client = new Client();
-    const request = CFindRequest.createStudyFindRequest({ PatientID: '12345' });
+    const request = CFindRequest.createStudyFindRequest({
+      PatientID: '12345',
+    });
     request.on('response', (response) => {
       if (response.getStatus() === Status.Pending) {
         ret = response.getDataset();
@@ -776,7 +819,7 @@ describe('Network (Client, Server)', () => {
       throw e;
     });
     client.send('127.0.0.1', 2109, 'CALLINGAET', 'CALLEDAET');
-  });
+  }).timeout(5000);
 
   it('should correctly perform and serve a C-GET operation', (done) => {
     const server = new Server(AcceptingScp);

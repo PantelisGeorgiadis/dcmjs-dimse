@@ -108,9 +108,10 @@ class Dataset {
   /**
    * Gets command elements encoded in a DICOM dataset buffer.
    * @method
+   * @param {Object} [writeOptions] - The write options to pass through to `DicomMessage.write()` and `DicomMessage.writeTagObject()`.
    * @returns {Buffer} DICOM dataset.
    */
-  getDenaturalizedCommandDataset() {
+  getDenaturalizedCommandDataset(writeOptions) {
     const denaturalizedDataset = DicomMetaDictionary.denaturalizeDataset(this.getElements());
 
     const datasetStream = new WriteBufferStream();
@@ -119,7 +120,7 @@ class Dataset {
       denaturalizedDataset,
       elementsStream,
       TransferSyntax.ImplicitVRLittleEndian,
-      {}
+      writeOptions
     );
     DicomMessage.writeTagObject(
       datasetStream,
@@ -127,7 +128,7 @@ class Dataset {
       'UL',
       elementsStream.size,
       TransferSyntax.ImplicitVRLittleEndian,
-      {}
+      writeOptions
     );
     datasetStream.concat(elementsStream);
 

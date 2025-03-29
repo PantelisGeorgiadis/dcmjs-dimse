@@ -237,7 +237,7 @@ declare class Dataset {
   /**
    * Gets command elements encoded in a DICOM dataset buffer.
    */
-  getDenaturalizedCommandDataset(): Buffer;
+  getDenaturalizedCommandDataset(writeOptions?: Record<string, unknown>): Buffer;
 
   /**
    * Loads a dataset from DICOM P10 file.
@@ -989,9 +989,19 @@ declare class CMoveResponse extends Response {
   getRemaining(): number;
 
   /**
+   * Sets remaining sub operations.
+   */
+  setRemaining(remaining: number): void;
+
+  /**
    * Gets completed sub operations.
    */
   getCompleted(): number;
+
+  /**
+   * Sets completed sub operations.
+   */
+  setCompleted(completed: number): void;
 
   /**
    * Gets sub operations with warnings.
@@ -999,9 +1009,24 @@ declare class CMoveResponse extends Response {
   getWarnings(): number;
 
   /**
+   * Sets sub operations with warnings.
+   */
+  setWarnings(warnings: number): void;
+
+  /**
    * Gets failed sub operations.
    */
   getFailures(): number;
+
+  /**
+   * Sets failed sub operations.
+   */
+  setFailures(failures: number): void;
+
+  /**
+   * Gets the C-MOVE response description.
+   */
+  toString(opts?: { includeCommandDataset?: boolean; includeDataset?: boolean }): string;
 
   /**
    * Creates a C-MOVE response from a request.
@@ -1074,9 +1099,19 @@ declare class CGetResponse extends Response {
   getRemaining(): number;
 
   /**
+   * Sets remaining sub operations.
+   */
+  setRemaining(remaining: number): void;
+
+  /**
    * Gets completed sub operations.
    */
   getCompleted(): number;
+
+  /**
+   * Sets completed sub operations.
+   */
+  setCompleted(completed: number): void;
 
   /**
    * Gets sub operations with warnings.
@@ -1084,9 +1119,24 @@ declare class CGetResponse extends Response {
   getWarnings(): number;
 
   /**
+   * Sets sub operations with warnings.
+   */
+  setWarnings(warnings: number): void;
+
+  /**
    * Gets failed sub operations.
    */
   getFailures(): number;
+
+  /**
+   * Sets failed sub operations.
+   */
+  setFailures(failures: number): void;
+
+  /**
+   * Gets the C-GET response description.
+   */
+  toString(opts?: { includeCommandDataset?: boolean; includeDataset?: boolean }): string;
 
   /**
    * Creates a C-GET response from a request.
@@ -1387,6 +1437,11 @@ declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
    * Sends requests.
    */
   sendRequests(requests: Array<Request> | Request): void;
+
+  /**
+   * Sends response for a specific request.
+   */
+  sendResponse(request: Request, response: Response): void;
 
   /**
    * Sends cancel request.

@@ -1163,6 +1163,16 @@ class CMoveResponse extends Response {
   }
 
   /**
+   * Sets remaining sub operations.
+   * @method
+   * @param {number} remaining - Remaining sub operations.
+   */
+  setRemaining(remaining) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfRemainingSuboperations', remaining);
+  }
+
+  /**
    * Gets completed sub operations.
    * @method
    * @returns {number} Completed sub operations.
@@ -1170,6 +1180,16 @@ class CMoveResponse extends Response {
   getCompleted() {
     const command = this.getCommandDataset();
     return command.getElement('NumberOfCompletedSuboperations');
+  }
+
+  /**
+   * Sets completed sub operations.
+   * @method
+   * @param {string} completed - Completed sub operations.
+   */
+  setCompleted(completed) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfCompletedSuboperations', completed);
   }
 
   /**
@@ -1183,6 +1203,16 @@ class CMoveResponse extends Response {
   }
 
   /**
+   * Sets sub operations with warnings.
+   * @method
+   * @param {string} warnings - Sub operations with warnings.
+   */
+  setWarnings(warnings) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfWarningSuboperations', warnings);
+  }
+
+  /**
    * Gets failed sub operations.
    * @method
    * @returns {number} Failed sub operations.
@@ -1190,6 +1220,28 @@ class CMoveResponse extends Response {
   getFailures() {
     const command = this.getCommandDataset();
     return command.getElement('NumberOfFailedSuboperations');
+  }
+
+  /**
+   * Sets failed sub operations.
+   * @method
+   * @param {string} failures - Failed sub operations.
+   */
+  setFailures(failures) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfFailedSuboperations', failures);
+  }
+
+  /**
+   * Gets the C-MOVE response description.
+   * @method
+   * @param {Object} [opts] - Description generation options.
+   * @param {boolean} [opts.includeCommandDataset] - Include command dataset in the description.
+   * @param {boolean} [opts.includeDataset] - Include dataset in the description.
+   * @return {string} Response description.
+   */
+  toString(opts) {
+    return `${super.toString(opts)} [Remaining: ${this.getRemaining()}; Completed: ${this.getCompleted()} Warnings: ${this.getWarnings()}; Failures: ${this.getFailures()}]`;
   }
 
   /**
@@ -1362,6 +1414,16 @@ class CGetResponse extends Response {
   }
 
   /**
+   * Sets remaining sub operations.
+   * @method
+   * @param {number} remaining - Remaining sub operations.
+   */
+  setRemaining(remaining) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfRemainingSuboperations', remaining);
+  }
+
+  /**
    * Gets completed sub operations.
    * @method
    * @returns {number} Completed sub operations.
@@ -1369,6 +1431,16 @@ class CGetResponse extends Response {
   getCompleted() {
     const command = this.getCommandDataset();
     return command.getElement('NumberOfCompletedSuboperations');
+  }
+
+  /**
+   * Sets completed sub operations.
+   * @method
+   * @param {string} completed - Completed sub operations.
+   */
+  setCompleted(completed) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfCompletedSuboperations', completed);
   }
 
   /**
@@ -1382,6 +1454,16 @@ class CGetResponse extends Response {
   }
 
   /**
+   * Sets sub operations with warnings.
+   * @method
+   * @param {string} warnings - Sub operations with warnings.
+   */
+  setWarnings(warnings) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfWarningSuboperations', warnings);
+  }
+
+  /**
    * Gets failed sub operations.
    * @method
    * @returns {number} Failed sub operations.
@@ -1389,6 +1471,28 @@ class CGetResponse extends Response {
   getFailures() {
     const command = this.getCommandDataset();
     return command.getElement('NumberOfFailedSuboperations');
+  }
+
+  /**
+   * Sets failed sub operations.
+   * @method
+   * @param {string} failures - Failed sub operations.
+   */
+  setFailures(failures) {
+    const command = this.getCommandDataset();
+    return command.setElement('NumberOfFailedSuboperations', failures);
+  }
+
+  /**
+   * Gets the C-GET response description.
+   * @method
+   * @param {Object} [opts] - Description generation options.
+   * @param {boolean} [opts.includeCommandDataset] - Include command dataset in the description.
+   * @param {boolean} [opts.includeDataset] - Include dataset in the description.
+   * @return {string} Response description.
+   */
+  toString(opts) {
+    return `${super.toString(opts)} [Remaining: ${this.getRemaining()}; Completed: ${this.getCompleted()} Warnings: ${this.getWarnings()}; Failures: ${this.getFailures()}]`;
   }
 
   /**
