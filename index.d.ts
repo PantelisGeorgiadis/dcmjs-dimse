@@ -2,7 +2,7 @@ import AsyncEventEmitter from 'async-eventemitter';
 import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
 import { Mixin } from 'ts-mixer';
-import { Logger } from 'winston';
+import { Logger } from 'loglevel';
 import { Writable } from 'stream';
 
 declare namespace PresentationContextResult {

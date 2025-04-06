@@ -46,10 +46,11 @@
     "async-eventemitter": "^0.2.4",
     "dcmjs": "^0.38.1",
     "dcmjs-codecs": "^0.0.5",
+    "loglevel": "^1.9.2",
+    "loglevel-plugin-prefix": "^0.8.4",
     "memorystream": "^0.3.1",
     "smart-buffer": "^4.2.0",
-    "ts-mixer": "^6.0.4",
-    "winston": "^3.17.0"
+    "ts-mixer": "^6.0.4"
   },
   "devDependencies": {
     "@types/async-eventemitter": "^0.2.4",
