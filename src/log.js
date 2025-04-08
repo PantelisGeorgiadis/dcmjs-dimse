@@ -1,14 +1,17 @@
-const { createLogger, format, transports } = require('winston');
-const { combine, printf, timestamp } = format;
+const log = require('loglevel');
+const prefix = require('loglevel-plugin-prefix');
 
-const log = createLogger({
-  format: combine(
-    timestamp(),
-    printf(({ level, message, timestamp }) => {
-      return `${timestamp} -- ${level.toUpperCase()} -- ${message}`;
-    })
-  ),
-  transports: [new transports.Console()],
+prefix.reg(log);
+log.enableAll(false);
+
+prefix.apply(log, {
+  // eslint-disable-next-line no-unused-vars
+  format(level, name, timestamp) {
+    return `${timestamp} -- ${level.toUpperCase()} --`;
+  },
+  timestampFormatter(timestamp) {
+    return timestamp.toISOString();
+  },
 });
 
 //#region Exports

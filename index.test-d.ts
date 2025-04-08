@@ -2,6 +2,7 @@ import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
 import { expectError, expectType } from 'tsd';
 import { Writable } from 'stream';
+import { Logger } from 'loglevel';
 
 import {
   Client,
@@ -52,7 +53,7 @@ const {
 const { Priority, SopClass, Status, TransferSyntax } = constants;
 
 // log
-expectType<typeof log>(log.error('error'));
+expectType<Logger>(log);
 
 // version
 expectType<string>(version);
