@@ -434,7 +434,7 @@ class StreamingScp extends Scp {
   }
 }
 
-describe('Network (Client, Server)', () => {
+describe('Network', () => {
   before(async () => {
     await Transcoding.initializeAsync();
     log.setLevel('error');
