@@ -489,6 +489,7 @@ class TestScp extends Scp {
           | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
           | undefined;
       };
+      customOptions?: Record<string, unknown>;
     }
   ) {
     super(socket, opts);
