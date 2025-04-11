@@ -50,6 +50,7 @@ class Scp extends Network {
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
    * @param {function} [opts.securityOptions.SNICallback] - A function that will be called if the client supports SNI TLS extension.
+   * @param {Object} [opts.customOptions] - Custom options to pass to each Scp instance.
    */
   constructor(socket, opts) {
     super(socket, opts);
@@ -341,6 +342,7 @@ class Server extends AsyncEventEmitter {
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
    * @param {function} [opts.securityOptions.SNICallback] - A function that will be called if the client supports SNI TLS extension.
+   * @param {Object} [opts.customOptions] - Custom options to pass to each Scp instance.
    */
   listen(port, opts) {
     opts = opts || {};
