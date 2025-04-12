@@ -1525,6 +1525,7 @@ declare class Scp extends Network {
           | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
           | undefined;
       };
+      customOptions?: Record<string, unknown>;
     }
   );
 
@@ -1662,6 +1663,7 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
           | ((servername: string, cb: (err: Error | null, ctx?: SecureContext) => void) => void)
           | undefined;
       };
+      customOptions?: Record<string, unknown>;
     }
   ): void;
 
