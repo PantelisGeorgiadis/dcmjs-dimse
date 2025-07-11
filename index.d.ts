@@ -1,4 +1,4 @@
-import AsyncEventEmitter from 'async-eventemitter';
+import AsyncEventEmitter2 from 'async-event-emitter2';
 import { Socket } from 'net';
 import { SecureContext, TLSSocket } from 'tls';
 import { Mixin } from 'ts-mixer';
@@ -636,7 +636,7 @@ declare class Command {
   toString(opts?: { includeCommandDataset?: boolean; includeDataset?: boolean }): string;
 }
 
-declare class Request extends Mixin(Command, AsyncEventEmitter) {
+declare class Request extends Mixin(Command, AsyncEventEmitter2) {
   /**
    * Creates an instance of Request.
    */
@@ -1389,7 +1389,7 @@ declare class CCancelRequest extends Request {
   static fromRequest(request: CFindRequest | CMoveRequest | CGetRequest): CCancelRequest;
 }
 
-declare class Network extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
+declare class Network extends AsyncEventEmitter2<AsyncEventEmitter2.EventMap> {
   /**
    * Creates an instance of Network.
    */
@@ -1629,7 +1629,7 @@ declare class Scp extends Network {
   abort(source: number, reason: number): void;
 }
 
-declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
+declare class Server extends AsyncEventEmitter2<AsyncEventEmitter2.EventMap> {
   /**
    * Creates an instance of Server.
    */
@@ -1678,7 +1678,7 @@ declare class Server extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
   close(): void;
 }
 
-declare class Client extends AsyncEventEmitter<AsyncEventEmitter.EventMap> {
+declare class Client extends AsyncEventEmitter2<AsyncEventEmitter2.EventMap> {
   /**
    * Creates an instance of Client.
    */

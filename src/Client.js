@@ -5,12 +5,12 @@ const Network = require('./Network');
 const Statistics = require('./Statistics');
 const log = require('./log');
 
-const AsyncEventEmitter = require('async-eventemitter');
+const AsyncEventEmitter2 = require('async-event-emitter2');
 const net = require('net');
 const tls = require('tls');
 
 //#region Client
-class Client extends AsyncEventEmitter {
+class Client extends AsyncEventEmitter2 {
   /**
    * Creates an instance of Client.
    * @constructor

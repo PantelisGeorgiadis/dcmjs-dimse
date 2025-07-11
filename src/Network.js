@@ -46,11 +46,11 @@ const log = require('./log');
 
 const { SmartBuffer } = require('smart-buffer');
 const { EOL } = require('os');
-const AsyncEventEmitter = require('async-eventemitter');
+const AsyncEventEmitter2 = require('async-event-emitter2');
 const MemoryStream = require('memorystream');
 
 //#region Network
-class Network extends AsyncEventEmitter {
+class Network extends AsyncEventEmitter2 {
   /**
    * Creates an instance of Network.
    * @constructor
@@ -880,7 +880,7 @@ class Network extends AsyncEventEmitter {
 //#endregion
 
 //#region PduAccumulator
-class PduAccumulator extends AsyncEventEmitter {
+class PduAccumulator extends AsyncEventEmitter2 {
   /**
    * Creates an instance of PduAccumulator.
    * @constructor

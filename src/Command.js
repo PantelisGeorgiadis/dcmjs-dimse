@@ -3,7 +3,7 @@ const Dataset = require('./Dataset');
 
 const { Mixin } = require('ts-mixer');
 const { EOL } = require('os');
-const AsyncEventEmitter = require('async-eventemitter');
+const AsyncEventEmitter2 = require('async-event-emitter2');
 const dcmjs = require('dcmjs');
 const { DicomMetaDictionary } = dcmjs.data;
 
@@ -172,7 +172,7 @@ class Command {
 //#endregion
 
 //#region Request
-class Request extends Mixin(Command, AsyncEventEmitter) {
+class Request extends Mixin(Command, AsyncEventEmitter2) {
   /**
    * Creates an instance of Request.
    * @constructor

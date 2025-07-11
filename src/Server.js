@@ -15,7 +15,7 @@ const Network = require('./Network');
 const Statistics = require('./Statistics');
 const log = require('./log');
 
-const AsyncEventEmitter = require('async-eventemitter');
+const AsyncEventEmitter2 = require('async-event-emitter2');
 const net = require('net');
 const tls = require('tls');
 
@@ -300,7 +300,7 @@ class Scp extends Network {
 //#endregion
 
 //#region Server
-class Server extends AsyncEventEmitter {
+class Server extends AsyncEventEmitter2 {
   /**
    * Creates an instance of Server.
    * @constructor
