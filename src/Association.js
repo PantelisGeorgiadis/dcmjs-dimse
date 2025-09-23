@@ -21,10 +21,14 @@ class PresentationContext {
    * @param {string} abstractSyntaxUid - Abstract syntax UID.
    * @param {string} [transferSyntaxUid] - Transfer syntax UID.
    * @param {number} [result] - Presentation context result.
+   * @param {boolean} [userRole] - Flag to indicate whether SCU role is supported.
+   * @param {boolean} [providerRole] - Flag to indicate whether SCP role is supported.
    */
-  constructor(pcId, abstractSyntaxUid, transferSyntaxUid, result) {
+  constructor(pcId, abstractSyntaxUid, transferSyntaxUid, result, userRole, providerRole) {
     this.pcId = pcId;
     this.abstractSyntaxUid = abstractSyntaxUid;
+    this.userRole = userRole;
+    this.providerRole = providerRole;
     this.transferSyntaxes = [];
     if (transferSyntaxUid) {
       this.transferSyntaxes.push(transferSyntaxUid);
@@ -133,6 +137,42 @@ class PresentationContext {
         this.transferSyntaxes.push(transferSyntaxes[0]);
       }
     }
+  }
+
+  /**
+   * Gets the flag that indicates whether SCU role is supported.
+   * @method
+   * @returns {boolean} User role.
+   */
+  getUserRole() {
+    return this.userRole;
+  }
+
+  /**
+   * Sets the flag that indicates whether SCU role is supported.
+   * @method
+   * @param {boolean} userRole - User role.
+   */
+  setUserRole(userRole) {
+    this.userRole = userRole;
+  }
+
+  /**
+   * Gets the flag that indicates whether SCP role is supported.
+   * @method
+   * @returns {boolean} Provider role.
+   */
+  getProviderRole() {
+    return this.providerRole;
+  }
+
+  /**
+   * Sets the flag that indicates whether SCP role is supported.
+   * @method
+   * @param {boolean} providerRole - Provider role.
+   */
+  setProviderRole(providerRole) {
+    this.providerRole = providerRole;
   }
 
   /**
@@ -652,6 +692,8 @@ class Association {
         Object.keys(StorageClass).forEach((uid) => {
           const storageClassUid = StorageClass[uid];
           const storagePcId = this.addOrGetPresentationContext(storageClassUid);
+          const storagePc = this.getPresentationContext(storagePcId);
+          storagePc.setProviderRole(true);
           syntaxes.forEach((syntax) => {
             this.addTransferSyntaxToPresentationContext(storagePcId, syntax);
           });
@@ -742,6 +784,9 @@ class Association {
           context.getAbstractSyntaxUid()
         }`
       );
+      str.push(
+        `      SCU/SCP Role: ${this._getScuScpRole(context.getUserRole(), context.getProviderRole())}`
+      );
       const syntaxes = context.getTransferSyntaxUids();
       syntaxes.forEach((tx) => {
         str.push(`      Transfer:  ${this._uidNameFromValue(TransferSyntax, tx) || tx}`);
@@ -753,6 +798,26 @@ class Association {
   }
 
   //#region Private Methods
+  /**
+   * Determines the SCU/SCP role string based on user and provider roles.
+   * @method
+   * @private
+   * @param {boolean|undefined} userRole - SCU role flag.
+   * @param {boolean|undefined} providerRole - SCP role flag.
+   * @returns {string} Role string.
+   */
+  _getScuScpRole(userRole, providerRole) {
+    if (userRole === true && (providerRole === undefined || providerRole === false)) {
+      return 'SCU';
+    } else if ((userRole === undefined || userRole === false) && providerRole === true) {
+      return 'SCP';
+    } else if (userRole === true && providerRole === true) {
+      return 'SCU/SCP';
+    }
+
+    return 'Default';
+  }
+
   /**
    * Gets UID name from UID value.
    * @method

@@ -44,6 +44,9 @@ describe('PDU', () => {
 
     const pcId = assoc1.addPresentationContext(SopClass.Verification);
     assoc1.addTransferSyntaxToPresentationContext(pcId, TransferSyntax.ImplicitVRLittleEndian);
+    const context1 = assoc1.getPresentationContext(pcId);
+    context1.setUserRole(false);
+    context1.setProviderRole(true);
 
     const rq1 = new AAssociateRQ(assoc1);
     const pduRq = rq1.write();
@@ -76,6 +79,8 @@ describe('PDU', () => {
 
     expect(pc1.getAbstractSyntaxUid()).to.be.eq(pc2.getAbstractSyntaxUid());
     expect(pc1.getAcceptedTransferSyntaxUid()).to.be.eq(pc2.getAcceptedTransferSyntaxUid());
+    expect(pc1.getUserRole()).to.be.eq(pc2.getUserRole());
+    expect(pc1.getProviderRole()).to.be.eq(pc2.getProviderRole());
   });
 
   it('should correctly write and read an A-ASSOCIATE-AC PDU', () => {
@@ -97,6 +102,7 @@ describe('PDU', () => {
     const pcId = assoc1.addPresentationContext(sop);
     assoc1.addTransferSyntaxToPresentationContext(pcId, tx);
     const context1 = assoc1.getPresentationContext(pcId);
+    context1.setUserRole(true);
     context1.setResult(res, tx);
 
     const rq1 = new AAssociateAC(assoc1);
@@ -118,6 +124,8 @@ describe('PDU', () => {
 
     expect(pc2.getAbstractSyntaxUid()).to.be.eq(sop);
     expect(pc2.getAcceptedTransferSyntaxUid()).to.be.eq(tx);
+    expect(pc2.getUserRole()).to.be.eq(true);
+    expect(pc2.getProviderRole()).to.be.eq(false);
     expect(pc2.getResult()).to.be.eq(res);
   });
 

@@ -445,6 +445,22 @@ class AAssociateRQ {
       );
     }
 
+    // SCU-SCP Role Negotiation
+    contexts.forEach((pc) => {
+      const context = this.association.getPresentationContext(pc.id);
+      if (context.getUserRole() !== undefined || context.getProviderRole() !== undefined) {
+        pdu.writeByte('Item-Type', 0x54);
+        pdu.writeByte('Reserved', 0x00);
+        pdu.markLength16('Item-Length');
+        pdu.markLength16('UID-Length');
+        pdu.writeString('Abstract Syntax UID', context.getAbstractSyntaxUid());
+        pdu.writeLength16();
+        pdu.writeByte('SCU Role', context.getUserRole() ? 0x01 : 0x00);
+        pdu.writeByte('SCP Role', context.getProviderRole() ? 0x01 : 0x00);
+        pdu.writeLength16();
+      }
+    });
+
     // Implementation Version
     pdu.writeByte('Item-Type', 0x55);
     pdu.writeByte('Reserved', 0x00);
@@ -548,6 +564,18 @@ class AAssociateRQ {
               this.association.getMaxAsyncOpsInvoked() !== 1 ||
                 this.association.getMaxAsyncOpsPerformed() !== 1
             );
+          } else if (ut === 0x54) {
+            const asl = pdu.readUInt16('Abstract Syntax Item-Length');
+            const as = pdu.readString('Abstract Syntax UID', asl);
+            const userRole = pdu.readByte('SCU role');
+            const providerRole = pdu.readByte('SCP role');
+            const pc = this.association
+              .getPresentationContexts()
+              .find((c) => c.context.getAbstractSyntaxUid() === as);
+            if (pc) {
+              pc.context.setUserRole(userRole === 0x01);
+              pc.context.setProviderRole(providerRole === 0x01);
+            }
           } else if (ut === 0x55) {
             this.association.setImplementationVersion(pdu.readString('Implementation Version', ul));
           } else if (ut === 0x58) {
@@ -684,6 +712,22 @@ class AAssociateAC {
       );
     }
 
+    // SCU-SCP Role Negotiation
+    contexts.forEach((pc) => {
+      const context = this.association.getPresentationContext(pc.id);
+      if (context.getUserRole() !== undefined || context.getProviderRole() !== undefined) {
+        pdu.writeByte('Item-Type', 0x54);
+        pdu.writeByte('Reserved', 0x00);
+        pdu.markLength16('Item-Length');
+        pdu.markLength16('UID-Length');
+        pdu.writeString('Abstract Syntax UID', context.getAbstractSyntaxUid());
+        pdu.writeLength16();
+        pdu.writeByte('SCU Role', context.getUserRole() ? 0x01 : 0x00);
+        pdu.writeByte('SCP Role', context.getProviderRole() ? 0x01 : 0x00);
+        pdu.writeLength16();
+      }
+    });
+
     // Implementation Version
     pdu.writeByte('Item-Type', 0x55);
     pdu.writeByte('Reserved', 0x00);
@@ -787,6 +831,18 @@ class AAssociateAC {
               this.association.getMaxAsyncOpsInvoked() !== 1 ||
                 this.association.getMaxAsyncOpsPerformed() !== 1
             );
+          } else if (ut === 0x54) {
+            const asl = pdu.readUInt16('Abstract Syntax Item-Length');
+            const as = pdu.readString('Abstract Syntax UID', asl);
+            const userRole = pdu.readByte('SCU role');
+            const providerRole = pdu.readByte('SCP role');
+            const pc = this.association
+              .getPresentationContexts()
+              .find((c) => c.context.getAbstractSyntaxUid() === as);
+            if (pc) {
+              pc.context.setUserRole(userRole === 0x01);
+              pc.context.setProviderRole(providerRole === 0x01);
+            }
           } else if (ut === 0x55) {
             this.association.setImplementationVersion(pdu.readString('Implementation Version', ul));
           } else if (ut === 0x59) {

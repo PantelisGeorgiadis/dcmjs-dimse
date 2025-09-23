@@ -63,6 +63,8 @@ expectError(new PresentationContext());
 expectError(new PresentationContext(1, 2));
 expectError(new PresentationContext('1', '1.2.3.4.5'));
 expectError(new PresentationContext(1, '1.2.3.4.5', 1, '2'));
+expectError(new PresentationContext(1, '1.2.3.4.5', '5.4.3.2.1', 2, '3'));
+expectError(new PresentationContext(1, '1.2.3.4.5', '5.4.3.2.1', 2, true, '4'));
 
 const presentationContext = new PresentationContext(
   1,

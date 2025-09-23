@@ -305,7 +305,14 @@ declare class PresentationContext {
   /**
    * Creates an instance of PresentationContext.
    */
-  constructor(pcId: number, abstractSyntaxUid: string, transferSyntaxUid?: string, result?: number);
+  constructor(
+    pcId: number,
+    abstractSyntaxUid: string,
+    transferSyntaxUid?: string,
+    result?: number,
+    userRole?: boolean,
+    providerRole?: boolean
+  );
 
   /**
    * Gets presentation context ID.
@@ -351,6 +358,26 @@ declare class PresentationContext {
    * Sets the presentation context result.
    */
   setResult(result: number, acceptedTransferSyntaxUid?: string): void;
+
+  /**
+   * Gets the flag that indicates whether SCU role is supported.
+   */
+  getUserRole(): boolean;
+
+  /**
+   * Sets the flag that indicates whether SCU role is supported.
+   */
+  setUserRole(userRole: boolean): void;
+
+  /**
+   * Gets the flag that indicates whether SCP role is supported.
+   */
+  getProviderRole(): boolean;
+
+  /**
+   * Sets the flag that indicates whether SCP role is supported.
+   */
+  setProviderRole(providerRole: boolean): void;
 
   /**
    * Gets the presentation context result description.
