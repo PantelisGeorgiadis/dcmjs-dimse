@@ -607,6 +607,7 @@ expectType<Promise<void>>(
   })
 );
 expectType<Promise<void>>(Transcoding.initializeAsync());
+expectType<boolean>(Transcoding.isInitialized());
 expectType<void>(Transcoding.release());
 expectError(Transcoding.transcodeDataset('string', 1, 1));
 expectError(Transcoding.transcodeDataset(1, '2', 3));

@@ -21,6 +21,17 @@ class Transcoding {
   }
 
   /**
+   * Checks if transcoding module is initialized.
+   * @method
+   * @static
+   * @async
+   * @returns {boolean} A flag indicating whether transcoding module is initialized.
+   */
+  static isInitialized() {
+    return NativeCodecs.isInitialized();
+  }
+
+  /**
    * Releases dcmjs-codecs native codecs webassembly.
    * @method
    * @static

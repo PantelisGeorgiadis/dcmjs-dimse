@@ -1795,6 +1795,11 @@ declare class Transcoding {
   }): Promise<void>;
 
   /**
+   * Checks if transcoding module is initialized.
+   */
+  static isInitialized(): boolean;
+
+  /**
    * Releases dcmjs-codecs native codecs webassembly.
    */
   static release(): void;

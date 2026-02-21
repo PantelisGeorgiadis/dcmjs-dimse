@@ -1887,12 +1887,10 @@ class NGetRequest extends Request {
    */
   setAttributeIdentifierList(attributeIdentifierList) {
     const attributeItems = [];
-    Object.keys(DicomMetaDictionary.dictionary).forEach((tag) => {
-      const dictionaryEntry = DicomMetaDictionary.dictionary[tag];
-      if (
-        dictionaryEntry.version === 'DICOM' &&
-        attributeIdentifierList.includes(dictionaryEntry.name)
-      ) {
+    attributeIdentifierList.forEach((name) => {
+      const item = DicomMetaDictionary.nameMap[name];
+      if (item !== undefined && item.tag !== undefined && item.version === 'DICOM') {
+        const dictionaryEntry = DicomMetaDictionary.dictionary[item.tag];
         const group = parseInt(dictionaryEntry.tag.substring(1, 5), 16);
         const element = parseInt(dictionaryEntry.tag.substring(6, 10), 16);
         attributeItems.push((group << 16) | (element & 0xffff));

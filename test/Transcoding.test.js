@@ -45,6 +45,10 @@ describe('Transcoding', () => {
     Transcoding.release();
   });
 
+  it('should correctly return initialization status', () => {
+    expect(Transcoding.isInitialized()).to.be.eq(true);
+  });
+
   it('should throw for invalid transcoding', () => {
     expect(() => {
       Transcoding.transcodeDataset(this.dataset, '1.2.3.4.5.6.7.8.9.0');

@@ -1,6 +1,6 @@
 {
   "name": "dcmjs-dimse",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DICOM DIMSE implementation for Node.js using dcmjs",
   "main": "build/dcmjs-dimse.min.js",
   "module": "build/dcmjs-dimse.min.js",
@@ -44,8 +44,8 @@
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
     "async-event-emitter2": "^0.0.2",
-    "dcmjs": "^0.45.0",
-    "dcmjs-codecs": "^0.0.6",
+    "dcmjs": "^0.50.1",
+    "dcmjs-codecs": "^0.0.7",
     "loglevel": "^1.9.2",
     "loglevel-plugin-prefix": "^0.8.4",
     "memorystream": "^0.3.1",
@@ -53,24 +53,24 @@
     "ts-mixer": "^6.0.4"
   },
   "devDependencies": {
-    "@types/node": "^24.5.2",
+    "@types/node": "^25.3.0",
     "c8": "^9.1.0",
     "chai": "^4.3.10",
     "docdash": "^2.0.2",
     "eslint": "^8.57.0",
-    "jsdoc": "^4.0.4",
-    "mocha": "^11.7.1",
+    "jsdoc": "^4.0.5",
+    "mocha": "^11.7.5",
     "mock-fs": "^5.5.0",
-    "nodemon": "^3.1.10",
+    "nodemon": "^3.1.14",
     "open-cli": "^7.2.0",
-    "prettier": "^3.6.2",
-    "selfsigned": "^3.0.1",
+    "prettier": "^3.8.1",
+    "selfsigned": "^4.0.1",
     "shx": "^0.3.3",
-    "terser-webpack-plugin": "^5.3.14",
+    "terser-webpack-plugin": "^5.3.16",
     "ts-node": "^10.9.2",
     "tsd": "^0.33.0",
-    "typescript": "^5.9.2",
-    "webpack": "^5.101.3",
+    "typescript": "^5.9.3",
+    "webpack": "^5.105.2",
     "webpack-cli": "^6.0.1"
   }
 }
