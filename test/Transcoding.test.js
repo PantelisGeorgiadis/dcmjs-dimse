@@ -28,6 +28,7 @@ describe('Uninitialized Transcoding', () => {
       Transcoding.transcodeDataset(dataset, TransferSyntax.Jpeg2000Lossless);
     }).to.throw();
   });
+
   it('should not throw for uninitialized transcoding and uncompressed syntaxes', () => {
     const dataset = createDataset();
     expect(() => {

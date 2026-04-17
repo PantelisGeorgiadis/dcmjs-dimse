@@ -36,6 +36,8 @@ Part of the networking code was taken from [dicom-dimse][dicom-dimse-url].
 - JPEG-LS Lossy Image Compression - Near-Lossless (1.2.840.10008.1.2.4.81)
 - JPEG 2000 Image Compression - Lossless Only (1.2.840.10008.1.2.4.90)
 - JPEG 2000 Image Compression (1.2.840.10008.1.2.4.91)
+- JPEG XL Image Compression - Lossless Only (1.2.840.10008.1.2.4.110)
+- JPEG XL Image Compression (1.2.840.10008.1.2.4.112)
 - High Throughput JPEG 2000 Image Compression - Lossless Only (1.2.840.10008.1.2.4.201)
 - High Throughput JPEG 2000 with RPCL Options Image Compression - Lossless Only (1.2.840.10008.1.2.4.202)
 - High Throughput JPEG 2000 Image Compression (1.2.840.10008.1.2.4.203)
