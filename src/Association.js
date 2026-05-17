@@ -545,6 +545,9 @@ class Association {
    * @returns {number} Presentation context ID.
    */
   addPresentationContext(abstractSyntaxUid, presentationContextId) {
+    if (this.presentationContexts.length >= 128) {
+      throw new Error('Maximum number of presentation contexts (128) reached');
+    }
     let pcId = presentationContextId || 1;
     this.presentationContexts.forEach((pc) => {
       const id = pc.id;
