@@ -49,6 +49,9 @@ const { EOL } = require('os');
 const AsyncEventEmitter2 = require('async-event-emitter2');
 const MemoryStream = require('memorystream');
 
+// Time to wait for pending outgoing data to be flushed before the socket is destroyed
+const CloseGracePeriod = 1000;
+
 //#region Network
 class Network extends AsyncEventEmitter2 {
   /**
@@ -242,6 +245,28 @@ class Network extends AsyncEventEmitter2 {
 
     log.info(`${this.logId} -> Abort ${rq.toString()}`);
     this._sendPdu(rqPdu);
+  }
+
+  /**
+   * Closes the connection.
+   * Pending outgoing data (e.g. an A-ABORT PDU) is flushed before the socket is destroyed,
+   * unless the peer fails to consume it within a short grace period.
+   * @method
+   */
+  close() {
+    if (this.socket.destroyed) {
+      return;
+    }
+
+    // Nothing has been sent over a connection that is still being established
+    if (this.socket.connecting) {
+      this.socket.destroy();
+      return;
+    }
+
+    const destroyTimer = setTimeout(() => this.socket.destroy(), CloseGracePeriod);
+    this.socket.once('close', () => clearTimeout(destroyTimer));
+    this.socket.end(() => this.socket.destroy());
   }
 
   /**

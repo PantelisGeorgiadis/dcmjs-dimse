@@ -32,6 +32,7 @@ const Transcoding = require('./../src/Transcoding');
 const log = require('./../src/log');
 
 const http = require('http');
+const net = require('net');
 const selfSigned = require('selfsigned');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -309,21 +310,6 @@ class AbortingScp extends Scp {
   constructor(socket, opts) {
     super(socket, opts);
     this.association = undefined;
-
-    this.abortion = {
-      _aborted: false,
-      _listener: (val) => {},
-      setAbortion(val) {
-        this._aborted = val;
-        this._listener(val);
-      },
-      getAbortion() {
-        return this._aborted;
-      },
-      abortListener: function (listener) {
-        this._listener = listener;
-      },
-    };
   }
   associationRequested(association) {
     this.association = association;
@@ -339,24 +325,16 @@ class AbortingScp extends Scp {
     this.sendAssociationAccept();
   }
   cFindRequest(request, callback) {
-    this.abortion.abortListener((val) => {
-      if (val === true) {
-        const response = CFindResponse.fromRequest(request);
-        response.setStatus(
-          // Abusively used here just to get feedback on the client that the association was aborted
-          Status.UnrecognizedOperation
-        );
-        callback([response]);
-      }
-    });
+    // Never respond, so that the client gets the chance to abort
   }
   abort(source, reason) {
-    this.abortion.setAbortion(true);
+    AbortingScp.lastAbort = { source, reason };
   }
   associationReleaseRequested() {
     this.sendAssociationReleaseResponse();
   }
 }
+AbortingScp.lastAbort = undefined;
 
 class StreamingScp extends Scp {
   constructor(socket, opts) {
@@ -986,20 +964,20 @@ describe('Network', () => {
   });
 
   it('should correctly perform and serve an A-ABORT operation', (done) => {
+    AbortingScp.lastAbort = undefined;
+
     const server = new Server(AbortingScp);
     server.on('networkError', (e) => {
       throw e;
     });
     server.listen(2114);
 
-    let aborted = false;
+    let responded = false;
 
     const client = new Client();
     const request = CFindRequest.createStudyFindRequest({ PatientID: '12345' });
-    request.on('response', (response) => {
-      if (response.getStatus() === Status.UnrecognizedOperation) {
-        aborted = true;
-      }
+    request.on('response', () => {
+      responded = true;
     });
     client.addRequest(request);
     client.on('associationAccepted', (association) => {
@@ -1009,7 +987,10 @@ describe('Network', () => {
       setTimeout(() => client.abort(AbortSource.ServiceUser, AbortReason.InvalidPduParameter), 500);
     });
     client.on('closed', () => {
-      expect(aborted).to.be.true;
+      // The SCP received the abort and closed the connection without responding
+      expect(responded).to.be.false;
+      expect(AbortingScp.lastAbort.source).to.be.eq(AbortSource.ServiceUser);
+      expect(AbortingScp.lastAbort.reason).to.be.eq(AbortReason.InvalidPduParameter);
       server.close();
       done();
     });
@@ -1033,5 +1014,155 @@ describe('Network', () => {
       expect(error).to.be.true;
       done();
     });
+  });
+
+  // A peer that accepts the TCP connection but never responds nor closes its side
+  function createUnresponsivePeer(port, onData) {
+    const sockets = [];
+    const server = net.createServer({ allowHalfOpen: true }, (socket) => {
+      sockets.push(socket);
+      socket.on('error', () => {});
+      socket.on('data', (data) => onData && onData(socket, data));
+    });
+    server.listen(port);
+    return {
+      close: () => {
+        sockets.forEach((socket) => socket.destroy());
+        server.close();
+      },
+    };
+  }
+
+  it('should close the client connection on timeout when the peer never closes its side', (done) => {
+    const peer = createUnresponsivePeer(2116);
+
+    let networkError = false;
+
+    const client = new Client();
+    client.addRequest(new CEchoRequest());
+    client.on('networkError', () => {
+      networkError = true;
+    });
+    client.on('closed', () => {
+      expect(networkError).to.be.true;
+      peer.close();
+      done();
+    });
+    client.send('127.0.0.1', 2116, 'CALLINGAET', 'CALLEDAET', { connectTimeout: 300 });
+  });
+
+  it('should deliver the A-ABORT to the peer before closing the client connection on association timeout', (done) => {
+    const received = [];
+    const peer = createUnresponsivePeer(2120, (socket, data) => {
+      received.push(data);
+    });
+
+    const client = new Client();
+    client.addRequest(new CEchoRequest());
+    client.on('networkError', () => {});
+    client.on('closed', () => {
+      const data = Buffer.concat(received);
+      // A-ABORT PDU: type, reserved, length (4), reserved, reserved, source, reason
+      const aAbortPdu = data.subarray(data.length - 10);
+      expect(aAbortPdu[0]).to.be.eq(0x07);
+      expect(aAbortPdu.readUInt32BE(2)).to.be.eq(4);
+      peer.close();
+      done();
+    });
+    client.send('127.0.0.1', 2120, 'CALLINGAET', 'CALLEDAET', { associationTimeout: 300 });
+  }).timeout(5000);
+
+  it('should emit abort and close the client connection when the peer sends an A-ABORT', (done) => {
+    // A-ABORT PDU: type, reserved, length (4), reserved, reserved, source, reason
+    const aAbortPdu = Buffer.from([0x07, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x02, 0x00]);
+    const peer = createUnresponsivePeer(2117, (socket) => socket.write(aAbortPdu));
+
+    let abort = undefined;
+
+    const client = new Client();
+    client.addRequest(new CEchoRequest());
+    client.on('abort', (a) => {
+      abort = a;
+    });
+    client.on('closed', () => {
+      expect(abort.source).to.be.eq(AbortSource.ServiceProvider);
+      peer.close();
+      done();
+    });
+    client.on('networkError', (e) => {
+      throw e;
+    });
+    client.send('127.0.0.1', 2117, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should close the client connection when aborted before the association request', (done) => {
+    let receivedBytes = 0;
+    const peer = createUnresponsivePeer(2118, (socket, data) => {
+      receivedBytes += data.length;
+    });
+
+    const client = new Client();
+    client.addRequest(new CEchoRequest());
+    client.on('closed', () => {
+      // Give a non-aborted connection the chance to send the association request
+      setTimeout(() => {
+        expect(receivedBytes).to.be.eq(0);
+        peer.close();
+        done();
+      }, 200);
+    });
+    client.on('networkError', (e) => {
+      throw e;
+    });
+    client.send('127.0.0.1', 2118, 'CALLINGAET', 'CALLEDAET');
+    client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
+  });
+
+  it('should close without a network error when aborted from the connected event', (done) => {
+    const peer = createUnresponsivePeer(2121);
+    let networkError = false;
+
+    const client = new Client();
+    client.addRequest(new CEchoRequest());
+    client.on('connected', () => {
+      client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
+    });
+    client.on('networkError', () => {
+      networkError = true;
+    });
+    client.on('closed', () => {
+      peer.close();
+      try {
+        expect(networkError).to.be.false;
+        expect(client.getStatistics().getBytesSent()).to.be.eq(0);
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+    client.send('127.0.0.1', 2121, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should close the server connection on network error when the peer never closes its side', (done) => {
+    class SocketTrackingScp extends AcceptingScp {
+      constructor(socket, opts) {
+        super(socket, opts);
+        socket.on('close', () => {
+          peer.destroy();
+          server.close();
+          done();
+        });
+      }
+    }
+
+    const server = new Server(SocketTrackingScp);
+    server.on('networkError', () => {});
+    server.listen(2119);
+
+    const peer = net.connect({ host: '127.0.0.1', port: 2119, allowHalfOpen: true }, () => {
+      // PDU with an unknown type
+      peer.write(Buffer.from([0x10, 0x00, 0x00, 0x00, 0x00, 0x00]));
+    });
+    peer.on('error', () => {});
   });
 });
