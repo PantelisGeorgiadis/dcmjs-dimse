@@ -259,7 +259,10 @@ class Client extends AsyncEventEmitter2 {
       return;
     }
 
+    // Flush the A-ABORT and then close the connection; an unresponsive peer
+    // would otherwise keep the socket open indefinitely
     this.network.sendAbort(source, reason);
+    this.network.close();
   }
 
   /**

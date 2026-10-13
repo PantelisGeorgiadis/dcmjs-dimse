@@ -1118,6 +1118,48 @@ describe('Network', () => {
     client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
   });
 
+  it('should deliver the A-ABORT and close the client connection when aborted after the association request', (done) => {
+    const received = [];
+    let aborted = false;
+    let closed = false;
+    let abortReceived = false;
+
+    const finish = () => {
+      if (closed && abortReceived) {
+        peer.close();
+        done();
+      }
+    };
+
+    const client = new Client();
+    const peer = createUnresponsivePeer(2122, (socket, data) => {
+      received.push(data);
+      // The association request has reached the peer, which now stays silent
+      if (!aborted) {
+        aborted = true;
+        client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
+        return;
+      }
+      // A-ABORT PDU: type, reserved, length (4), reserved, reserved, source, reason
+      const buffer = Buffer.concat(received);
+      const aAbortPdu = buffer.subarray(buffer.length - 10);
+      if (aAbortPdu[0] === 0x07 && aAbortPdu.readUInt32BE(2) === 4) {
+        abortReceived = true;
+        finish();
+      }
+    });
+
+    client.addRequest(new CEchoRequest());
+    client.on('closed', () => {
+      closed = true;
+      finish();
+    });
+    client.on('networkError', (e) => {
+      throw e;
+    });
+    client.send('127.0.0.1', 2122, 'CALLINGAET', 'CALLEDAET');
+  }).timeout(5000);
+
   it('should close without a network error when aborted from the connected event', (done) => {
     const peer = createUnresponsivePeer(2121);
     let networkError = false;
