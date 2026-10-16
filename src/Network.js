@@ -49,6 +49,9 @@ const { EOL } = require('os');
 const AsyncEventEmitter2 = require('async-event-emitter2');
 const MemoryStream = require('memorystream');
 
+// Time to wait for pending outgoing data to be flushed before the socket is destroyed
+const CloseGracePeriod = 1000;
+
 //#region Network
 class Network extends AsyncEventEmitter2 {
   /**
@@ -245,6 +248,34 @@ class Network extends AsyncEventEmitter2 {
   }
 
   /**
+   * Closes the connection.
+   * Pending outgoing data (e.g. an A-ABORT PDU) is flushed before the socket is destroyed,
+   * unless the peer fails to consume it within a short grace period.
+   * @method
+   */
+  close() {
+    if (this.socket.destroyed) {
+      return;
+    }
+
+    // Nothing has been sent over a connection that is still being established
+    if (this.socket.connecting) {
+      this.socket.destroy();
+      return;
+    }
+
+    // Stop the timeout monitors; if the peer stalls while the pending data is
+    // being flushed, they would emit a spurious network error during the
+    // graceful close of an intentionally aborted or finished connection
+    this._reset();
+    this.socket.setTimeout(0);
+
+    const destroyTimer = setTimeout(() => this.socket.destroy(), CloseGracePeriod);
+    this.socket.once('close', () => clearTimeout(destroyTimer));
+    this.socket.end(() => this.socket.destroy());
+  }
+
+  /**
    * Gets network statistics.
    * @method
    * @returns {Statistics} Network statistics.
@@ -301,6 +332,11 @@ class Network extends AsyncEventEmitter2 {
    * @param {Buffer} pdu - PDU.
    */
   _sendPdu(pdu) {
+    if (this._isSocketClosing()) {
+      log.info(`${this.logId} -> Connection is closing. Skipping PDU [type: ${pdu.getType()}]`);
+      return;
+    }
+
     try {
       const buffer = pdu.writePdu();
       this.socket.write(buffer);
@@ -318,6 +354,11 @@ class Network extends AsyncEventEmitter2 {
    */
   _sendNextRequests() {
     const processNextRequest = () => {
+      // The connection is closing (e.g. aborted from a listener); neither dispatch
+      // further requests nor signal completion, which would trigger a release request
+      if (this._isSocketClosing()) {
+        return;
+      }
       const request = this.requests.shift();
       if (!request) {
         // Done with requests
@@ -357,6 +398,11 @@ class Network extends AsyncEventEmitter2 {
    * @param {PresentationContext} dimse.context - Presentation context.
    */
   _sendDimse(dimse) {
+    if (this._isSocketClosing()) {
+      log.info(`${this.logId} -> Connection is closing. Skipping ${dimse.command.toString()}`);
+      return;
+    }
+
     try {
       const dataset = dimse.command.getDataset();
       const presentationContext = this.association.getPresentationContext(
@@ -859,6 +905,17 @@ class Network extends AsyncEventEmitter2 {
         this.emit('networkError', new Error(`Connection timeout: ${error}`));
       }
     }, 1000);
+  }
+
+  /**
+   * Checks whether the socket can no longer be written to,
+   * i.e. it is destroyed or its writable side has been ended.
+   * @method
+   * @private
+   * @returns {boolean} Whether the socket is closing or closed.
+   */
+  _isSocketClosing() {
+    return this.socket.destroyed || this.socket.writableEnded;
   }
 
   /**
