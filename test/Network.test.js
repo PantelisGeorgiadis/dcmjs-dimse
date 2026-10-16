@@ -326,15 +326,21 @@ class AbortingScp extends Scp {
   }
   cFindRequest(request, callback) {
     // Never respond, so that the client gets the chance to abort
+    if (AbortingScp.requestListener) {
+      AbortingScp.requestListener(request);
+    }
   }
   abort(source, reason) {
-    AbortingScp.lastAbort = { source, reason };
+    if (AbortingScp.abortListener) {
+      AbortingScp.abortListener({ source, reason });
+    }
   }
   associationReleaseRequested() {
     this.sendAssociationReleaseResponse();
   }
 }
-AbortingScp.lastAbort = undefined;
+AbortingScp.requestListener = undefined;
+AbortingScp.abortListener = undefined;
 
 class StreamingScp extends Scp {
   constructor(socket, opts) {
@@ -964,15 +970,35 @@ describe('Network', () => {
   });
 
   it('should correctly perform and serve an A-ABORT operation', (done) => {
-    AbortingScp.lastAbort = undefined;
+    let responded = false;
+    let closed = false;
+    let abort = undefined;
+
+    const finish = () => {
+      if (closed && abort) {
+        AbortingScp.abortListener = undefined;
+        server.close();
+        try {
+          // The SCP received the abort and closed the connection without responding
+          expect(responded).to.be.false;
+          expect(abort.source).to.be.eq(AbortSource.ServiceUser);
+          expect(abort.reason).to.be.eq(AbortReason.InvalidPduParameter);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    };
+    AbortingScp.abortListener = (a) => {
+      abort = a;
+      finish();
+    };
 
     const server = new Server(AbortingScp);
     server.on('networkError', (e) => {
       throw e;
     });
     server.listen(2114);
-
-    let responded = false;
 
     const client = new Client();
     const request = CFindRequest.createStudyFindRequest({ PatientID: '12345' });
@@ -987,12 +1013,8 @@ describe('Network', () => {
       setTimeout(() => client.abort(AbortSource.ServiceUser, AbortReason.InvalidPduParameter), 500);
     });
     client.on('closed', () => {
-      // The SCP received the abort and closed the connection without responding
-      expect(responded).to.be.false;
-      expect(AbortingScp.lastAbort.source).to.be.eq(AbortSource.ServiceUser);
-      expect(AbortingScp.lastAbort.reason).to.be.eq(AbortReason.InvalidPduParameter);
-      server.close();
-      done();
+      closed = true;
+      finish();
     });
     client.on('networkError', (e) => {
       throw e;
@@ -1053,21 +1075,33 @@ describe('Network', () => {
 
   it('should deliver the A-ABORT to the peer before closing the client connection on association timeout', (done) => {
     const received = [];
+    let closed = false;
+    let abortReceived = false;
+
+    const finish = () => {
+      if (closed && abortReceived) {
+        peer.close();
+        done();
+      }
+    };
+
     const peer = createUnresponsivePeer(2120, (socket, data) => {
       received.push(data);
+      // A-ABORT PDU: type, reserved, length (4), reserved, reserved, source, reason
+      const buffer = Buffer.concat(received);
+      const aAbortPdu = buffer.subarray(buffer.length - 10);
+      if (aAbortPdu[0] === 0x07 && aAbortPdu.readUInt32BE(2) === 4) {
+        abortReceived = true;
+        finish();
+      }
     });
 
     const client = new Client();
     client.addRequest(new CEchoRequest());
     client.on('networkError', () => {});
     client.on('closed', () => {
-      const data = Buffer.concat(received);
-      // A-ABORT PDU: type, reserved, length (4), reserved, reserved, source, reason
-      const aAbortPdu = data.subarray(data.length - 10);
-      expect(aAbortPdu[0]).to.be.eq(0x07);
-      expect(aAbortPdu.readUInt32BE(2)).to.be.eq(4);
-      peer.close();
-      done();
+      closed = true;
+      finish();
     });
     client.send('127.0.0.1', 2120, 'CALLINGAET', 'CALLEDAET', { associationTimeout: 300 });
   }).timeout(5000);
@@ -1115,7 +1149,7 @@ describe('Network', () => {
       throw e;
     });
     client.send('127.0.0.1', 2118, 'CALLINGAET', 'CALLEDAET');
-    client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
+    client.abort(AbortSource.ServiceUser, AbortReason.NotSpecified);
   });
 
   it('should deliver the A-ABORT and close the client connection when aborted after the association request', (done) => {
@@ -1137,7 +1171,7 @@ describe('Network', () => {
       // The association request has reached the peer, which now stays silent
       if (!aborted) {
         aborted = true;
-        client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
+        client.abort(AbortSource.ServiceUser, AbortReason.NotSpecified);
         return;
       }
       // A-ABORT PDU: type, reserved, length (4), reserved, reserved, source, reason
@@ -1167,7 +1201,7 @@ describe('Network', () => {
     const client = new Client();
     client.addRequest(new CEchoRequest());
     client.on('connected', () => {
-      client.abort(AbortSource.ServiceUser, AbortReason.NoReasonGiven);
+      client.abort(AbortSource.ServiceUser, AbortReason.NotSpecified);
     });
     client.on('networkError', () => {
       networkError = true;
@@ -1183,6 +1217,126 @@ describe('Network', () => {
       }
     });
     client.send('127.0.0.1', 2121, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should close without a network error when aborted from the associationAccepted event', (done) => {
+    let closed = false;
+    let abort = undefined;
+    let networkError = false;
+    let requestReceived = false;
+
+    const finish = () => {
+      if (closed && abort) {
+        AbortingScp.abortListener = undefined;
+        AbortingScp.requestListener = undefined;
+        server.close();
+        try {
+          expect(networkError).to.be.false;
+          // The queued request was not dispatched over the closing connection
+          expect(requestReceived).to.be.false;
+          expect(abort.source).to.be.eq(AbortSource.ServiceUser);
+          expect(abort.reason).to.be.eq(AbortReason.NotSpecified);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    };
+    AbortingScp.abortListener = (a) => {
+      abort = a;
+      finish();
+    };
+    AbortingScp.requestListener = () => {
+      requestReceived = true;
+    };
+
+    const server = new Server(AbortingScp);
+    server.on('networkError', (e) => {
+      throw e;
+    });
+    server.listen(2123);
+
+    const client = new Client();
+    client.addRequest(CFindRequest.createStudyFindRequest({ PatientID: '12345' }));
+    client.on('associationAccepted', () => {
+      client.abort(AbortSource.ServiceUser, AbortReason.NotSpecified);
+    });
+    client.on('networkError', () => {
+      networkError = true;
+    });
+    client.on('closed', () => {
+      closed = true;
+      finish();
+    });
+    client.send('127.0.0.1', 2123, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should close without a network error when aborted from a final response event', (done) => {
+    const receivedRequests = [];
+    let closed = false;
+    let abort = undefined;
+    let released = false;
+    let networkError = false;
+
+    class RequestTrackingScp extends AcceptingScp {
+      cEchoRequest(request, callback) {
+        receivedRequests.push(request);
+        super.cEchoRequest(request, callback);
+      }
+      cFindRequest(request, callback) {
+        receivedRequests.push(request);
+        super.cFindRequest(request, callback);
+      }
+      abort(source, reason) {
+        abort = { source, reason };
+        finish();
+      }
+      associationReleaseRequested() {
+        released = true;
+        super.associationReleaseRequested();
+      }
+    }
+
+    const finish = () => {
+      if (closed && abort) {
+        server.close();
+        try {
+          expect(networkError).to.be.false;
+          expect(released).to.be.false;
+          // The second request was not dispatched after the abort
+          expect(receivedRequests.length).to.be.eq(1);
+          expect(receivedRequests[0]).to.be.instanceOf(CEchoRequest);
+          expect(abort.source).to.be.eq(AbortSource.ServiceUser);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }
+    };
+
+    const server = new Server(RequestTrackingScp);
+    server.on('networkError', (e) => {
+      throw e;
+    });
+    server.listen(2124);
+
+    const client = new Client();
+    const echoRequest = new CEchoRequest();
+    echoRequest.on('response', (response) => {
+      if (response.getStatus() !== Status.Pending) {
+        client.abort(AbortSource.ServiceUser, AbortReason.NotSpecified);
+      }
+    });
+    client.addRequest(echoRequest);
+    client.addRequest(CFindRequest.createStudyFindRequest({ PatientID: '12345' }));
+    client.on('networkError', () => {
+      networkError = true;
+    });
+    client.on('closed', () => {
+      closed = true;
+      finish();
+    });
+    client.send('127.0.0.1', 2124, 'CALLINGAET', 'CALLEDAET', { associationLingerTimeout: 100 });
   });
 
   it('should close the server connection on network error when the peer never closes its side', (done) => {

@@ -326,6 +326,11 @@ class Network extends AsyncEventEmitter2 {
    * @param {Buffer} pdu - PDU.
    */
   _sendPdu(pdu) {
+    if (this._isSocketClosing()) {
+      log.info(`${this.logId} -> Connection is closing. Skipping PDU [type: ${pdu.getType()}]`);
+      return;
+    }
+
     try {
       const buffer = pdu.writePdu();
       this.socket.write(buffer);
@@ -343,6 +348,11 @@ class Network extends AsyncEventEmitter2 {
    */
   _sendNextRequests() {
     const processNextRequest = () => {
+      // The connection is closing (e.g. aborted from a listener); neither dispatch
+      // further requests nor signal completion, which would trigger a release request
+      if (this._isSocketClosing()) {
+        return;
+      }
       const request = this.requests.shift();
       if (!request) {
         // Done with requests
@@ -382,6 +392,11 @@ class Network extends AsyncEventEmitter2 {
    * @param {PresentationContext} dimse.context - Presentation context.
    */
   _sendDimse(dimse) {
+    if (this._isSocketClosing()) {
+      log.info(`${this.logId} -> Connection is closing. Skipping ${dimse.command.toString()}`);
+      return;
+    }
+
     try {
       const dataset = dimse.command.getDataset();
       const presentationContext = this.association.getPresentationContext(
@@ -884,6 +899,17 @@ class Network extends AsyncEventEmitter2 {
         this.emit('networkError', new Error(`Connection timeout: ${error}`));
       }
     }, 1000);
+  }
+
+  /**
+   * Checks whether the socket can no longer be written to,
+   * i.e. it is destroyed or its writable side has been ended.
+   * @method
+   * @private
+   * @returns {boolean} Whether the socket is closing or closed.
+   */
+  _isSocketClosing() {
+    return this.socket.destroyed || this.socket.writableEnded;
   }
 
   /**
