@@ -28,9 +28,11 @@ const {
 } = require('./../src/Constants');
 const Client = require('./../src/Client');
 const Dataset = require('./../src/Dataset');
+const Network = require('./../src/Network');
 const Transcoding = require('./../src/Transcoding');
 const log = require('./../src/log');
 
+const events = require('events');
 const http = require('http');
 const net = require('net');
 const selfSigned = require('selfsigned');
@@ -1338,6 +1340,52 @@ describe('Network', () => {
     });
     client.send('127.0.0.1', 2124, 'CALLINGAET', 'CALLEDAET', { associationLingerTimeout: 100 });
   });
+
+  it('should not emit network errors from timeout monitors while draining an aborted connection', (done) => {
+    const clientSocket = new events.EventEmitter();
+    let ended = false;
+    let destroyed = false;
+    clientSocket.connecting = false;
+    clientSocket.destroyed = false;
+    clientSocket.writableEnded = false;
+    clientSocket.setTimeout = () => {};
+    clientSocket.end = (callback) => {
+      // A stalled peer keeps the flush (and the end callback) pending forever
+      ended = true;
+      clientSocket.writableEnded = true;
+    };
+    clientSocket.destroy = () => {
+      destroyed = true;
+      clientSocket.destroyed = true;
+      clientSocket.emit('close');
+    };
+    clientSocket.write = () => true;
+
+    const network = new Network(clientSocket, { connectTimeout: 5000, associationTimeout: 200 });
+
+    let networkError = undefined;
+    network.on('networkError', (err) => {
+      networkError = err;
+    });
+    network.on('close', () => {
+      try {
+        expect(destroyed).to.be.true;
+        expect(networkError).to.be.undefined;
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+
+    // Simulate an established association, then an intentional abort toward a
+    // peer that stops consuming data, so the flush outlives the PDU timeout
+    network.association = {};
+    network.connected = true;
+    network.connectedTime = Date.now() - 100;
+    network.sendAbort(AbortSource.ServiceUser, AbortReason.NotSpecified);
+    network.close();
+    expect(ended).to.be.true;
+  }).timeout(5000);
 
   it('should close the server connection on network error when the peer never closes its side', (done) => {
     class SocketTrackingScp extends AcceptingScp {

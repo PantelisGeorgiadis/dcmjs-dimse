@@ -264,6 +264,12 @@ class Network extends AsyncEventEmitter2 {
       return;
     }
 
+    // Stop the timeout monitors; if the peer stalls while the pending data is
+    // being flushed, they would emit a spurious network error during the
+    // graceful close of an intentionally aborted or finished connection
+    this._reset();
+    this.socket.setTimeout(0);
+
     const destroyTimer = setTimeout(() => this.socket.destroy(), CloseGracePeriod);
     this.socket.once('close', () => clearTimeout(destroyTimer));
     this.socket.end(() => this.socket.destroy());
