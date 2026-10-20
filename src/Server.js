@@ -99,6 +99,8 @@ class Scp extends Network {
     });
     this.on('abort', ({ source, reason }) => {
       this.abort(source, reason);
+      // The association is gone; close the transport connection (PS3.8, AA-3)
+      this.close();
     });
   }
 
@@ -376,7 +378,9 @@ class Server extends AsyncEventEmitter2 {
         this.statistics.addFromOtherStatistics(client.getStatistics());
       });
       client.on('networkError', (err) => {
-        socket.end();
+        // Close rather than just end the socket; a half-closed socket is retained
+        // until the peer closes its side, and it is no longer tracked for close()
+        client.close();
         this.emit('networkError', err);
       });
       this.clients.push(client);

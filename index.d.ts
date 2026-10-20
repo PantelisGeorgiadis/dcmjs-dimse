@@ -1479,6 +1479,11 @@ declare class Network extends AsyncEventEmitter2<AsyncEventEmitter2.EventMap> {
    * Sends abort request.
    */
   sendAbort(source?: number, reason?: number): void;
+
+  /**
+   * Closes the connection.
+   */
+  close(): void;
 }
 
 declare class Statistics {

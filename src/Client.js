@@ -182,6 +182,10 @@ class Client extends AsyncEventEmitter2 {
     const network = new Network(socket, opts);
     network.on('connect', () => {
       this.emit('connected');
+      // A connected listener may abort before the association request is sent.
+      if (socket.destroyed || socket.writableEnded) {
+        return;
+      }
       network.sendAssociationRequest(association);
     });
     network.on('associationAccepted', (association) => {
@@ -205,8 +209,16 @@ class Client extends AsyncEventEmitter2 {
     network.on('nEventReportRequest', (request, callback) => {
       this.emit('nEventReportRequest', request, callback);
     });
+    network.on('abort', (abort) => {
+      this.emit('abort', abort);
+      // The association is gone; close the transport connection (PS3.8, AA-3)
+      network.close();
+    });
     network.on('networkError', (err) => {
-      socket.end();
+      // Close rather than just end the socket; a half-closed socket is retained
+      // (along with its pending requests) until the peer closes its side,
+      // which never happens with an unresponsive peer
+      network.close();
       this.emit('networkError', err);
     });
     network.on('close', () => {
@@ -228,6 +240,8 @@ class Client extends AsyncEventEmitter2 {
 
   /**
    * Aborts the established association.
+   * If the association has not been requested yet, the connection is
+   * closed without sending an A-ABORT and the requests are not performed.
    * @method
    * @param {AbortSource} [source] - Abortion source.
    * @param {AbortReason} [reason] - Abortion reason.
@@ -238,7 +252,17 @@ class Client extends AsyncEventEmitter2 {
       throw new Error('Network has not been initialized');
     }
 
+    // The association request has not been sent yet, so there is nothing to abort
+    // on the wire; close the connection so that the requests are not performed
+    if (!this.network.association) {
+      this.network.close();
+      return;
+    }
+
+    // Flush the A-ABORT and then close the connection; an unresponsive peer
+    // would otherwise keep the socket open indefinitely
     this.network.sendAbort(source, reason);
+    this.network.close();
   }
 
   /**
