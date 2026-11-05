@@ -19,6 +19,11 @@ class Implementation {
    * @param {string} uid - Implementation class UID.
    */
   static setImplementationClassUid(uid) {
+    if (typeof uid !== 'string' || uid.length === 0 || uid.length > 64) {
+      throw new Error(
+        'Implementation class UID should be a non-empty string with at most 64 characters'
+      );
+    }
     this.implementationClassUid = uid;
   }
 

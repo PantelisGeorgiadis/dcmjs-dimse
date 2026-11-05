@@ -198,7 +198,8 @@ declare class Dataset {
   constructor(
     elementsOrBuffer?: Record<string, unknown> | Buffer,
     transferSyntaxUid?: string,
-    readOptions?: Record<string, unknown>
+    readOptions?: Record<string, unknown>,
+    options?: { retainSourceBuffer?: boolean }
   );
 
   /**

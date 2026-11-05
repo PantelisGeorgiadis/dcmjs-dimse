@@ -376,6 +376,10 @@ class Server extends AsyncEventEmitter2 {
       client.connected = true;
       client.on('close', () => {
         this.statistics.addFromOtherStatistics(client.getStatistics());
+        const idx = this.clients.indexOf(client);
+        if (idx !== -1) {
+          this.clients.splice(idx, 1);
+        }
       });
       client.on('networkError', (err) => {
         // Close rather than just end the socket; a half-closed socket is retained

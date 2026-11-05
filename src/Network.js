@@ -310,7 +310,9 @@ class Network extends AsyncEventEmitter2 {
   createDatasetFromStoreWritableStream(writable, acceptedPresentationContext, callback) {
     const dataset = new Dataset(
       writable.toBuffer(),
-      acceptedPresentationContext.getAcceptedTransferSyntaxUid()
+      acceptedPresentationContext.getAcceptedTransferSyntaxUid(),
+      undefined,
+      { retainSourceBuffer: true }
     );
     callback(dataset);
   }
@@ -472,17 +474,13 @@ class Network extends AsyncEventEmitter2 {
         this.datasetNameMap
       );
 
-      const datasetBufferChunks = [];
       const datasetBufferLength = datasetBuffer.length;
       const chunkSize = maxPduLength - 6;
       let i = 0;
       while (i < datasetBufferLength) {
-        datasetBufferChunks.push(datasetBuffer.slice(i, (i += chunkSize)));
-      }
-
-      for (let i = 0; i < datasetBufferChunks.length; i++) {
-        const last = datasetBufferChunks.length === i + 1;
-        const pdv = new Pdv(pcId, datasetBufferChunks[i], false, last);
+        const end = Math.min(i + chunkSize, datasetBufferLength);
+        const last = end >= datasetBufferLength;
+        const pdv = new Pdv(pcId, datasetBuffer.slice(i, end), false, last);
 
         const pDataTf = new PDataTF();
         pDataTf.addPdv(pdv);
@@ -490,6 +488,7 @@ class Network extends AsyncEventEmitter2 {
         const pduBuffer = pdu.writePdu();
         this.socket.write(pduBuffer);
         this.statistics.addBytesSent(pduBuffer.length);
+        i = end;
       }
     }
   }
@@ -737,7 +736,8 @@ class Network extends AsyncEventEmitter2 {
               const dataset = new Dataset(
                 this.dimseStream.toBuffer(),
                 presentationContext.getAcceptedTransferSyntaxUid(),
-                this.datasetReadOptions
+                this.datasetReadOptions,
+                { retainSourceBuffer: true }
               );
               this.dimse.setDataset(dataset);
               this._performDimse(presentationContext, this.dimse);

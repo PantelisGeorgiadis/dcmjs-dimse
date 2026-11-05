@@ -183,4 +183,52 @@ describe('Dataset', () => {
       });
     });
   });
+
+  it('should reuse the retained source buffer in toFile (fast path)', () => {
+    mockFs();
+
+    const elements = {
+      SOPClassUID: StorageClass.SecondaryCaptureImageStorage,
+      SOPInstanceUID: Dataset.generateDerivedUid(),
+      PatientName: 'JOHN^DOE',
+      PatientID: '123456',
+      AccessionNumber: '654321',
+      StudyDescription: 'STUDY_DESCRIPTION',
+      SeriesDescription: 'SERIES_DESCRIPTION',
+    };
+    const seedDataset = new Dataset(elements, TransferSyntax.ExplicitVRLittleEndian);
+    const encodedBuffer = seedDataset.getDenaturalizedDataset();
+
+    // Dataset constructed from a Buffer with retainSourceBuffer should keep the bytes.
+    const dataset1 = new Dataset(encodedBuffer, TransferSyntax.ExplicitVRLittleEndian, undefined, {
+      retainSourceBuffer: true,
+    });
+    expect(dataset1.sourceElementsBuffer).to.equal(encodedBuffer);
+
+    dataset1.toFile('fileOut.dcm');
+    const roundTripped = Dataset.fromFile('fileOut.dcm');
+    const roundTrippedElements = roundTripped.getElements();
+    delete roundTrippedElements._vrMap;
+    Object.keys(elements).forEach((tag) => {
+      expect(String(roundTrippedElements[tag])).to.be.eq(String(elements[tag]));
+    });
+    expect(roundTripped.getTransferSyntaxUid()).to.be.eq(TransferSyntax.ExplicitVRLittleEndian);
+
+    // Mutating an element must invalidate the retained source buffer.
+    dataset1.setElement('PatientName', 'JANE^DOE');
+    expect(dataset1.sourceElementsBuffer).to.be.undefined;
+
+    // Without retention, sourceElementsBuffer should never be populated.
+    const dataset2 = new Dataset(encodedBuffer, TransferSyntax.ExplicitVRLittleEndian);
+    expect(dataset2.sourceElementsBuffer).to.be.undefined;
+
+    // Changing the transfer syntax must invalidate the retained source buffer.
+    const dataset3 = new Dataset(encodedBuffer, TransferSyntax.ExplicitVRLittleEndian, undefined, {
+      retainSourceBuffer: true,
+    });
+    dataset3.setTransferSyntaxUid(TransferSyntax.ImplicitVRLittleEndian);
+    expect(dataset3.sourceElementsBuffer).to.be.undefined;
+
+    mockFs.restore();
+  });
 });
