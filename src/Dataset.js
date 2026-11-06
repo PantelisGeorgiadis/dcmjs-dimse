@@ -3,7 +3,7 @@ const Implementation = require('./Implementation');
 
 const { readFile, readFileSync, writeFile, writeFileSync } = require('fs');
 const { EOL } = require('os');
-const dcmjs = require('dcmjs');
+const dcmjs = require('@dcmjs-org/dcmjs');
 const { DicomDict, DicomMessage, DicomMetaDictionary, ReadBufferStream, WriteBufferStream } =
   dcmjs.data;
 const dcmjsLog = dcmjs.log;

@@ -4,7 +4,7 @@ const Dataset = require('./Dataset');
 const { Mixin } = require('ts-mixer');
 const { EOL } = require('os');
 const AsyncEventEmitter2 = require('async-event-emitter2');
-const dcmjs = require('dcmjs');
+const dcmjs = require('@dcmjs-org/dcmjs');
 const { DicomMetaDictionary } = dcmjs.data;
 
 //#region Command

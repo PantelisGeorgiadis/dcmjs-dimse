@@ -43,8 +43,8 @@
   "funding": "https://github.com/PantelisGeorgiadis/dcmjs-dimse?sponsor=1",
   "homepage": "https://github.com/PantelisGeorgiadis/dcmjs-dimse",
   "dependencies": {
+    "@dcmjs-org/dcmjs": "1.0.0-beta.10",
     "async-event-emitter2": "^0.0.2",
-    "dcmjs": "^0.50.1",
     "dcmjs-codecs": "^0.0.8",
     "loglevel": "^1.9.2",
     "loglevel-plugin-prefix": "^0.8.4",
