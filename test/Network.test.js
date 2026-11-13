@@ -506,6 +506,51 @@ describe('Network', () => {
     });
   });
 
+  it('should raise done for a request without an accepted presentation context', (done) => {
+    const server = new Server(UserIdentityScp);
+    server.on('networkError', (e) => {
+      throw e;
+    });
+    server.listen(2125);
+
+    let skippedRequestDone = false;
+    let skippedRequestResponses = 0;
+
+    const client = new Client();
+    // The server accepts only the verification context, so the C-STORE is skipped
+    const storeRequest = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.MrImageStorage,
+        StudyInstanceUID: Dataset.generateDerivedUid(),
+        PatientID: '76543',
+        PatientName: 'JANE^DOE',
+      })
+    );
+    storeRequest.on('done', () => {
+      skippedRequestDone = true;
+    });
+    storeRequest.on('response', () => {
+      skippedRequestResponses++;
+    });
+    client.addRequest(storeRequest);
+    client.addRequest(new CEchoRequest());
+    client.on('closed', () => {
+      try {
+        expect(skippedRequestDone).to.be.true;
+        expect(skippedRequestResponses).to.be.eq(0);
+        done();
+      } catch (e) {
+        done(e);
+      } finally {
+        server.close();
+      }
+    });
+    client.on('networkError', (e) => {
+      throw e;
+    });
+    client.send('127.0.0.1', 2125, 'CALLINGAET', 'CALLEDAET');
+  });
+
   it('should correctly perform and serve a C-ECHO operation', (done) => {
     const server = new Server(AcceptingScp);
     server.on('networkError', (e) => {

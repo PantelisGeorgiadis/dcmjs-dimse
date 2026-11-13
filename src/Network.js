@@ -383,6 +383,7 @@ class Network extends AsyncEventEmitter2 {
         log.error(
           `Could not find an accepted presentation context for request ${request.toString()}. Skipping...`
         );
+        request.raiseDoneEvent();
         processNextRequest();
       }
     };

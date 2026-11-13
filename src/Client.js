@@ -111,6 +111,8 @@ class Client extends AsyncEventEmitter2 {
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
+   * Connection failures, including an invalid host or port, are not thrown;
+   * they are reported through the `networkError` event followed by `closed`.
    * @throws {Error} If there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
@@ -177,7 +179,20 @@ class Client extends AsyncEventEmitter2 {
     // Connect
     log.info(`Connecting to ${host}:${port} ${opts.securityOptions ? '(TLS)' : ''}`);
     const netImpl = opts.securityOptions ? tls : net;
-    const socket = netImpl.connect({ host, port, ...options });
+    let socket;
+    try {
+      socket = netImpl.connect({ host, port, ...options });
+    } catch (err) {
+      // Report synchronous connection failures (e.g. invalid port) the same way as
+      // asynchronous ones, so that callers handle a single failure path; the events
+      // are emitted in separate ticks, as in the asynchronous case
+      log.error(`Connection error: ${err.message}`);
+      setTimeout(() => {
+        this.emit('networkError', err);
+        setTimeout(() => this.emit('closed'), 0);
+      }, 0);
+      return;
+    }
 
     const network = new Network(socket, opts);
     network.on('connect', () => {
