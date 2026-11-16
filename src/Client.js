@@ -74,6 +74,9 @@ class Client extends AsyncEventEmitter2 {
 
   /**
    * Sends requests to the remote host.
+   * If the connection cannot be initiated (e.g. invalid port), the error is not thrown. It is
+   * reported through the `networkError` event, which is followed by the `closed` event, in
+   * separate ticks, as it happens for a connection failure.
    * @method
    * @param {string} host - Remote host.
    * @param {number} port - Remote port.
@@ -111,8 +114,6 @@ class Client extends AsyncEventEmitter2 {
    * @param {string} [opts.securityOptions.maxVersion] - The maximum TLS version to allow. One of
    * 'TLSv1.3', 'TLSv1.2', 'TLSv1.1', or 'TLSv1'.
    * @param {string} [opts.securityOptions.ciphers] - Cipher suite specification, replacing the default.
-   * Connection failures, including an invalid host or port, are not thrown;
-   * they are reported through the `networkError` event followed by `closed`.
    * @throws {Error} If there are zero requests to perform.
    */
   send(host, port, callingAeTitle, calledAeTitle, opts) {
@@ -183,9 +184,7 @@ class Client extends AsyncEventEmitter2 {
     try {
       socket = netImpl.connect({ host, port, ...options });
     } catch (err) {
-      // Report synchronous connection failures (e.g. invalid port) the same way as
-      // asynchronous ones, so that callers handle a single failure path; the events
-      // are emitted in separate ticks, as in the asynchronous case
+      // Report the failure the same way as an asynchronous connection failure
       log.error(`Connection error: ${err.message}`);
       setTimeout(() => {
         this.emit('networkError', err);

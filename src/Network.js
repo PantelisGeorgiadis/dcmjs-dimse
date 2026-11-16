@@ -383,8 +383,13 @@ class Network extends AsyncEventEmitter2 {
         log.error(
           `Could not find an accepted presentation context for request ${request.toString()}. Skipping...`
         );
-        request.raiseDoneEvent();
-        processNextRequest();
+        // Signal completion asynchronously, as for the performed requests, so that listeners
+        // attached after sendRequests() still get the event; this also keeps the stack flat
+        // when many consecutive requests are skipped
+        setImmediate(() => {
+          request.raiseDoneEvent();
+          processNextRequest();
+        });
       }
     };
     processNextRequest();

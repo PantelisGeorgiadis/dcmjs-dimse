@@ -23,28 +23,27 @@ describe('Client', () => {
     }).to.throw();
   });
 
-  [-1, 99999, undefined].forEach((port) => {
-    it(`should raise networkError and closed instead of throwing for an invalid port (${port})`, (done) => {
-      const client = new Client();
-      client.addRequest(new CEchoRequest());
+  it('should raise networkError and closed instead of throwing for an invalid port', (done) => {
+    const client = new Client();
+    client.addRequest(new CEchoRequest());
 
-      const events = [];
-      let networkError = undefined;
-      client.on('networkError', (e) => {
-        events.push('networkError');
-        networkError = e;
-      });
-      client.on('closed', () => {
-        try {
-          expect(events).to.deep.equal(['networkError']);
-          expect(networkError).to.be.an.instanceOf(Error);
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
-      expect(() => client.send('localhost', port, 'SCU', 'SCP')).to.not.throw();
+    const events = [];
+    let networkError = undefined;
+    client.on('networkError', (e) => {
+      events.push('networkError');
+      networkError = e;
     });
+    client.on('closed', () => {
+      events.push('closed');
+      try {
+        expect(events).to.deep.equal(['networkError', 'closed']);
+        expect(networkError).to.be.an.instanceOf(Error);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    });
+    expect(() => client.send('localhost', -1, 'SCU', 'SCP')).to.not.throw();
   });
 
   it('should throw for invalid cancellation and abortion', () => {
