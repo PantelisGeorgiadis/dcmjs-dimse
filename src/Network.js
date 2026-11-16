@@ -186,8 +186,10 @@ class Network extends AsyncEventEmitter2 {
   /**
    * Sends a response for a specific request.
    * @method
-   * @param {Request} requests - Request for which to send response.
+   * @param {Request} request - Request for which to send response.
    * @param {Response} response - Response to send.
+   * @returns {boolean} True if the response was handed over for sending, false if it was
+   * not sent because there is no accepted presentation context for the request.
    */
   sendResponse(request, response) {
     const context = this.association.getAcceptedPresentationContextFromRequest(request);
@@ -195,11 +197,13 @@ class Network extends AsyncEventEmitter2 {
       log.error(
         `Could not find an accepted presentation context for request ${request.toString()}. Skipping...`
       );
-      return;
+      return false;
     }
 
     const dimse = { context, command: response };
     this._sendDimse(dimse);
+
+    return true;
   }
 
   /**
@@ -376,6 +380,10 @@ class Network extends AsyncEventEmitter2 {
         const dimse = { context, command: request };
         dimse.command.on('done', () => {
           // Request is done (there are no more pending responses)
+          const index = this.pending.indexOf(request);
+          if (index !== -1) {
+            this.pending.splice(index, 1);
+          }
           processNextRequest();
         });
         this._sendDimse(dimse);

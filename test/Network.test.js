@@ -658,6 +658,72 @@ describe('Network', () => {
     expect(doneCount).to.be.eq(0);
   }).timeout(10000);
 
+  it('should remove a request from the pending requests when it is done', (done) => {
+    const socket = new events.EventEmitter();
+    socket.connecting = false;
+    socket.destroyed = false;
+    socket.writableEnded = false;
+    socket.setTimeout = () => {};
+
+    const network = new Network(socket, { connectTimeout: 5000, associationTimeout: 5000 });
+    network.association = { getAcceptedPresentationContextFromRequest: () => ({}) };
+    network._sendDimse = () => {};
+
+    const respondedRequest = new CEchoRequest();
+    const failedRequest = new CEchoRequest();
+    network.sendRequests([respondedRequest, failedRequest]);
+    expect(network.pending).to.deep.equal([respondedRequest]);
+
+    const response = CEchoResponse.fromRequest(respondedRequest);
+    response.setStatus(Status.Success);
+    network._performDimse({}, response);
+
+    // The next request is dispatched once the previous one is done; the second request
+    // fails without a response (e.g. transcoding failure)
+    setImmediate(() => {
+      try {
+        expect(network.pending).to.deep.equal([failedRequest]);
+        failedRequest.raiseDoneEvent();
+        setImmediate(() => {
+          try {
+            expect(network.pending).to.be.empty;
+            done();
+          } catch (e) {
+            done(e);
+          } finally {
+            network._reset();
+          }
+        });
+      } catch (e) {
+        network._reset();
+        done(e);
+      }
+    });
+  });
+
+  it('should report whether a response was sent', () => {
+    const socket = new events.EventEmitter();
+    socket.setTimeout = () => {};
+
+    const network = new Network(socket);
+    const request = new CEchoRequest();
+    request.setMessageId(1);
+    const response = CEchoResponse.fromRequest(request);
+    const sent = [];
+    network._sendDimse = (dimse) => sent.push(dimse);
+
+    log.setLevel('silent');
+    network.association = { getAcceptedPresentationContextFromRequest: () => undefined };
+    expect(network.sendResponse(request, response)).to.be.false;
+    expect(sent).to.be.empty;
+    log.setLevel('error');
+
+    network.association = { getAcceptedPresentationContextFromRequest: () => ({}) };
+    expect(network.sendResponse(request, response)).to.be.true;
+    expect(sent).to.have.length(1);
+    network._reset();
+  });
+
   it('should correctly perform and serve a C-ECHO operation', (done) => {
     const server = new Server(AcceptingScp);
     server.on('networkError', (e) => {

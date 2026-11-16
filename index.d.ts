@@ -1467,8 +1467,10 @@ declare class Network extends AsyncEventEmitter2<AsyncEventEmitter2.EventMap> {
 
   /**
    * Sends response for a specific request.
+   * Returns false if the response was not sent because there is no accepted
+   * presentation context for the request.
    */
-  sendResponse(request: Request, response: Response): void;
+  sendResponse(request: Request, response: Response): boolean;
 
   /**
    * Sends cancel request.
