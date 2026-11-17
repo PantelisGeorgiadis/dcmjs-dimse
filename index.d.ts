@@ -746,6 +746,10 @@ declare class Request extends Mixin(Command, AsyncEventEmitter2) {
 
   /**
    * Raise done event.
+   * A request raises `done` once, when it has no more pending responses. A request that
+   * was not performed (e.g. no accepted presentation context, or a transcoding failure)
+   * raises `done` without a `response` event, so a C-GET or C-MOVE SCP can count it as a
+   * failed sub-operation.
    */
   raiseDoneEvent(): void;
 
@@ -1467,8 +1471,10 @@ declare class Network extends AsyncEventEmitter2<AsyncEventEmitter2.EventMap> {
 
   /**
    * Sends response for a specific request.
+   * Returns false if the response was not sent because there is no accepted
+   * presentation context for the request.
    */
-  sendResponse(request: Request, response: Response): void;
+  sendResponse(request: Request, response: Response): boolean;
 
   /**
    * Sends cancel request.
