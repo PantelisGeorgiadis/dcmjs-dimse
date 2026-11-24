@@ -506,6 +506,224 @@ describe('Network', () => {
     });
   });
 
+  it('should raise done once, in order, for a request without an accepted presentation context', (done) => {
+    const server = new Server(UserIdentityScp);
+    server.on('networkError', (e) => {
+      throw e;
+    });
+    server.listen(2125);
+
+    const order = [];
+    let skippedRequestDones = 0;
+    let skippedRequestResponses = 0;
+
+    const client = new Client();
+    // The server accepts only the verification context, so the C-STORE is skipped
+    const storeRequest = new CStoreRequest(
+      new Dataset({
+        SOPClassUID: StorageClass.MrImageStorage,
+        StudyInstanceUID: Dataset.generateDerivedUid(),
+        PatientID: '76543',
+        PatientName: 'JANE^DOE',
+      })
+    );
+    storeRequest.on('done', () => {
+      skippedRequestDones++;
+      order.push('skippedDone');
+    });
+    storeRequest.on('response', () => {
+      skippedRequestResponses++;
+    });
+    const echoRequest = new CEchoRequest();
+    echoRequest.on('response', () => {
+      order.push('echoResponse');
+    });
+    client.addRequest(storeRequest);
+    client.addRequest(echoRequest);
+    client.on('closed', () => {
+      try {
+        expect(skippedRequestDones).to.be.eq(1);
+        expect(skippedRequestResponses).to.be.eq(0);
+        expect(order).to.deep.equal(['skippedDone', 'echoResponse']);
+        done();
+      } catch (e) {
+        done(e);
+      } finally {
+        server.close();
+      }
+    });
+    client.on('networkError', (e) => {
+      throw e;
+    });
+    client.send('127.0.0.1', 2125, 'CALLINGAET', 'CALLEDAET');
+  });
+
+  it('should allow an SCP to count skipped C-STORE sub-operations of a C-GET as failures', (done) => {
+    class SkippedSubOperationsScp extends AcceptingScp {
+      cGetRequest(request, callback) {
+        const total = 2;
+        let finished = 0;
+        let failures = 0;
+        for (let i = 0; i < total; i++) {
+          const cStoreRequest = new CStoreRequest(datasets[0]);
+          let responded = false;
+          cStoreRequest.on('response', () => {
+            responded = true;
+          });
+          cStoreRequest.on('done', () => {
+            if (!responded) {
+              failures++;
+            }
+            if (++finished === total) {
+              const response = CGetResponse.fromRequest(request);
+              response.setStatus(failures > 0 ? Status.Warning : Status.Success);
+              response.setRemaining(0);
+              response.setCompleted(total - failures);
+              response.setWarnings(0);
+              response.setFailures(failures);
+              callback(response);
+            }
+          });
+          this.sendRequests(cStoreRequest);
+        }
+      }
+    }
+
+    const server = new Server(SkippedSubOperationsScp);
+    server.on('networkError', (e) => {
+      throw e;
+    });
+    server.listen(2126);
+
+    let finalResponse = undefined;
+    const client = new Client();
+    const getRequest = CGetRequest.createStudyGetRequest(Dataset.generateDerivedUid());
+    // The association has no storage context, so the SCP cannot perform the sub-operations
+    getRequest.setAddStorageSopClassesToAssociation(false);
+    getRequest.on('response', (response) => {
+      finalResponse = response;
+    });
+    client.addRequest(getRequest);
+    client.on('closed', () => {
+      try {
+        expect(finalResponse).to.not.be.undefined;
+        expect(finalResponse.getFailures()).to.be.eq(2);
+        expect(finalResponse.getCompleted()).to.be.eq(0);
+        done();
+      } catch (e) {
+        done(e);
+      } finally {
+        server.close();
+      }
+    });
+    client.on('networkError', (e) => {
+      throw e;
+    });
+    client.send('127.0.0.1', 2126, 'CALLINGAET', 'CALLEDAET');
+  }).timeout(5000);
+
+  it('should raise done asynchronously and without recursion for many skipped requests', (done) => {
+    const socket = new events.EventEmitter();
+    socket.connecting = false;
+    socket.destroyed = false;
+    socket.writableEnded = false;
+    socket.setTimeout = () => {};
+
+    const network = new Network(socket, { connectTimeout: 5000, associationTimeout: 5000 });
+    network.association = { getAcceptedPresentationContextFromRequest: () => undefined };
+    log.setLevel('silent');
+    const count = 20000;
+    let doneCount = 0;
+    const requests = [];
+    for (let i = 0; i < count; i++) {
+      const request = new CEchoRequest();
+      request.on('done', () => {
+        doneCount++;
+      });
+      requests.push(request);
+    }
+
+    network.on('done', () => {
+      try {
+        expect(doneCount).to.be.eq(count);
+        done();
+      } catch (e) {
+        done(e);
+      } finally {
+        log.setLevel('error');
+        network._reset();
+      }
+    });
+    network.sendRequests(requests);
+    expect(doneCount).to.be.eq(0);
+  }).timeout(10000);
+
+  it('should remove a request from the pending requests when it is done', (done) => {
+    const socket = new events.EventEmitter();
+    socket.connecting = false;
+    socket.destroyed = false;
+    socket.writableEnded = false;
+    socket.setTimeout = () => {};
+
+    const network = new Network(socket, { connectTimeout: 5000, associationTimeout: 5000 });
+    network.association = { getAcceptedPresentationContextFromRequest: () => ({}) };
+    network._sendDimse = () => {};
+
+    const respondedRequest = new CEchoRequest();
+    const failedRequest = new CEchoRequest();
+    network.sendRequests([respondedRequest, failedRequest]);
+    expect(network.pending).to.deep.equal([respondedRequest]);
+
+    const response = CEchoResponse.fromRequest(respondedRequest);
+    response.setStatus(Status.Success);
+    network._performDimse({}, response);
+
+    // The next request is dispatched once the previous one is done; the second request
+    // fails without a response (e.g. transcoding failure)
+    setImmediate(() => {
+      try {
+        expect(network.pending).to.deep.equal([failedRequest]);
+        failedRequest.raiseDoneEvent();
+        setImmediate(() => {
+          try {
+            expect(network.pending).to.be.empty;
+            done();
+          } catch (e) {
+            done(e);
+          } finally {
+            network._reset();
+          }
+        });
+      } catch (e) {
+        network._reset();
+        done(e);
+      }
+    });
+  });
+
+  it('should report whether a response was sent', () => {
+    const socket = new events.EventEmitter();
+    socket.setTimeout = () => {};
+
+    const network = new Network(socket);
+    const request = new CEchoRequest();
+    request.setMessageId(1);
+    const response = CEchoResponse.fromRequest(request);
+    const sent = [];
+    network._sendDimse = (dimse) => sent.push(dimse);
+
+    log.setLevel('silent');
+    network.association = { getAcceptedPresentationContextFromRequest: () => undefined };
+    expect(network.sendResponse(request, response)).to.be.false;
+    expect(sent).to.be.empty;
+    log.setLevel('error');
+
+    network.association = { getAcceptedPresentationContextFromRequest: () => ({}) };
+    expect(network.sendResponse(request, response)).to.be.true;
+    expect(sent).to.have.length(1);
+    network._reset();
+  });
+
   it('should correctly perform and serve a C-ECHO operation', (done) => {
     const server = new Server(AcceptingScp);
     server.on('networkError', (e) => {
